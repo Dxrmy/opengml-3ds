@@ -1914,7 +1914,7 @@ namespace
                             _ast->m_subtype = ogm_ast_st_exp_literal_primitive;
                             auto* _payload = (ogm_ast_literal_primitive_t*) malloc( sizeof(ogm_ast_literal_primitive_t) );
                             _payload->m_type = ogm_ast_literal_t_number;
-                            _payload->m_value = _strdup(std::to_string(i).c_str());;
+                            _payload->m_value = ogm_strdup(std::to_string(i).c_str());;
                             _ast->m_payload = _payload;
                             enum_data.m_map[payload->m_identifier[i]] = _ast;
                         }

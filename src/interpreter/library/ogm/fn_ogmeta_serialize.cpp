@@ -33,12 +33,12 @@ namespace
 
 void ogm::interpreter::fn::ogm_save_state(VO out)
 {
-    ogm_save_state(out, 0);
+    ogm_save_state(out, 0.0);
 }
 
 void ogm::interpreter::fn::ogm_load_state(VO out)
 {
-    ogm_load_state(out, 0);
+    ogm_load_state(out, 0.0);
 }
 
 void ogm::interpreter::fn::ogm_save_state(VO out, V n)

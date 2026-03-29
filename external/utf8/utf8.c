@@ -20,7 +20,7 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <malloc.h>
 #define snprintf _snprintf
 #else
@@ -241,7 +241,11 @@ size_t u8_strlen(const char *s)
     return count;
 }
 
+#ifdef _WIN32
+int wcwidth(wchar_t c) { return 1; }
+#else
 int wcwidth(wchar_t c);
+#endif
 
 size_t u8_strwidth(const char *s)
 {

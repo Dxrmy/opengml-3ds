@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include "ffi/shltype.h"
 
+#ifndef __3DS__
 #include <ffi.h>
 
 using namespace ogm::interpreter;
@@ -156,7 +157,7 @@ namespace
                     // TODO: don't copy-allocate the string if it can be avoided.
                     std::string s {argv[i].string_view()};
                     char** nv = alloc<char*>();
-                    *nv = _strdup(s.c_str());
+                    *nv = ogm_strdup(s.c_str());
                     values[i-1] = nv;
                 }
                 else
@@ -169,7 +170,11 @@ namespace
         }
         
         #ifdef _WIN32
-        ffi_abi abi = (ct == CallType::_STDCALL) ? FFI_STDCALL : FFI_DEFAULT_ABI;
+            #ifdef _WIN64
+            ffi_abi abi = FFI_DEFAULT_ABI;
+            #else
+            ffi_abi abi = (ct == CallType::_STDCALL) ? FFI_STDCALL : FFI_DEFAULT_ABI;
+            #endif
         #else
         ffi_abi abi = FFI_DEFAULT_ABI;
         #endif
@@ -264,3 +269,27 @@ void ogm::interpreter::fn::external_free(VO out, V id)
 {
     external_free_impl(id.castCoerce<external_id_t>());
 }
+
+#else // __3DS__
+
+void ogm::interpreter::fn::ogm_external_list(VO out, V vpath)
+{
+    out = 0.0;
+}
+
+void ogm::interpreter::fn::external_define(VO out, uint8_t argc, const Variable* argv)
+{
+    throw MiscError("External library loading is not supported on 3DS.");
+}
+
+void ogm::interpreter::fn::external_call(VO out, uint8_t argc, const Variable* argv)
+{
+    throw MiscError("External library loading is not supported on 3DS.");
+}
+
+void ogm::interpreter::fn::external_free(VO out, V id)
+{
+    throw MiscError("External library loading is not supported on 3DS.");
+}
+
+#endif

@@ -343,12 +343,12 @@ void ogm::interpreter::fn::string_delete(VO out, V str, V pos, V count)
     else if (p + c == str.string_length() + 1)
     {
         // starting substring
-        string_copy(out, str, 1, p - 1);
+        string_copy(out, str, 1.0, p - 1.0);
     }
     else*/
     {
         Variable b;
-        ogm::interpreter::fn::string_copy(out, str, 1, p - 1);
+        ogm::interpreter::fn::string_copy(out, str, 1.0, p - 1.0);
         ogm::interpreter::fn::string_copy(b, str, p + c);
         out += b;
         b.cleanup();
@@ -386,7 +386,7 @@ void ogm::interpreter::fn::string_format(VO out, V vr, V vtot, V vdec)
 void ogm::interpreter::fn::string_insert(VO out, V substr, V str, V pos)
 {
     Variable a;
-    ogm::interpreter::fn::string_copy(a, str, 1, pos);
+    ogm::interpreter::fn::string_copy(a, str, 1.0, pos);
     Variable b;
     ogm::interpreter::fn::string_copy(b, str, pos);
 
@@ -442,7 +442,7 @@ void ogm::interpreter::fn::string_pos(VO out, V substr, V str)
     auto sc2 = s.find(sub);
     if (sc2 != s.npos)
     {
-        out = sc2 + 1;
+        out = static_cast<real_t>(sc2 + 1);
     }
     else
     {
@@ -509,13 +509,13 @@ void ogm::interpreter::fn::string_upper(VO out, V str)
 void ogm::interpreter::fn::string_height(VO out, V str)
 {
     // TODO
-  out = 16;
+  out = 16.0;
 }
 
 void ogm::interpreter::fn::string_height_ext(VO out, V str, V sep, V w)
 {
     // TODO
-  out = 16;
+  out = 16.0;
 }
 
 void ogm::interpreter::fn::string_width(VO out, V str)

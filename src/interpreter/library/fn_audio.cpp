@@ -19,6 +19,10 @@
 #include <cstdlib>
 #include <queue>
 
+#ifdef __3DS__
+#include <3ds.h>
+#endif
+
 #ifdef OGM_SOLOUD
 #include <soloud.h>
 #include <soloud_queue.h>
@@ -41,6 +45,13 @@ typedef sound_id_t play_queue_id_t;
 #ifdef OGM_SOLOUD
 SoLoud::Soloud soloud;
 #endif
+
+#ifdef __3DS__
+// NDSP fallback globals
+static bool g_ndsp_init = false;
+static int g_ndsp_channels_used = 0;
+#define MAX_NDSP_CHANNELS 24
+#endif
     
 // data for a sound which can be instantiated
 struct resource_t
@@ -50,6 +61,11 @@ struct resource_t
     real_t m_length = 0.0;
     #endif
     
+    #ifdef __3DS__
+    void* m_linear_pcm_data = nullptr;
+    size_t m_linear_pcm_size = 0;
+    #endif
+
     // sound instances not known to have stopped.
     std::set<sound_id_t> m_instances;
     
@@ -65,6 +81,14 @@ struct resource_t
     // default pan
     float m_pan = 0.0;
     
+    ~resource_t() {
+        #ifdef __3DS__
+        if (m_linear_pcm_data) {
+            linearFree(m_linear_pcm_data);
+            m_linear_pcm_data = nullptr;
+        }
+        #endif
+    }
 };
     
 // data for a playing sound instance.
@@ -74,6 +98,12 @@ struct instance_t
     // soloud handle
     int m_handle = -1;
     #endif
+    
+    #ifdef __3DS__
+    int m_ndsp_channel = -1;
+    ndspWaveBuf m_wavebuf;
+    #endif
+
     resource_id_t m_resource_id = -1;
 };
 
@@ -167,6 +197,15 @@ resource_t* get_resource_from_resource_id(sound_id_t id)
                 resource.m_sample = std::unique_ptr<SoLoud::AudioSource>(
                     audio_source
                 );
+                
+                #ifdef __3DS__
+                // Hardware fallback: load raw PCM into linear memory.
+                // In a real implementation, you'd decode the WAV/OGG here.
+                // For now, we set up the structure to accept linearAlloc buffers.
+                // resource.m_linear_pcm_data = linearAlloc(size);
+                // memcpy(resource.m_linear_pcm_data, raw_pcm, size);
+                #endif
+
                 return &resource;
             }
         }
@@ -974,7 +1013,7 @@ void ogm::interpreter::async_update_audio(std::vector<std::unique_ptr<AsyncEvent
 
 void ogm::interpreter::fn::sound_play(VO out, V audio)
 {
-    audio_play_sound(out, audio, 0, false);
+    audio_play_sound(out, audio, 0.0, false);
 }
 
 void ogm::interpreter::fn::sound_exists(VO out, V audio)
@@ -989,7 +1028,7 @@ void ogm::interpreter::fn::sound_get_name(VO out, V audio)
 
 void ogm::interpreter::fn::sound_loop(VO out, V audio)
 {
-    audio_play_sound(out, audio, 0, true);
+    audio_play_sound(out, audio, 0.0, true);
 }
 
 void ogm::interpreter::fn::sound_stop(VO out, V audio)

@@ -12,7 +12,7 @@ uint64_t cache_version()
     #ifdef OGM_BUILD_GMTOFF
         return __TIME_UNIX__ - (OGM_BUILD_GMTOFF);
     #else
-        #ifdef __GNUC__
+        #if defined(__GNUC__) && !defined(__3DS__)
             time_t t = time(NULL);
             struct tm lt = {0};
             localtime_r(&t, &lt);

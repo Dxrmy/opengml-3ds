@@ -60,13 +60,13 @@ void ogm::interpreter::fn::buffer_exists(VO out, V id)
 void ogm::interpreter::fn::buffer_get_alignment(VO out, V id)
 {
     Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
-    out = b.get_align();
+    out = static_cast<real_t>(b.get_align());
 }
 
 void ogm::interpreter::fn::buffer_get_type(VO out, V id)
 {
     Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
-    out = b.get_type();
+    out = static_cast<real_t>(b.get_type());
 }
 
 void ogm::interpreter::fn::buffer_sizeof(VO out, V type)
@@ -125,10 +125,10 @@ void ogm::interpreter::fn::buffer_read(VO out, V id, V type)
         out = static_cast<int32_t>(b.read<char>());
         break;
     case k_u16:
-        out = b.read<uint16_t>();
+        out = static_cast<real_t>(b.read<uint16_t>());
         break;
     case k_s16:
-        out = b.read<int16_t>();
+        out = static_cast<real_t>(b.read<int16_t>());
         break;
     case k_u32:
         out = b.read<uint32_t>();
@@ -300,7 +300,7 @@ void ogm::interpreter::fn::buffer_fill(
 void ogm::interpreter::fn::buffer_get_size(VO out, V id)
 {
     Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
-    out = b.size();
+    out = static_cast<real_t>(b.size());
 }
 
 void ogm::interpreter::fn::buffer_get_address(VO out, V id)
@@ -380,7 +380,7 @@ void ogm::interpreter::fn::buffer_load(VO out, V f)
     }
 
     frame.m_buffers.get_buffer(buffer_index).seek(0);
-    out = buffer_index;
+    out = static_cast<real_t>(buffer_index);
 }
 
 void ogm::interpreter::fn::game_save_buffer(VO out, V buf)

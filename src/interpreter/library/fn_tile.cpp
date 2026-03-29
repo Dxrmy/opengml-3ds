@@ -203,7 +203,7 @@ void ogm::interpreter::fn::tile_get_ids_at_depth(VO out, V depth)
     out.array_ensure();
     if (out.array_height() == 0)
     {
-        out.array_get(OGM_2DARRAY_DEFAULT_ROW 0) = 0;
+        out.array_get(OGM_2DARRAY_DEFAULT_ROW 0) = 0.0;
     }
 
     size_t i = 0;

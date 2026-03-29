@@ -156,6 +156,15 @@ public:
     // to before those nodes would be deleted.
     inline GCNode* construct_node(GCNode::cleanup_fn&& cleanup, GCNode::cleanup_fn&& _delete, void* underlying)
     {
+        #ifdef __3DS__
+        // 3DS has only ~64MB of usable RAM. We aggressively garbage collect
+        // to prevent OOM crashes on large GML games.
+        if (m_nodes.size() > 1024)
+        {
+            process();
+        }
+        #endif
+
         return m_nodes.emplace_back(
             new GCNode(std::move(cleanup), std::move(_delete), underlying)
         );

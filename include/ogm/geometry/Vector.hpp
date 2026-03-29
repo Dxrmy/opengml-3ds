@@ -124,7 +124,7 @@ public:
 
     Vector<coord_t> projection(const Vector<coord_t>& other) const
     {
-        return other.normalize_copy() * projection_length(other);
+        return other.normalize_safe_copy() * projection_length(other);
     }
 
     Vector<coord_t> projection_perp(const Vector<coord_t>& other) const

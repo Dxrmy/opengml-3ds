@@ -536,7 +536,7 @@ namespace
 
 void ogm::interpreter::fn::getv::async_load(VO out)
 {
-    out = g_async_load_map;
+    out = static_cast<real_t>(g_async_load_map);
 }
 
 void ogm::interpreter::fn::ogm_flush_tcp_sockets(VO out)
@@ -574,11 +574,11 @@ static void execute_async_events(std::vector<std::unique_ptr<AsyncEvent>>& event
 
             event.cleanup();
 
-            ds_map_clear(dummy, g_async_load_map);
+            ds_map_clear(dummy, static_cast<real_t>(g_async_load_map));
         }
     }
     
-    ds_map_destroy(dummy, g_async_load_map);
+    ds_map_destroy(dummy, static_cast<real_t>(g_async_load_map));
     g_async_load_map = -1;
     dummy.cleanup();
 }

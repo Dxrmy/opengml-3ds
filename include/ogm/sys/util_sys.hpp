@@ -155,10 +155,11 @@ inline std::string path_directory(std::string path) {
 inline std::string native_path(std::string path) {
   #ifdef _WIN32
   return replace_all(path,"/","\\");
-  #elif defined(__unix__) || defined (__APPLE__)
+  #elif defined(__unix__) || defined (__APPLE__) || defined(__3DS__)
   return replace_all(path,"\\","/");
   #else
   ogm_assert(false);
+  return path;
   #endif
 }
 

@@ -42,6 +42,7 @@
 
 // For placement new
 #include <new>
+#include <climits>
 
 #ifdef _MSC_VER
 #	pragma warning(push)

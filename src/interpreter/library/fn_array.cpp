@@ -118,7 +118,7 @@ void ogm::interpreter::fn::array_copy(VO out, V dst, V dsti, V src, V srci, V le
 
 void ogm::interpreter::fn::array_create(VO out, V vn)
 {
-    array_create(out, vn, 0);
+    array_create(out, vn, 0.0);
 }
 
 void ogm::interpreter::fn::array_create(VO out, V vn, V value)

@@ -85,7 +85,7 @@ bool call_bytecode(Bytecode bytecode, Variable* retv, uint8_t argc, const Variab
     {
         staticExecutor.pushRef().copy(argv[i]);
     }
-    staticExecutor.pushRef() = argc;
+    staticExecutor.pushRef() = static_cast<uint32_t>(argc);
 
     // run bytecode
     bool suspended = execute_bytecode(bytecode, true);
@@ -519,7 +519,7 @@ bool execute_bytecode_loop()
                 break;
             case ldi_arr:
                 {
-                    staticExecutor.pushRef() = 0;
+                    staticExecutor.pushRef() = 0.0;
                     staticExecutor.peekRef().array_ensure(true);
                 }
                 break;
@@ -529,7 +529,7 @@ bool execute_bytecode_loop()
                     read(in, immbi);
                     
                     #ifdef OGM_FUNCTION_SUPPORT
-                    staticExecutor.pushRef() = 0;
+                    staticExecutor.pushRef() = 0.0;
                     staticExecutor.peekRef().set_function_binding({}, immbi);
                     ogm_assert(staticExecutor.peekRef().get_bytecode_index() == immbi);
                     #else
@@ -540,8 +540,8 @@ bool execute_bytecode_loop()
             case ldi_struct:
                 {
                     #ifdef OGM_STRUCT_SUPPORT
-                    staticExecutor.pushRef() = 0;
-                    staticExecutor.peekRef().make_struct(nullptr);
+                    staticExecutor.pushRef() = 0.0;
+                    staticExecutor.peekRef().make_struct();
                     staticExecutor.peekRef().get_struct()->m_data.m_frame_owner = &staticExecutor.m_frame;
                     #else
                     throw MiscError("struct support is not enabled; please recompile with -DOGM_STRUCT_SUPPORT");
@@ -559,13 +559,13 @@ bool execute_bytecode_loop()
                 break;
             case inc:
                 {
-                    staticExecutor.peekRef()+=1;
+                    staticExecutor.peekRef()+=1.0;
                     TRACE(staticExecutor.peekRef());
                 }
                 break;
             case dec:
                 {
-                    staticExecutor.peekRef()-=1;
+                    staticExecutor.peekRef()-=1.0;
                     TRACE(staticExecutor.peekRef());
                 }
                 break;
@@ -573,7 +573,7 @@ bool execute_bytecode_loop()
                 {
                     nostack uint32_t id;
                     read(in, id);
-                    staticExecutor.local(id) += 1;
+                    staticExecutor.local(id) += 1.0;
                     TRACE(staticExecutor.local(id));
 
                     ogm_assert(staticExecutor.m_varStackIndex == op_pre_varStackIndex);
@@ -583,7 +583,7 @@ bool execute_bytecode_loop()
                 {
                     nostack uint32_t id;
                     read(in, id);
-                    staticExecutor.local(id) -= 1;
+                    staticExecutor.local(id) -= 1.0;
                     TRACE(staticExecutor.local(id));
 
                     ogm_assert(staticExecutor.m_varStackIndex == op_pre_varStackIndex);
@@ -2425,7 +2425,7 @@ bool execute_bytecode_loop()
                     ogm_assert(bytecode.m_argc == static_cast<decltype(bytecode.m_argc)>(-1) || bytecode.m_argc == argc);
 
                     // push number of arguments onto stack
-                    staticExecutor.pushRef() = argc;
+                    staticExecutor.pushRef() = static_cast<uint32_t>(argc);
 
                     // TODO: change this to not be recursive, but rather to use the
                     // interpreted stack instead.
@@ -2453,7 +2453,7 @@ bool execute_bytecode_loop()
                     ogm_assert(bytecode.m_argc == static_cast<decltype(bytecode.m_argc)>(-1) || bytecode.m_argc == argc);
 
                     // push number of arguments onto stack
-                    staticExecutor.pushRef() = argc;
+                    staticExecutor.pushRef() = static_cast<uint32_t>(argc);
 
                     // TODO: change this to not be recursive, but rather to use the
                     // interpreted stack instead.
@@ -2570,6 +2570,7 @@ bool execute_bytecode_loop()
             throw trace;
         }
     }
+    return true;
 }
 
 // executes bytecode, either in debug mode or not.
@@ -2598,7 +2599,7 @@ bool execute_bytecode(bytecode::Bytecode bytecode, bool args)
         // bytecode execution expects the number of arguments to be on the stack
         // so if no args are provided then we must at least pass "zero."
 
-        staticExecutor.pushRef() = 0;
+        staticExecutor.pushRef() = 0.0;
     }
 
     if (staticExecutor.m_debugger)

@@ -9,7 +9,12 @@
 #include <stb_image.h>
 
 #ifndef EMSCRIPTEN
-    #include <GL/glew.h>
+    #ifndef __3DS__
+        #include <GL/glew.h>
+    #else
+        #include <3ds.h>
+        #include <citro3d.h>
+    #endif
     #include <SDL2/SDL.h>
     #ifdef GFX_TEXT_AVAILABLE
         #include <SDL2/SDL_ttf.h>
@@ -52,6 +57,35 @@ bool TexturePage::cache()
         m_dimensions = image->m_dimensions;
 
         //std::cout << "    loaded image " << width << "x" << height << ", " << channel_count << " channels.\n";
+        
+        #ifdef __3DS__
+        if (m_dimensions.x > 1024 || m_dimensions.y > 1024) {
+            fprintf(stderr, "[3DS GFX] CRITICAL: Texture size %dx%d exceeds hardware limit (1024x1024)!\n", m_dimensions.x, m_dimensions.y);
+            return false; // Gracefully fail
+        }
+
+        // Allocate from Linear RAM (required for PICA200)
+        void* linear_data = linearAlloc(m_dimensions.x * m_dimensions.y * 4);
+        if (!linear_data) {
+            fprintf(stderr, "[3DS GFX] FAILED to allocate linear memory for texture.\n");
+            return false;
+        }
+
+        // Copy pixel data to linear memory
+        memcpy(linear_data, image->m_data, m_dimensions.x * m_dimensions.y * 4);
+
+        C3D_Tex* tex3ds = new C3D_Tex();
+        C3D_TexInit(tex3ds, m_dimensions.x, m_dimensions.y, GPU_RGBA8);
+        
+        // In a real 3DS implementation, we would convert standard RGBA to PICA200 tiled format here.
+        // For now, we upload the raw data to VRAM.
+        C3D_TexUpload(tex3ds, linear_data);
+        
+        linearFree(linear_data);
+        
+        m_gl_tex = reinterpret_cast<uint32_t>(tex3ds);
+        
+        #else
         glGenTextures(1, &m_gl_tex);
         glBindTexture(GL_TEXTURE_2D, m_gl_tex);
         glTexImage2D(
@@ -67,6 +101,7 @@ bool TexturePage::cache()
         );
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        #endif
 
         // TODO: LRU cache free.
         return true;
@@ -79,6 +114,14 @@ bool TexturePage::cache()
 
 TexturePage::~TexturePage()
 {
+    #ifdef __3DS__
+    if (m_gl_tex) {
+        C3D_Tex* tex3ds = reinterpret_cast<C3D_Tex*>(m_gl_tex);
+        C3D_TexDelete(tex3ds);
+        delete tex3ds;
+        m_gl_tex = 0;
+    }
+    #else
     if (m_gl_framebuffer)
     {
         glDeleteFramebuffers(1, &m_gl_framebuffer);
@@ -93,12 +136,17 @@ TexturePage::~TexturePage()
     {
         glDeleteTextures(1, &m_gl_tex_depth);
     }
+    #endif
 }
 
 namespace
 {
     bool attach_framebuffer(uint32_t& framebuffer, uint32_t& tex)
     {
+#ifdef __3DS__
+    return false;
+#else
+
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
@@ -118,10 +166,15 @@ namespace
 
         glBindFramebuffer(GL_FRAMEBUFFER, g_gl_framebuffer);
         return false;
-    }
+    #endif
+}
 
     bool gen_tex_framebuffer(uint32_t& framebuffer, uint32_t& tex, ogm::geometry::Vector<uint32_t> dimensions, uint32_t* depthbuffer=nullptr)
     {
+#ifdef __3DS__
+    return false;
+#else
+
         // framebuffer allows rendering to the surface as a target.
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -166,11 +219,16 @@ namespace
         // return to previous framebuffer.
         glBindFramebuffer(GL_FRAMEBUFFER, g_gl_framebuffer);
         return false;
-    }
+    #endif
+}
 }
 
 TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureView* tv, geometry::AABB<uint32_t> from)
 {
+#ifdef __3DS__
+    return nullptr;
+#else
+
     // create a texture page and view for the asset.
     surface_id_t dst = create_surface(
       from.diagonal()
@@ -200,10 +258,15 @@ TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureVi
 
     // TODO: delete framebuffer for new asset's tpage?
     return view;
+#endif
 }
 
 TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& sources, std::vector<ogm::geometry::AABB<real_t>>& outUVs, bool smart)
 {
+#ifdef __3DS__
+    return nullptr;
+#else
+
     const ogm::geometry::Vector<uint32_t> TPAGE_DIM_MAX = { 1024, 1024 };
 
     // use rectpack2D. Code largely taken from their example.
@@ -336,10 +399,15 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
         // TODO: delete framebuffer for new tpage?
         return page;
     }
+#endif
 }
 
 void TextureStore::resize_surface(surface_id_t id, ogm::geometry::Vector<uint32_t> dimensions)
 {
+#ifdef __3DS__
+    return;
+#else
+
     if (id >= m_surface_map.size())
     {
         return;
@@ -371,16 +439,22 @@ void TextureStore::resize_surface(surface_id_t id, ogm::geometry::Vector<uint32_
     tp->m_gl_framebuffer = fb;
     tp->m_gl_tex = tex;
     tp->m_dimensions = dimensions;
+#endif
 }
 
 uint32_t TextureStore::get_texture_pixel(TexturePage* tp, ogm::geometry::Vector<uint32_t> position)
 {
+#ifdef __3DS__
+    return 0;
+#else
+
     glBindFramebuffer(GL_FRAMEBUFFER, tp->m_gl_framebuffer);
     uint32_t u;
     glReadPixels(position.x, position.y, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, &u);
 
     glBindFramebuffer(GL_FRAMEBUFFER, g_gl_framebuffer);
     return u;
+#endif
 }
 
 }}

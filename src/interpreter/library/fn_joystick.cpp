@@ -53,7 +53,7 @@ void ogm::interpreter::fn::gamepad_axis_value(VO out, V i, V a)
 
 void ogm::interpreter::fn::gamepad_button_count(VO out, V i)
 {
-    out = frame.m_display->get_joystick_button_count(i.castCoerce<int32_t>());
+    out = static_cast<real_t>(frame.m_display->get_joystick_button_count(i.castCoerce<int32_t>()));
 }
 
 void ogm::interpreter::fn::gamepad_button_value(VO out, V i, V j)
@@ -94,5 +94,5 @@ void ogm::interpreter::fn::joystick_has_pov(VO out, V i)
 
 void ogm::interpreter::fn::joystick_pov(VO out, V i)
 {
-    out = 0;
+    out = 0.0;
 }

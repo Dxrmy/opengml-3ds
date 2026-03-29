@@ -335,7 +335,7 @@ void ogm::interpreter::fn::d3d_transform_set_rotation_z(VO out, V theta)
 
 void ogm::interpreter::fn::d3d_transform_set_rotation_axis(VO out, V theta, V x, V y, V z)
 {
-    if (x != 0 || y != 0 || z != 0)
+    if (x != 0.0 || y != 0.0 || z != 0.0)
     {
         display->transform_apply_rotation(theta.castCoerce<real_t>(),
             x.castCoerce<real_t>(),
@@ -387,7 +387,7 @@ void ogm::interpreter::fn::d3d_transform_add_rotation_z(VO out, V theta)
 
 void ogm::interpreter::fn::d3d_transform_add_rotation_axis(VO out, V theta, V x, V y, V z)
 {
-    if (x != 0 || y != 0 || z != 0)
+    if (x != 0.0 || y != 0.0 || z != 0.0)
     {
         display->transform_apply_rotation(theta.castCoerce<real_t>(),
             x.castCoerce<real_t>(),

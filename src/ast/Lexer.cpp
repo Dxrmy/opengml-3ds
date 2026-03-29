@@ -8,6 +8,7 @@
 #include <cctype>
 #include <sstream>
 #include <iostream>
+#include <cstring>
 
 #include "Lexer.hpp"
 #include "ogm/common/util.hpp"
@@ -483,7 +484,8 @@ void Lexer::set_line_preprocessor(const char* _pp) {
   _pp += strlen("#line");
 
   // copy preprocessor line so we can edit it.
-  char * pp = strdup(_pp);
+  char * pp = (char*)malloc(strlen(_pp) + 1);
+  strcpy(pp, _pp);
   _pp = pp;
   ogm_defer(free(const_cast<char *>(_pp)));
   

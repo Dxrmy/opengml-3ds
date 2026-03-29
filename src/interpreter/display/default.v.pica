@@ -1,0 +1,38 @@
+; OpenGML Default Vertex Shader for PICA200
+; Handles projection and passes through color/texcoords
+
+; Uniforms
+.fvec projection[4]
+
+; Constants
+.constf myconst(0.0, 1.0, -1.0, 0.5)
+.alias  zeros myconst.xxxx
+.alias  ones  myconst.yyyy
+
+; Inputs
+.in v0 ; position
+.in v1 ; color
+.in v2 ; texcoord
+
+; Outputs
+.out o0 position
+.out o1 color
+.out o2 texcoord0
+
+.proc main
+    ; Force w to 1.0 for position
+    mov r0.xyz, v0.xyz
+    mov r0.w,   ones
+
+    ; Multiply by projection matrix
+    dp4 o0.x, projection[0], r0
+    dp4 o0.y, projection[1], r0
+    dp4 o0.z, projection[2], r0
+    dp4 o0.w, projection[3], r0
+
+    ; Pass through color and texcoord
+    mov o1, v1
+    mov o2, v2
+
+    end
+.end

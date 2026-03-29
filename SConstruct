@@ -432,7 +432,7 @@ if msvc:
   source_files["src/main"] += [ogm_rc_path]
 
   # sockets support
-  env.Append(LIBS=["Ws2_32", "comdlg32", "User32", "Shlwapi"])
+  env.Append(LIBS=["Ws2_32", "comdlg32", "User32", "Shlwapi", "shell32"])
 else:
   # gcc and clang
 
@@ -714,7 +714,7 @@ def decide_if_changed(dependency, target, prev_ni, repo_node=None):
         return True
     return False
 
-env.Decider(decide_if_changed)
+# env.Decider(decide_if_changed)
 
 # ---------------------------------------------------------------------------------------------------------------------
 

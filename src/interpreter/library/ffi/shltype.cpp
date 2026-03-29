@@ -17,15 +17,15 @@ SharedLibraryType getSharedLibraryTypeFromPath(const std::string& path)
         
         if (get_extension(path) == ".so"s)
         {
-            shtype.os = SharedLibraryType::UNIX;
+            shtype.os = SharedLibraryType::OS_UNIX;
         }
         else if (get_extension(path) == ".dll"s)
         {
-            shtype.os = SharedLibraryType::WINDOWS;
+            shtype.os = SharedLibraryType::OS_WINDOWS;
         }
         if (get_extension(path) == ".dylib"s)
         {
-            shtype.os = SharedLibraryType::APPLE;
+            shtype.os = SharedLibraryType::OS_APPLE;
         }
         
         size_t len = sizeof(shlheader);
@@ -36,7 +36,7 @@ SharedLibraryType getSharedLibraryTypeFromPath(const std::string& path)
         
         switch(shtype.os)
         {
-        case SharedLibraryType::UNIX:
+        case SharedLibraryType::OS_UNIX:
             if (len < 6) return shtype;
             if (shlheader[5] == 1)
             {
@@ -48,7 +48,7 @@ SharedLibraryType getSharedLibraryTypeFromPath(const std::string& path)
             }
             break;
             
-        case SharedLibraryType::WINDOWS:
+        case SharedLibraryType::OS_WINDOWS:
             if (len < 64) return shtype;
             {
                 uint16_t magic = *(uint16_t*)(shlheader);
@@ -87,7 +87,7 @@ SharedLibraryType getSharedLibraryTypeFromPath(const std::string& path)
             }
             break;
             
-        case SharedLibraryType::APPLE:
+        case SharedLibraryType::OS_APPLE:
             // TODO
             break;
         }

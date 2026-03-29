@@ -1,3 +1,4 @@
+#ifndef __3DS__
 // get constants
 #include "../library/libpre.h"
     #include "../library/fn_draw.h"
@@ -3986,3 +3987,4 @@ namespace ogm::interpreter
         g_char_last = std::move(v);
     }
 }
+#endif // __3DS__

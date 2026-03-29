@@ -6,6 +6,8 @@
 #include <functional>
 #endif
 
+#include <stdint.h>
+
 #include "ogm/common/location.h"
 
 typedef enum ogm_ast_type
@@ -15,8 +17,6 @@ typedef enum ogm_ast_type
     //! imperative
     ogm_ast_t_imp
 } ogm_ast_type_t;
-
-typedef int int32_t;
 
 typedef enum ogm_ast_subtype
 {

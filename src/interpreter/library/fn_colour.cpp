@@ -156,7 +156,7 @@ namespace
         
         if (_max == _min)
         {
-            hue = 0;
+            hue = 0.0;
         }
         else if (_max == r)
         {
@@ -171,7 +171,7 @@ namespace
             hue = (255.0 / 6.0) * (4.0 + (r - g) / _range);
         }
         
-        if (hue < 0)
+        if (hue < 0.0)
         {
             hue += 255.0;
         }
@@ -182,7 +182,7 @@ namespace
         
         if (_max == 0)
         {
-            sat = 0;
+            sat = 0.0;
         }
         else
         {

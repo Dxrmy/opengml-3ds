@@ -67,11 +67,11 @@ void ogm::interpreter::fn::getv::mouse_button(VO out)
     {
         if (display->get_key_down(i))
         {
-            out = i;
+            out = static_cast<real_t>(i);
             return;
         }
     }
-    out = mb_none;
+    out = static_cast<real_t>(mb_none);
 }
 
 void ogm::interpreter::fn::mouse_check_button(VO out, V key)
@@ -103,7 +103,7 @@ void ogm::interpreter::fn::mouse_wheel_down(VO out)
 
 void ogm::interpreter::fn::getv::keyboard_key(VO out)
 {
-    out = display->get_current_key();
+    out = static_cast<real_t>(display->get_current_key());
 }
 
 void ogm::interpreter::fn::setv::keyboard_key(V val)

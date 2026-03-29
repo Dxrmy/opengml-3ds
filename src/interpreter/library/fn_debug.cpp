@@ -36,7 +36,7 @@ void get_real(VO out, V prompt)
 
 void ogm::interpreter::fn::get_integer(VO out, V prompt)
 {
-  get_integer(out, prompt, 0);
+  get_integer(out, prompt, 0.0);
 }
 
 void ogm::interpreter::fn::get_integer(VO out, V prompt, V def)
@@ -48,7 +48,7 @@ void ogm::interpreter::fn::get_integer(VO out, V prompt, V def)
 
 void ogm::interpreter::fn::get_string(VO out, V prompt)
 {
-  get_string(out, prompt, 0);
+  get_string(out, prompt, "");
 }
 
 void ogm::interpreter::fn::get_string(VO out, V prompt, V def)
@@ -71,7 +71,7 @@ void ogm::interpreter::fn::show_question(VO out, V msg)
 {
     throw NotImplementedError();
 
-    out = 0;
+    out = 0.0;
 }
 
 namespace

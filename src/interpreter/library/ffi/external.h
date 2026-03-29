@@ -8,6 +8,13 @@
 #include <vector>
 #include <map>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 namespace ogm::interpreter::ffi
 {
     typedef uint32_t external_id_t;

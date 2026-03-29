@@ -273,7 +273,7 @@ namespace
         #define FNDEF16(...)
         #define IGNORE_WARN(...)
         #define FNDEFN(...)
-        #define CONST(name, value) {#name, {#name, value}},
+        #define CONST(name, value) {#name, {#name, (real_t)(value)}},
         #include "library/all.h"
         #undef CONST
     };

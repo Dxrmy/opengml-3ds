@@ -47,7 +47,7 @@ inline void instance_destroy_(direct_instance_id_t id)
 
 void ogm::interpreter::fn::instance_create(VO out, V vobject_index)
 {
-    ogm::interpreter::fn::instance_create(out, 0, 0, v_object_index);
+    ogm::interpreter::fn::instance_create(out, 0.0, 0.0, vobject_index);
 }
 
 void ogm::interpreter::fn::instance_create(VO out, V x, V y, V vobject_index)

@@ -254,7 +254,7 @@ int umain (int argn, char** argv)
       if (!is_terminal())
       {
           std::cout << "Please run from a console for more options." << std::endl;
-          sleep(500);
+          ogm::sleep(500);
       }
       std::cout << "Opening popup window..." << std::endl;
       ogm::interpreter::Variable filter = "project file|*.project.gmx;*.project.ogm;*.yyp";
@@ -273,7 +273,7 @@ int umain (int argn, char** argv)
       if (filename == "")
       {
           std::cout << "No file was selected." << std::endl;
-          sleep(2000);
+          ogm::sleep(2000);
       }
       else
       {

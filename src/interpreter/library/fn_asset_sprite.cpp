@@ -158,7 +158,7 @@ void ogm::interpreter::fn::sprite_add(VO out, V fname, V vimgnum, V removeback, 
         throw MiscError("smooth or removebg not supported yet.");
     }
 
-    size_t imgnum = std::max(1, vimgnum.castCoerce<int32_t>());
+    size_t imgnum = std::max<int32_t>(1, vimgnum.castCoerce<int32_t>());
     
     asset_index_t index;
     AssetSprite* sprite = frame.m_assets.add_asset<AssetSprite>(

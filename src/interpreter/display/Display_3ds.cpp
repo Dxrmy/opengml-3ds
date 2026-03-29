@@ -1,0 +1,274 @@
+#ifdef __3DS__
+
+#include <3ds.h>
+#include <citro3d.h>
+#include <citro2d.h>
+
+#include "ogm/interpreter/display/Display.hpp"
+#include "ogm/common/types.hpp"
+
+// Embedded Shader Symbols (from bin2s)
+extern const u8 default_v_shbin[];
+extern const u32 default_v_shbin_size;
+
+namespace ogm::interpreter {
+    Display* g_active_display = nullptr;
+    volatile bool g_key_down[256];
+    volatile bool g_key_pressed[256];
+    volatile bool g_key_released[256];
+    
+    uint32_t g_window_width = 0;
+    uint32_t g_window_height = 0;
+
+    // GML vk_ constants
+    const int vk_space = 32;
+    const int vk_shift = 16;
+    const int vk_enter = 13;
+    const int vk_escape = 27;
+    const int vk_up = 38;
+    const int vk_down = 40;
+    const int vk_left = 37;
+    const int vk_right = 39;
+    const int vk_control = 17;
+    const int vk_alt = 18;
+    const int mb_left = 1;
+
+
+// Static constants for 3DS rendering
+static C2D_TextBuf g_textBuf;
+static C3D_RenderTarget* g_topTarget;
+static C3D_RenderTarget* g_bottomTarget;
+
+// Shader Program Data
+static DVLB_s* g_defaultDvlb;
+static shaderProgram_s g_defaultShader;
+static int8_t g_uLocProjection;
+
+bool Display::start(uint32_t width, uint32_t height, const char* caption, bool vsync) {
+    if (g_active_display != nullptr) {
+        throw MiscError("Multiple displays not supported");
+    }
+
+    // Initialize citro2d and hardware
+    gfxInitDefault();
+    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+    C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+    C2D_Prepare();
+
+    // Setup screens
+    g_topTarget = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+    g_bottomTarget = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
+
+    // Initialize text buffer
+    g_textBuf = C2D_TextBufNew(4096);
+
+    // Load Default Shader from embedded buffer
+    g_defaultDvlb = DVLB_ParseFile((u32*)default_v_shbin, (u32)&default_v_shbin_size);
+    if (g_defaultDvlb) {
+        shaderProgramInit(&g_defaultShader);
+        shaderProgramSetVsh(&g_defaultShader, &g_defaultDvlb->DVLE[0]);
+        C3D_BindProgram(&g_defaultShader);
+        
+        // Locate projection uniform (defined in default.v.pica)
+        g_uLocProjection = shaderInstanceGetUniformLocation(g_defaultShader.vertexShader, "projection");
+    }
+
+    g_active_display = this;
+    g_window_width = width;
+    g_window_height = height;
+    
+    // Clear screen on start
+    begin_render();
+    clear_render();
+    end_render();
+
+    // Default TEV configuration (Stage 0: Modulate Texture * Vertex Colour)
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, (GPU_TEVSRC)0);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+
+    // Initial Blend Mode
+    set_blendmode(0, 0); // bm_normal
+
+    return true;
+}
+
+Display::~Display() {
+    C2D_TextBufDelete(g_textBuf);
+    
+    if (g_defaultDvlb) {
+        shaderProgramFree(&g_defaultShader);
+        DVLB_Free(g_defaultDvlb);
+    }
+    
+    C2D_Fini();
+    C3D_Fini();
+    gfxExit();
+    g_active_display = nullptr;
+}
+
+static GPU_BLENDFACTOR ogm_to_3ds_blend(int32_t ogm_factor) {
+    switch (ogm_factor) {
+        case 4: return GPU_ZERO;
+        case 5: return GPU_ONE;
+        case 6: return GPU_SRC_COLOR;
+        case 7: return GPU_ONE_MINUS_SRC_COLOR;
+        case 8: return GPU_SRC_ALPHA;
+        case 9: return GPU_ONE_MINUS_SRC_ALPHA;
+        case 10: return GPU_DST_ALPHA;
+        case 11: return GPU_ONE_MINUS_DST_ALPHA;
+        case 12: return GPU_DST_COLOR;
+        case 13: return GPU_ONE_MINUS_DST_COLOR;
+        case 14: return GPU_SRC_ALPHA_SATURATE;
+        default: return GPU_ONE;
+    }
+}
+
+void Display::set_blendmode(int32_t src, int32_t dst) {
+    if (src == 0 && dst == 0) { // bm_normal
+        C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA);
+    } else if (src == 1 && dst == 1) { // bm_add
+        C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE, GPU_SRC_ALPHA, GPU_ONE);
+    } else if (src == 2 && dst == 2) { // bm_subtract
+        C3D_AlphaBlend(GPU_BLEND_REVERSE_SUBTRACT, GPU_BLEND_REVERSE_SUBTRACT, GPU_SRC_ALPHA, GPU_ONE, GPU_SRC_ALPHA, GPU_ONE);
+    } else {
+        C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, ogm_to_3ds_blend(src), ogm_to_3ds_blend(dst), ogm_to_3ds_blend(src), ogm_to_3ds_blend(dst));
+    }
+}
+
+void Display::set_blendmode_separate(int32_t src, int32_t dst, int32_t srca, int32_t dsta) {
+    C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, ogm_to_3ds_blend(src), ogm_to_3ds_blend(dst), ogm_to_3ds_blend(srca), ogm_to_3ds_blend(dsta));
+}
+
+void Display::shader_set_alpha_test_enabled(bool enabled) {
+    C3D_AlphaTest(enabled, GPU_GREATER, 0);
+}
+
+void Display::shader_set_alpha_test_threshold(real_t value) {
+    // value is 0.0 to 1.0, 3DS expects 0 to 255
+    C3D_AlphaTest(true, GPU_GREATER, static_cast<int>(value * 255));
+}
+
+void Display::begin_render() {
+    C2D_TextBufClear(g_textBuf);
+    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+}
+
+void Display::clear_render() {
+    C2D_TargetClear(g_topTarget, C2D_Color32(0, 0, 0, 255));
+    C2D_SceneBegin(g_topTarget);
+}
+
+void Display::end_render() {
+    C3D_FrameEnd(0);
+}
+
+void Display::flip() {
+    // Already handled by C3D_FrameEnd(0) in end_render()
+}
+
+// Input Handling via libctru
+void Display::process_keys() {
+    hidScanInput();
+    uint32_t held = hidKeysHeld();
+    uint32_t pressed = hidKeysDown();
+    uint32_t released = hidKeysUp();
+
+    auto map_key = [&](uint32_t k3ds, ogm_keycode_t kogm) {
+        g_key_down[kogm] = (held & k3ds);
+        g_key_pressed[kogm] = (pressed & k3ds);
+        g_key_released[kogm] = (released & k3ds);
+    };
+
+    map_key(KEY_A, vk_space);
+    map_key(KEY_B, vk_shift);
+    map_key(KEY_START, vk_enter);
+    map_key(KEY_SELECT, vk_escape);
+    map_key(KEY_UP | KEY_CPAD_UP, vk_up);
+    map_key(KEY_DOWN | KEY_CPAD_DOWN, vk_down);
+    map_key(KEY_LEFT | KEY_CPAD_LEFT, vk_left);
+    map_key(KEY_RIGHT | KEY_CPAD_RIGHT, vk_right);
+    map_key(KEY_L, vk_control);
+    map_key(KEY_R, vk_alt);
+
+    // Mouse / Touch
+    map_key(KEY_TOUCH, mb_left);
+    
+    touchPosition touch;
+    hidTouchRead(&touch);
+    // TODO: Map these to staticExecutor.m_mouse_x/y if accessible, 
+    // but for now we'll handle them in the GML mouse functions.
+    // The bottom screen is always 320x240.
+}
+
+// Basic Shape Drawing
+void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+    C2D_DrawRectSolid(x1, y1, 0, x2 - x1, y2 - y1, C2D_Color32(255, 255, 255, 255));
+}
+
+// 3DS Texture Allocation Helper
+void* Display_3DS_AllocTexture(uint32_t width, uint32_t height, GPU_TEXCOLOR format, C3D_Tex* out_tex) {
+    if (width > 1024 || height > 1024) {
+        fprintf(stderr, "[3DS GFX] CRITICAL: Texture size %lux%u exceeds hardware limit (1024x1024)!\n", width, height);
+        return nullptr;
+    }
+
+    // Allocate from Linear RAM (required for PICA200)
+    void* data = linearAlloc(width * height * 4); // Assuming RGBA8
+    if (!data) {
+        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes from Linear RAM\n", (uint32_t)(width * height * 4));
+        return nullptr;
+    }
+
+    C3D_TexInit(out_tex, width, height, format);
+    return data;
+}
+
+// Text Rendering via C2D_TextBuf
+void Display::draw_text(coord_t x, coord_t y, const char* text, real_t halign, real_t valign, bool use_max_width, coord_t max_width, bool use_sep, coord_t sep) {
+    C2D_Text c2dText;
+    C2D_TextParse(&c2dText, g_textBuf, text);
+    C2D_TextOptimize(&c2dText);
+    C2D_DrawText(&c2dText, C2D_WithColor, x, y, 0, 1.0f, 1.0f, C2D_Color32(255, 255, 255, 255));
+}
+
+
+
+// Linker Stubs for missing Display methods on 3DS
+void Display::set_matrix_view(real_t x, real_t y, real_t z, real_t w, real_t h) {}
+void Display::set_matrix_projection() {}
+void Display::set_matrix_model(real_t x, real_t y, real_t z, real_t w, real_t h) {}
+void Display::set_matrix_pre_model() {}
+void Display::check_error(const std::string& ctx) {}
+void Display::set_multisample(uint32_t s) {}
+void Display::delay(real_t ms) {}
+bool Display::window_close_requested() { return false; }
+uint32_t Display::make_vertex_format() { return 0; }
+void Display::vertex_format_append_attribute(uint32_t vf, VertexFormatAttribute attr) {}
+uint32_t Display::make_vertex_buffer(size_t size) { return 0; }
+void Display::add_vertex_buffer_data(uint32_t id, unsigned char* data, size_t length) {}
+void Display::freeze_vertex_buffer(uint32_t vb) {}
+void Display::render_buffer(uint32_t vb, TexturePage* tp, uint32_t glenum) {}
+void Display::bind_and_compile_shader(uint32_t s, const std::string& v, const std::string& f) {}
+geometry::AABB<coord_t> Display::get_viewable_aabb() { return {}; }
+void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t x, coord_t y, coord_t w, coord_t h, coord_t px, coord_t py, coord_t pw, coord_t ph) {}
+
+template<bool write>
+void Display::serialize(typename state_stream<write>::state_stream_t& s) {}
+template void Display::serialize<true>(typename state_stream<true>::state_stream_t& s);
+template void Display::serialize<false>(typename state_stream<false>::state_stream_t& s);
+
+geometry::Vector<real_t> Display::get_window_dimensions() { return {static_cast<real_t>(g_window_width), static_cast<real_t>(g_window_height)}; }
+void Display::set_target(TexturePage* tp) {}
+void Display::enable_view_projection(bool) {}
+void Display::associate_vertex_buffer_format(uint32_t vb, uint32_t vf) {}
+size_t Display::vertex_buffer_get_count(uint32_t id) { return 0; }
+size_t Display::vertex_buffer_get_size(uint32_t id) { return 0; }
+void Display::free_vertex_format(uint32_t id) {}
+void Display::vertex_format_finish(uint32_t id) {}
+void Display::free_vertex_buffer(uint32_t id) {}
+
+} // namespace ogm::interpreter
+
+#endif

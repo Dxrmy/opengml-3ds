@@ -164,7 +164,7 @@ void ogm::interpreter::fn::room_instance_add(VO out, V vr, V x, V y, V obj)
 
 void ogm::interpreter::fn::room_tile_add(VO out, V vr, V bg, V l, V t, V w, V h, V x, V y, V d)
 {
-    room_tile_add_ext(out, vr, bg, l, t, w, h, x, y, d, 1, 1, 1);
+    room_tile_add_ext(out, vr, bg, l, t, w, h, x, y, d, 1.0, 1.0, 1.0);
 }
 
 void ogm::interpreter::fn::room_tile_add_ext(VO out, V vr, V bg, V l, V t, V w, V h, V x, V y, V d, V xscale, V yscale, V alpha)

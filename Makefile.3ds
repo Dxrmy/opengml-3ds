@@ -1,0 +1,61 @@
+# OpenGML 3DS Makefile
+# Requires devkitARM, libctru, citro3d, citro2d
+
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+include $(DEVKITARM)/3ds_rules
+
+TARGET		:=	OpenGML
+SOURCES		:=	src/common src/ast src/bytecode src/interpreter src/interpreter/async src/interpreter/library src/interpreter/library/ogm src/interpreter/display src/sys src/project src/project/arf src/project/formats/arf src/project/formats/json src/project/formats/xml src/asset src/main external/pugixml external/fmt external/utf8 external/stb external/xbr
+INCLUDES	:=	include src external/include external/soloud/include
+
+ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2
+
+CFLAGS	:=	-g -O3 $(ARCH) -Wall -Werror=return-type -Wno-switch -D__3DS__ -DGFX_AVAILABLE -DOGM_STRUCT_SUPPORT -DOGM_FUNCTION_SUPPORT -DOGM_X32 -DOGM_GARBAGE_COLLECTOR=1 -DOGM_CAMERAS=1 -DFMT_USE_FCNTL=0 -DCPP_FILESYSTEM_ENABLED=1
+CXXFLAGS :=	$(CFLAGS) -std=c++17
+LDFLAGS	:=	$(ARCH)
+
+LIBS	:=	-lcitro2d -lcitro3d -lctru -lm
+LIBDIRS	:=	$(PORTLIBS) $(CTRULIB)
+
+# Add search paths for headers and source files
+VPATH	:=	$(SOURCES)
+IPATH	:=	$(addprefix -I,$(INCLUDES)) -I$(CTRULIB)/include -I$(PORTLIBS)/include -ID:/GitHub/vcpkg/installed/x64-windows/include
+
+# Collect all .cpp, .cc, and .c files in the specified directories
+CPP_FILES := $(foreach dir,$(SOURCES),$(wildcard $(dir)/*.cpp)) external/fmt/format.cc
+C_FILES   := $(foreach dir,$(SOURCES),$(wildcard $(dir)/*.c))
+PICA_FILES := $(foreach dir,$(SOURCES),$(wildcard $(dir)/*.v.pica))
+
+O_FILES   := $(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(CPP_FILES))) $(C_FILES:.c=.o) $(PICA_FILES:.v.pica=.shbin.o)
+
+.PHONY: all clean
+
+all: $(TARGET).3dsx
+
+$(TARGET).3dsx: $(TARGET).elf
+	@3dsxtool $< $@
+
+$(TARGET).elf: $(O_FILES)
+	$(CXX) $(LDFLAGS) -specs=3dsx.specs $^ -L$(PORTLIBS)/lib -L$(CTRULIB)/lib $(LIBS) -o $@
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(IPATH) -c $< -o $@
+
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) $(IPATH) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(IPATH) -c $< -o $@
+
+# Rule for PICA200 shaders
+%.shbin.o: %.v.pica
+	@echo "Assembling shader: $<"
+	@picasso -o $(basename $<).shbin $<
+	@bin2s -a 4 $(basename $<).shbin | $(AS) -o $@
+	@rm $(basename $<).shbin
+
+clean:
+	rm -f $(O_FILES) $(TARGET).elf $(TARGET).3dsx

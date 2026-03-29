@@ -52,7 +52,7 @@ void ogm::interpreter::fn::action_create_object_motion(VO out, V obj, V x, V y, 
 
 void ogm::interpreter::fn::action_create_object_random(VO out, V obj0, V obj1, V obj2, V obj3, V x, V y)
 {
-    irandom(out, 4);
+    irandom(out, 4.0);
     switch (out.castCoerce<size_t>())
     {
     case 0:

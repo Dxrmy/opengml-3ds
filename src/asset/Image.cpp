@@ -11,7 +11,7 @@ void Image::realize_data()
 {
     if (m_data == nullptr)
     {
-        int32_t width, height, channel_count;
+        int width, height, channel_count;
         m_data = stbi_load(m_path.c_str(), &width, &height, &channel_count, 4);
 
         if (!m_data)
@@ -44,7 +44,7 @@ void Image::load_from_memory(const unsigned char* data, size_t len)
 {
     if (m_data == nullptr)
     {
-        int32_t width, height, channel_count;
+        int width, height, channel_count;
         m_data = stbi_load_from_memory(data, len, &width, &height, &channel_count, 4);
 
         if (!m_data)

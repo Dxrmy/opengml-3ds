@@ -68,7 +68,7 @@ void ogm::interpreter::fn::network_connect(VO out, V socket, V url, V port)
         port.castCoerce<port_t>()
     )
         ? 0
-        : -1;
+        : -1.0;
 }
 
 void ogm::interpreter::fn::network_connect_raw(VO out, V socket, V url, V port)
@@ -80,7 +80,7 @@ void ogm::interpreter::fn::network_connect_raw(VO out, V socket, V url, V port)
         port.castCoerce<port_t>()
     )
         ? 0
-        : -1;
+        : -1.0;
 }
 
 void ogm::interpreter::fn::network_send_raw(VO out, V socket, V buffer, V size)

@@ -93,14 +93,14 @@ void ogm::interpreter::fn::d3d_model_primitive_begin(VO out, V id, V glenum)
 void ogm::interpreter::fn::d3d_model_vertex(VO out, V x, V y, V z)
 {
     fn::vertex_position_3d(out, g_current_vbo, x, y, z);
-    fn::vertex_colour(out, g_current_vbo, 0xffffff, 1.0);
-    fn::vertex_texcoord(out, g_current_vbo, 0, 0);
+    fn::vertex_colour(out, g_current_vbo, static_cast<real_t>(0xffffff), 1.0);
+    fn::vertex_texcoord(out, g_current_vbo, 0.0, 0.0);
 }
 
 void ogm::interpreter::fn::d3d_model_vertex_texture(VO out, V x, V y, V z, V u, V v)
 {
     fn::vertex_position_3d(out, g_current_vbo, x, y, z);
-    fn::vertex_colour(out, g_current_vbo, 0xffffff, 1.0);
+    fn::vertex_colour(out, g_current_vbo, static_cast<real_t>(0xffffff), 1.0);
     fn::vertex_texcoord(out, g_current_vbo, u, v);
 }
 
@@ -108,7 +108,7 @@ void ogm::interpreter::fn::d3d_model_vertex_colour(VO out, V x, V y, V z, V colo
 {
     fn::vertex_position_3d(out, g_current_vbo, x, y, z);
     fn::vertex_colour(out, g_current_vbo, colour, alpha);
-    fn::vertex_texcoord(out, g_current_vbo, 0, 0);
+    fn::vertex_texcoord(out, g_current_vbo, 0.0, 0.0);
 }
 
 

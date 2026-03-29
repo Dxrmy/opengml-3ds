@@ -26,7 +26,7 @@ namespace
     void get_uvs(VO out, TextureView* texture)
     {
         // initialize
-        out.array_get(OGM_2DARRAY_DEFAULT_ROW 7) = 0;
+        out.array_get(OGM_2DARRAY_DEFAULT_ROW 7) = 0.0;
 
         // fill array
         out.array_get(OGM_2DARRAY_DEFAULT_ROW 0) = texture->m_uv.left();
@@ -35,10 +35,10 @@ namespace
         out.array_get(OGM_2DARRAY_DEFAULT_ROW 3) = texture->m_uv.bottom();
 
         // TODO: fix these placeholder values
-        out.array_get(OGM_2DARRAY_DEFAULT_ROW 4) = 0;
-        out.array_get(OGM_2DARRAY_DEFAULT_ROW 5) = 0;
-        out.array_get(OGM_2DARRAY_DEFAULT_ROW 6) = 1;
-        out.array_get(OGM_2DARRAY_DEFAULT_ROW 7) = 1;
+        out.array_get(OGM_2DARRAY_DEFAULT_ROW 4) = 0.0;
+        out.array_get(OGM_2DARRAY_DEFAULT_ROW 5) = 0.0;
+        out.array_get(OGM_2DARRAY_DEFAULT_ROW 6) = 1.0;
+        out.array_get(OGM_2DARRAY_DEFAULT_ROW 7) = 1.0;
     }
 }
 

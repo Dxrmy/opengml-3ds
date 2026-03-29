@@ -1826,3 +1826,9 @@ void matrix_to_variable(const matrix_t& matrix, Variable& out)
 }
 
 }}
+
+#ifdef __3DS__
+namespace ogm { namespace interpreter {
+template unsigned int Variable::castCoerce<unsigned int>() const;
+} }
+#endif

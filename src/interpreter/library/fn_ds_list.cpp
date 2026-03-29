@@ -184,7 +184,7 @@ void ogm::interpreter::fn::ds_list_set(VO out, V vindex, V vlindex, V val)
         size_t zero_count = lindex - list.m_size;
         while (zero_count--)
         {
-            iter = list.m_data.emplace_after(iter, 0);
+            iter = list.m_data.emplace_after(iter, 0.0);
         }
 
         // append element.

@@ -111,7 +111,7 @@ void ogm::interpreter::fn::clamp(VO out, V val, V min, V max)
 
 void ogm::interpreter::fn::lerp(VO out, V a, V b, V amt)
 {
-  if (amt < 0)
+  if (amt < 0.0)
     out.copy(a);
   if (amt >= b)
     out.copy(b);

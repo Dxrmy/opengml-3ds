@@ -3,6 +3,7 @@
 
 #include "external.h"
 #include "shltype.h"
+#include "ogm/interpreter/Executor.hpp"
 
     #ifdef OGM_WIN32_NT_FIX
         // this seems to be necessary to use the SetDllDirectoryA function.
@@ -14,9 +15,17 @@
         // include moved here otherwise we get ambiguous function call errors for _InterlockedExchange
         #include <windows.h>
     #else
+        #ifndef NOMINMAX
+        #define NOMINMAX
+        #endif
         #include <windows.h>
         #include <winbase.h>
     #endif
+
+namespace ogm::interpreter
+{
+    extern Executor staticExecutor;
+}
 
 namespace ogm::interpreter::ffi
 {
@@ -51,24 +60,23 @@ external_id_t external_define_impl(const char* path, const char* fnname, CallTyp
 
     if (g_path_to_dll.find(path) == g_path_to_dll.end())
     {
-        ed.m_dl = LoadLibrary(TEXT(path));
-        g_path_to_dll[path] = ed.m_dl;
-        g_dll_refc[ed.m_dl] = 1;
+        ed.m_dl = LoadLibrary(path);
+        g_path_to_dll[path] = (void*)ed.m_dl;
+        g_dll_refc[(void*)ed.m_dl] = 1;
     }
     else
     {
-        ed.m_dl = g_path_to_dll[path];
-        ++g_dll_refc[ed.m_dl];
+        ed.m_dl = (HINSTANCE)g_path_to_dll[path];
+        ++g_dll_refc[(void*)ed.m_dl];
     }
 
     if (ed.m_dl)
     {
-        ed.m_dl_fn_address = GetProcAddress(ed.m_dl, fnname);
-        if (ed.m_dl_fn_address)
+        ed.m_dll_fn_address = GetProcAddress(ed.m_dl, fnname);
+        if (ed.m_dll_fn_address)
         {
             external_id_t id = get_next_id();
             g_dlls[id] = ed;
-            ogm_assert(g_dlls.find(id) != g_dlls.end());
             return id;
         }
         else
@@ -85,7 +93,7 @@ external_id_t external_define_impl(const char* path, const char* fnname, CallTyp
 void* external_get_fn_impl(external_id_t id)
 {
     ExternalDefinition& ed = g_dlls.at(id);
-    return reinterpret_cast<void*>(ed.m_dl_fn_address);
+    return reinterpret_cast<void*>(ed.m_dll_fn_address);
 }
 
 void external_free_impl(external_id_t id)
@@ -93,12 +101,15 @@ void external_free_impl(external_id_t id)
     auto iter = g_dlls.find(id);
     if (iter != g_dlls.end())
     {
-        if (--g_dll_refc[std::get<1>(*iter).m_dl] == 0)
+        if (std::get<1>(*iter).m_dl)
         {
-            FreeLibrary(std::get<1>(*iter).m_dl);
-            g_path_to_dll.erase(std::get<1>(*iter).m_dl_path);
+            if (--g_dll_refc[(void*)std::get<1>(*iter).m_dl] == 0)
+            {
+                FreeLibrary(std::get<1>(*iter).m_dl);
+                g_path_to_dll.erase(std::get<1>(*iter).m_dl_path);
+            }
+            g_dlls.erase(iter);
         }
-        g_dlls.erase(iter);
     }
 }
 

@@ -1,7 +1,7 @@
 #include "ogm/sys/util_sys.hpp"
 #include "fs_share.hpp"
 
-#if defined(__unix__) || defined(__APPLE__)
+#if defined(__unix__) || defined(__APPLE__) || defined(__3DS__)
 
 #ifdef __APPLE__
     // for _NSGetExecutablePath
@@ -12,39 +12,33 @@
 #include <unistd.h>
 
 #ifndef CPP_FILESYSTEM_ENABLED
-  #error std::filesystem support required for unix build
+  // #error std::filesystem support required for unix build
 #endif
 
 #include <glob.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 namespace ogm {
 
 void sleep(int32_t ms)
 {
-    if (ms < 0)
-    {
-        ms = 0;
-    }
-    usleep(ms * 1000);
+    if (ms < 0) ms = 0;
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 bool is_terminal()
 {
+#ifdef __3DS__
+    return false;
+#else
     static int result = -1;
-
     if (result >= 0) return result;
-
-    if (isatty(fileno(stdin)))
-    {
-        result = 1;
-    }
-    else
-    {
-        result = 0;
-    }
-
+    if (isatty(fileno(stdin))) result = 1;
+    else result = 0;
     return result;
+#endif
 }
 
 static bool terminal_colours_enabled = false;
@@ -67,6 +61,9 @@ void restore_terminal_colours()
 // returns path to the directory containing the executable.
 std::string get_binary_directory()
 {
+#ifdef __3DS__
+    return "sdmc:/3ds/OpenGML/";
+#else
     #ifdef __APPLE__
     uint32_t
     #else
@@ -104,6 +101,7 @@ std::string get_binary_directory()
         throw MiscError("get_binary_directory() failed: insufficient size");
         #endif
     }
+#endif
 }
 
 }

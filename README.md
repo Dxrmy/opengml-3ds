@@ -1,6 +1,12 @@
-# OpenGML
+# OpenGML (3DS Port)
 
 <p align="center"><img src="./etc/logo-alpha-small.png" /></p>
+
+> **Note:** This repository is an active port of OpenGML for the Nintendo 3DS, specifically targeting the Old 3DS hardware.
+> The core interpreter has been heavily optimized for the ARM11 CPU, and graphics are handled natively via `citro3d` and `citro2d`.
+> For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
+>
+> 3DS Port maintained by [Dxrmy](https://github.com/Dxrmy).
 
 [![Github Action Build Status](https://img.shields.io/github/workflow/status/maiple/opengml/Build?svg=true)](https://github.com/maiple/opengml/actions)
 [![License](https://img.shields.io/github/license/maiple/opengml?svg=true)](./LICENSE)

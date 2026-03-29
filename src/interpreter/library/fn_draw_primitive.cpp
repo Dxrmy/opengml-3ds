@@ -70,7 +70,7 @@ void ogm::interpreter::fn::draw_vertex(VO out, V x, V y)
 
 void ogm::interpreter::fn::draw_vertex_colour(VO out, V x, V y, V col, V alpha)
 {
-    draw_vertex_texture_colour(out, x, y, 0, 0, col, alpha);
+    draw_vertex_texture_colour(out, x, y, 0.0, 0.0, col, alpha);
 }
 
 void ogm::interpreter::fn::draw_vertex_texture(VO out, V x, V y, V u, V v)

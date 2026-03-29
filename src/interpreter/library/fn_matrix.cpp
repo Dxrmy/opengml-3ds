@@ -93,7 +93,7 @@ void ogm::interpreter::fn::matrix_build(VO out, V x, V y, V z, V xa, V ya, V za,
         {
             rm.array_get(OGM_2DARRAY_DEFAULT_ROW i - 1) = static_cast<real_t>(0);
         }
-        rm.array_get(axis, axis) = 1;
+        rm.array_get(axis, axis) = 1.0;
         rm.array_get(OGM_2DARRAY_DEFAULT_ROW 0 + (axis == 0) + 4*(0 + (axis == 0))) = std::cos(theta);
         rm.array_get(OGM_2DARRAY_DEFAULT_ROW 0 + (axis == 0) + 4*(1 + (axis != 2))) = std::sin(theta);
         rm.array_get(OGM_2DARRAY_DEFAULT_ROW 1 + (axis != 2) + 4*(0 + (axis == 0))) = -std::sin(theta);

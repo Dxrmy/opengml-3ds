@@ -27,13 +27,13 @@ void ogm::interpreter::fn::ds_grid_create(VO out, V w, V h)
 
     DSGrid& grid = dsgm.ds_get(index);
     grid.m_data.reserve(width);
-    for (size_t i = 0; i < width; ++i)
+    for (size_t i = 0.0; i < width; ++i)
     {
         grid.m_data.emplace_back();
         grid.m_data.back().reserve(height);
-        for (size_t j = 0; j < height; ++j)
+        for (size_t j = 0.0; j < height; ++j)
         {
-            grid.m_data.back().emplace_back(0);
+            grid.m_data.back().emplace_back(0.0);
         }
     }
 
@@ -82,7 +82,7 @@ void ogm::interpreter::fn::ds_grid_get(VO out, V i, V _x, V _y)
     if (x >= grid.m_data.size() || y >= grid.m_data.at(x).size())
     {
         // TODO: *carefully* approve this value.
-        out = -1;
+        out = -1.0;
         return;
     }
 
@@ -126,12 +126,12 @@ void ogm::interpreter::fn::ds_grid_resize(VO out, V i, V _w, V _h)
     size_t h = _h.castCoerce<size_t>();
     
     grid.m_data.resize(w);
-    for (size_t x = 0; x < grid.m_data.size(); ++x)
+    for (size_t x = 0.0; x < grid.m_data.size(); ++x)
     {
         grid.m_data.at(x).resize(h);
         for (size_t y = x >= grid.m_width ? 0 : grid.m_height; y < h; ++y)
         {
-            grid.m_data.at(x).at(y) = 0;
+            grid.m_data.at(x).at(y) = 0.0;
         }
     }
     

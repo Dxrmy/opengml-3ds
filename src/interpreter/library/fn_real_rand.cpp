@@ -75,7 +75,7 @@ void ogm::interpreter::fn::choose(VO out, byte n, const Variable* v)
 
 void ogm::interpreter::fn::irandom(VO out, V v)
 {
-    if (v < 0)
+    if (v < 0.0)
     {
         throw UnknownIntendedBehaviourError("irandom() on negative range");
     }

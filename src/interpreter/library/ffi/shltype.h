@@ -9,11 +9,11 @@ namespace ogm::interpreter::ffi
     struct SharedLibraryType
     {
         enum {
-            ERROR,
-            WINDOWS,
-            UNIX,
-            APPLE,
-        } os = ERROR;
+            OS_ERROR,
+            OS_WINDOWS,
+            OS_UNIX,
+            OS_APPLE,
+        } os = OS_ERROR;
         
         enum {
             UNKNOWN,
@@ -29,15 +29,15 @@ namespace ogm::interpreter::ffi
         bool osmatch() const
         {
             #if defined(__unix__)
-            return os == UNIX;
+            return os == OS_UNIX;
             #endif
             
             #if defined(_WIN32) || defined(WIN32)
-            return os == WINDOWS;
+            return os == OS_WINDOWS;
             #endif
             
             #if defined(__APPLE__)
-            return os == APPLE;
+            return os == OS_APPLE;
             #endif
             
             return false;
@@ -53,7 +53,7 @@ namespace ogm::interpreter::ffi
             if (platmatch()) return true;
             
             #if defined(EMBED_ZUGBRUECKE) && defined(PYTHON)
-            if (os == WINDOWS && zugbruecke_init())
+            if (os == OS_WINDOWS && zugbruecke_init())
             {
                 return true;
             }

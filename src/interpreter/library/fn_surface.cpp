@@ -52,7 +52,7 @@ void ogm::interpreter::fn::surface_get_width(VO out, V vid)
     }
     else
     {
-        out = 0;
+        out = 0.0;
     }
 }
 
@@ -66,7 +66,7 @@ void ogm::interpreter::fn::surface_get_height(VO out, V vid)
     }
     else
     {
-        out = 0;
+        out = 0.0;
     }
 }
 
@@ -82,7 +82,7 @@ void ogm::interpreter::fn::surface_getpixel_ext(VO out, V vid, V vx, V vy)
 
     if (!tpage)
     {
-        out = 0;
+        out = 0.0;
         return;
     }
 
@@ -100,7 +100,7 @@ void ogm::interpreter::fn::surface_getpixel_ext(VO out, V vid, V vx, V vy)
 void ogm::interpreter::fn::surface_getpixel(VO out, V vid, V vx, V vy)
 {
     surface_getpixel_ext(out, vid, vx, vy);
-    out &= 0xffffff;
+    out &= static_cast<uint32_t>(0xffffff);
     out = out.castCoerce<real_t>();
 }
 

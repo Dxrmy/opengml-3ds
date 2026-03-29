@@ -516,7 +516,7 @@ inline T* alloc(size_t size=1)
 }
 
 // https://stackoverflow.com/a/40766163
-inline char* _strdup (const char* s)
+inline char* ogm_strdup (const char* s)
 {
   size_t slen = strlen(s);
   char* result = (alloc<char>(slen + 1));
