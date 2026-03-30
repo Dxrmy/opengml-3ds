@@ -89,7 +89,7 @@ Image Image::cropped(const geometry::AABB<int32_t>& region)
     c.m_data = (uint8_t*) malloc(c.m_dimensions.area() * 4);
     
     // copy data
-    for (size_t y = region.top(); y < region.bottom(); ++y)
+    for (int32_t y = region.top(); y < region.bottom(); ++y)
     {
         uint8_t* src_start = m_data + 4 * (
             region.left() + m_dimensions.x * y
@@ -126,9 +126,9 @@ Image Image::rotated(real_t angle, geometry::Vector<real_t>& io_centre)
     memset(c.m_data, 0, c.m_dimensions.area() * 4);
     
     // copy pixels in.
-    for (size_t y = 0; y < c.m_dimensions.y; ++y)
+    for (int32_t y = 0; y < c.m_dimensions.y; ++y)
     {
-        for (size_t x = 0; x < c.m_dimensions.x; ++x)
+        for (int32_t x = 0; x < c.m_dimensions.x; ++x)
         {
             geometry::Vector<real_t> rdst{x + 0.5f, y + 0.5f };
             geometry::Vector<real_t> delta = rdst - o_centre;
@@ -163,12 +163,12 @@ Image Image::scaled(double sx, double sy)
     c.m_data = (uint8_t*) malloc(c.m_dimensions.area() * 4);
     
     // copy data
-    for (size_t y = 0; y < c.m_dimensions.y; ++y)
+    for (int32_t y = 0; y < c.m_dimensions.y; ++y)
     {
         int32_t src_y = y / sy;
         while (src_y < 0) src_y += m_dimensions.y;
         if (src_y >= m_dimensions.y) src_y = m_dimensions.y - 1;
-        for (size_t x = 0; x < c.m_dimensions.x; ++x)
+        for (int32_t x = 0; x < c.m_dimensions.x; ++x)
         {
             int32_t src_x = x / sx;
             while (src_x < 0) src_x += m_dimensions.x;

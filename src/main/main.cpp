@@ -46,8 +46,18 @@
 using namespace std;
 using namespace ogm;
 
+#ifdef __3DS__
+#include <3ds.h>
+u32 __stacksize__ = 1024 * 1024;
+#endif
+
 int umain (int argn, char** argv)
 {
+    #ifdef __3DS__
+    gfxInitDefault();
+    consoleInit(GFX_TOP, NULL);
+    #endif
+
     #if defined(EMSCRIPTEN)
     // substitute in dummy argments
     if (argn <= 1)
@@ -256,6 +266,13 @@ int umain (int argn, char** argv)
           std::cout << "Please run from a console for more options." << std::endl;
           ogm::sleep(500);
       }
+#ifdef __3DS__
+      filename = "sdmc:/3ds/OpenGML/test.project.gmx";
+      filename_index = 1;
+      compile = true;
+      execute = true;
+      std::cout << "3DS Fallback: Loading " << filename << std::endl;
+#else
       std::cout << "Opening popup window..." << std::endl;
       ogm::interpreter::Variable filter = "project file|*.project.gmx;*.project.ogm;*.yyp";
       ogm::interpreter::Variable fname = "";
@@ -284,13 +301,21 @@ int umain (int argn, char** argv)
       filter.cleanup();
       fname.cleanup();
       selected.cleanup();
+#endif
   }
   else
   {
       if (filename_index == -1)
       {
+          #ifdef __3DS__
+          filename = "sdmc:/3ds/OpenGML/test.project.gmx";
+          filename_index = 1;
+          compile = true;
+          execute = true;
+          #else
           std::cout << "Basic usage: " << argv[0] << " [--execute] [--dis] [--ast] [--gui] [--debug] [--rdebug] [--compile] [--single-thread] [--verbose] [--cache] [--show-license] file [parameters...]" << std::endl;
           exit(0);
+          #endif
       }
       else
       {

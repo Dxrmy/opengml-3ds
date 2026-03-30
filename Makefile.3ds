@@ -8,7 +8,7 @@ endif
 include $(DEVKITARM)/3ds_rules
 
 TARGET		:=	OpenGML
-SOURCES		:=	src/common src/ast src/bytecode src/interpreter src/interpreter/async src/interpreter/library src/interpreter/library/ogm src/interpreter/display src/sys src/project src/project/arf src/project/formats/arf src/project/formats/json src/project/formats/xml src/asset src/main external/pugixml external/fmt external/utf8 external/stb external/xbr
+SOURCES		:=	src/common src/ast src/bytecode src/interpreter src/interpreter/async src/interpreter/library src/interpreter/library/ogm src/interpreter/library/ogm/3D src/interpreter/display src/sys src/project src/project/arf src/project/formats/arf src/project/formats/json src/project/formats/xml src/asset src/main external/pugixml external/fmt external/utf8 external/stb external/xbr external/base64 external/md5
 INCLUDES	:=	include src external/include external/soloud/include
 
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2

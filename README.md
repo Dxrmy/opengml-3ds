@@ -1,26 +1,49 @@
-# OpenGML (3DS Port)
+<div align="center">
+  <img src="./etc/logo-alpha.png" alt="OpenGML Icon" width="128" />
+  <h1>OpenGML (3DS Port)</h1>
+  <p>
+    <strong>GML 1.4 Interpreter Ported to Nintendo 3DS</strong>
+  </p>
+  
+  ![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat&logo=c%2B%2B)
+  ![Platform](https://img.shields.io/badge/Platform-Nintendo%203DS-red)
+  ![Status](https://img.shields.io/badge/Status-Active%20Port-success)
+  [![License](https://img.shields.io/github/license/maiple/opengml?style=flat&color=green)](./LICENSE)
 
-<p align="center"><img src="./etc/logo-alpha-small.png" /></p>
+  <br />
+</div>
 
-> **Note:** This repository is an active port of OpenGML for the Nintendo 3DS, specifically targeting the Old 3DS hardware.
-> The core interpreter has been heavily optimized for the ARM11 CPU, and graphics are handled natively via `citro3d` and `citro2d`.
-> For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
->
-> 3DS Port maintained by [Dxrmy](https://github.com/Dxrmy).
+**OpenGML** is a free, open-source, cross-platform interpreter for GameMaker: Studio 1.4. This specific branch is a dedicated native port to the Nintendo 3DS, heavily optimized for the Old 3DS's ARM11 hardware.
 
-[![Github Action Build Status](https://img.shields.io/github/workflow/status/maiple/opengml/Build?svg=true)](https://github.com/maiple/opengml/actions)
-[![License](https://img.shields.io/github/license/maiple/opengml?svg=true)](./LICENSE)
-[![Discord](https://img.shields.io/discord/708407305833676960?svg=true)](https://discord.gg/3aztsGj)
+> **⚠️ Current Port Status**: The core logic, memory manager (`linearAlloc`), and bytecode interpreter are fully ported and running natively. The engine successfully parses GML `.project.gmx` files on the 3DS. However, native `citro2d` / `citro3d` rendering is currently **pending implementation**. You will not see graphical output yet!
 
-**Download**: [Nightly](https://github.com/maiple/opengml/actions/workflows/build.yml). (Select a workflow, scroll down to artifacts. May require logging into Github to click the links. Better download link TBD.)
+## 🚧 Roadmap & Todo
+State of the 3DS Port as of latest push:
+
+- [x] **Core Interpreter**: C++17 bytecode interpreter ported to `devkitARM`.
+- [x] **Optimizations**: GCC Computed Gotos implemented for ARM11 performance.
+- [x] **Memory Management**: 3DS-specific Garbage Collector tuning and `linearAlloc` integration for PICA200 compatibility.
+- [x] **Build System**: SCons replaced with native 3DS `Makefile.3ds`.
+- [ ] **Display Backend**:
+    - [ ] `citro3d` render loop initialization.
+    - [ ] `citro2d` basic shape and sprite rendering.
+    - [ ] Hardware blend modes via `C3D_TexEnv`.
+- [ ] **Input System**: `hid` keys mapped to GML `vk_` constants.
+- [ ] **Audio**: `ndsp` raw PCM buffer implementation.
+
+For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
+
+<p align="center"><img src="./etc/example-game.gif" /></p>
+
+---
+
+### Original Project Information
 
 **What this is**: a free, open-source, cross-platform interpreter for GML 1.4 (with experimental support for GML 2.0), everyone's favourite game development language and toolkit. **It's easy**: `ogm ./MyGame.project.gmx` in any terminal and your game will launch.
 
 **What this is not**: an IDE or graphical user interface. If you want to OpenGML for development, you must write your code, draw your sprites, and tile your rooms with your own preferred software. Recommendations are provided in the "[Other Software](#Other%20Software)" section below.
 
-<p align="center"><img src="./etc/example-game.gif" /></p>
-
-## Getting Started
+## Getting Started (PC)
 
 - **Use**: To get started running an existing GML project or a new project, see the [Quickstart guide](./etc/QUICKSTART.md).
 - **Debug**: Try `ogm --debug MyGame.project.gmx`

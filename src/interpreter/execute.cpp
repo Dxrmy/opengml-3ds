@@ -2490,7 +2490,7 @@ bool execute_bytecode_loop()
 
                     // pop argc, argv
                     nostack uint8_t argc;
-                    argc = staticExecutor.popRef().castExact<size_t>();
+                    argc = staticExecutor.popRef().castExact<uint64_t>();
                     ogm_assert(argc < 256); // assertion can be removed if this turns out to be a problem
                     for (i = 0; i < argc; ++i)
                     {

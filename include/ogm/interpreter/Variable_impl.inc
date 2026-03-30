@@ -306,6 +306,12 @@ inline_if_ndebug int32_t Variable::castCoerce() const
 }
 
 template<>
+inline_if_ndebug int Variable::castCoerce() const
+{
+    return castCoerce<int32_t>();
+}
+
+template<>
 inline_if_ndebug const int32_t& Variable::coerce()
 {
     switch(m_tag)
@@ -434,6 +440,12 @@ inline_if_ndebug int64_t Variable::castCoerce() const
 
 template<>
 inline_if_ndebug uint32_t Variable::castCoerce() const
+{
+    return castCoerce<uint64_t>();
+}
+
+template<>
+inline_if_ndebug unsigned int Variable::castCoerce() const
 {
     return castCoerce<uint64_t>();
 }

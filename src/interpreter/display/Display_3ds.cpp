@@ -269,6 +269,105 @@ void Display::free_vertex_format(uint32_t id) {}
 void Display::vertex_format_finish(uint32_t id) {}
 void Display::free_vertex_buffer(uint32_t id) {}
 
+float Display::get_alpha() { return 1.0f; }
+void Display::set_alpha(float a) {}
+uint32_t Display::get_colour() { return 0xffffffff; }
+void Display::set_colour(uint32_t c) {}
+
+matrix_t Display::get_matrix_view() { return {}; }
+matrix_t Display::get_matrix_model() { return {}; }
+matrix_t Display::get_matrix_projection() { return {}; }
+void Display::set_matrix_view(matrix_t) {}
+void Display::set_matrix_model(matrix_t) {}
+void Display::set_matrix_projection(matrix_t) {}
+void Display::set_matrix_pre_model(coord_t x, coord_t y, coord_t xscale, coord_t yscale, real_t angle) {}
+
+// Transform stack (not natively in Display.hpp? Or maybe added recently)
+// Adding stubs just in case they are declared somewhere or used
+bool Display::transform_stack_push() { return true; }
+bool Display::transform_stack_pop() { return true; }
+void Display::transform_apply_translation(real_t x, real_t y, real_t z) {}
+
+model_id_t Display::model_make() { return 0; }
+void Display::model_free(model_id_t) {}
+void Display::model_draw(model_id_t, TexturePage*) {}
+uint32_t Display::model_get_vertex_format(model_id_t) { return 0; }
+void Display::model_add_vertex_buffer(model_id_t, uint32_t, uint32_t) {}
+
+void Display::use_shader(uint32_t) {}
+int32_t Display::shader_get_uniform_id(uint32_t, const std::string&) { return -1; }
+void Display::shader_set_uniform_f(int32_t, int, float*) {}
+
+void Display::clear_keys() {}
+bool Display::get_key_down(ogm_keycode_t k) { return g_key_down[k]; }
+bool Display::get_key_pressed(ogm_keycode_t k) { return g_key_pressed[k]; }
+bool Display::get_key_released(ogm_keycode_t k) { return g_key_released[k]; }
+bool Display::get_key_direct(ogm_keycode_t k) { return g_key_down[k]; }
+ogm_keycode_t Display::get_current_key() { return 0; }
+real_t Display::get_key_last() { return 0; }
+void Display::set_key_last(real_t) {}
+const std::string& Display::get_char_last() { static std::string s; return s; }
+void Display::set_char_last(std::string&&) {}
+
+bool Display::get_joysticks_supported() { return false; }
+size_t Display::get_joystick_max() { return 0; }
+bool Display::get_joystick_connected(size_t index) { return false; }
+std::string Display::get_joystick_name(size_t index) { return ""; }
+size_t Display::get_joystick_axis_count(size_t index) { return 0; }
+real_t Display::get_joystick_axis_value(size_t index, size_t axis_index) { return 0; }
+size_t Display::get_joystick_button_count(size_t index) { return 0; }
+bool Display::get_joystick_button_down(size_t index, size_t b) { return false; }
+bool Display::get_joystick_button_pressed(size_t index, size_t b) { return false; }
+bool Display::get_joystick_button_released(size_t index, size_t b) { return false; }
+
+void Display::draw_image(TextureView*, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2) {}
+void Display::draw_image(TextureView*, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3, coord_t y3, coord_t x4, coord_t y4, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2, coord_t tx3, coord_t ty3, coord_t tx4, coord_t ty4) {}
+
+uint32_t Display::get_colour4() { return 0xffffffff; }
+void Display::set_colours4(uint32_t[4]) {}
+void Display::get_colours4(uint32_t*) {}
+
+void Display::write_vertex(float*, coord_t, coord_t, coord_t, uint32_t, coord_t, coord_t) const {}
+uint32_t Display::get_vertex_size() const { return 0; }
+void Display::render_array(size_t, float*, TexturePage*, uint32_t) {}
+void Display::draw_outline_rectangle(coord_t, coord_t, coord_t, coord_t) {}
+void Display::draw_filled_circle(coord_t, coord_t, coord_t) {}
+void Display::draw_outline_circle(coord_t, coord_t, coord_t) {}
+void Display::draw_fill_colour(uint32_t) {}
+void Display::set_circle_precision(uint32_t) {}
+void Display::set_colour_mask(bool, bool, bool, bool) {}
+void Display::set_depth_test(bool) {}
+void Display::set_culling(bool) {}
+void Display::set_zwrite(bool) {}
+void Display::transform_identity() {}
+void Display::transform_apply(std::array<float, 16>) {}
+void Display::transform_apply_rotation(real_t, real_t, real_t, real_t) {}
+void Display::transform_stack_clear() {}
+bool Display::transform_stack_empty() { return true; }
+bool Display::transform_stack_top() { return true; }
+bool Display::transform_stack_discard() { return true; }
+void Display::transform_vertex(std::array<double, 3>&) {}
+void Display::transform_vertex_mv(std::array<double, 3>&) {}
+void Display::transform_vertex_mvp(std::array<double, 3>&) {}
+void Display::set_camera(coord_t, coord_t, coord_t, coord_t, coord_t, coord_t, coord_t, coord_t, coord_t, real_t, real_t, coord_t, coord_t) {}
+void Display::set_camera_ortho(real_t, real_t, real_t, real_t, real_t) {}
+void Display::set_fog(bool, real_t, real_t, uint32_t) {}
+void Display::set_window_position(real_t, real_t) {}
+void Display::set_window_size(real_t, real_t) {}
+geometry::Vector<real_t> Display::get_display_dimensions() { return {0, 0}; }
+uint32_t Display::get_clear_colour() { return 0; }
+void Display::set_clear_colour(uint32_t) {}
+geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {0, 0}; }
+geometry::Vector<real_t> Display::get_mouse_coord() { return {0, 0}; }
+void Display::set_vsync(bool) {}
+void Display::set_font(asset::AssetFont*, TextureView*) {}
+void Display::disable_scissor() {}
+void Display::enable_scissor(real_t, real_t, real_t, real_t) {}
+void Display::set_blending_enabled(bool) {}
+void Display::set_interpolation_linear(bool) {}
+
 } // namespace ogm::interpreter
+
+
 
 #endif

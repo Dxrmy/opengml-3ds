@@ -46,7 +46,7 @@ std::string input(const char* prompt, input_completer_t completer)
 
 #else
 
-std::string input(const char* prompt, char** (*completer)(const char* text, int start, int end))
+std::string input(const char* prompt, input_completer_t completer)
 {
     std::cout << prompt << std::flush;
     std::string _input;
