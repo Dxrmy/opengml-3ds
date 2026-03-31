@@ -61,6 +61,8 @@ int umain (int argn, char** argv)
     C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
     C2D_Prepare();
     consoleInit(GFX_BOTTOM, NULL);
+    consoleDebugInit(debugDevice_SVC);
+    std::cout << "LOGGING SYSTEM ONLINE: Citra should see this!" << std::endl;
     #endif
 
     #if defined(EMSCRIPTEN)
@@ -272,7 +274,7 @@ int umain (int argn, char** argv)
           ogm::sleep(500);
       }
 #ifdef __3DS__
-      filename = "sdmc:/3ds/OpenGML/test.project.gmx";
+      filename = "sdmc:/3ds/OpenGML/data.win";
       filename_index = 1;
       compile = true;
       execute = true;
@@ -313,7 +315,7 @@ int umain (int argn, char** argv)
       if (filename_index == -1)
       {
           #ifdef __3DS__
-          filename = "sdmc:/3ds/OpenGML/test.project.gmx";
+          filename = "sdmc:/3ds/OpenGML/data.win";
           filename_index = 1;
           compile = true;
           execute = true;
@@ -333,6 +335,19 @@ int umain (int argn, char** argv)
       std::cout << "build and gui mode are mutually exclusive." << std::endl;
       exit(1);
   }
+
+  #ifdef __3DS__
+  std::cout << "DEBUG: Filename is " << filename << std::endl;
+  {
+      FILE* f = fopen(filename.c_str(), "rb");
+      if (f) {
+          std::cout << "DEBUG: File found!" << std::endl;
+          fclose(f);
+      } else {
+          std::cout << "DEBUG: FILE NOT FOUND!" << std::endl;
+      }
+  }
+  #endif
 
   ogm::interpreter::staticExecutor.m_frame.m_config.m_cache = cache;
   ogm::interpreter::staticExecutor.m_frame.m_config.m_parallel_compile = !single_thread_compile;
@@ -460,7 +475,19 @@ int umain (int argn, char** argv)
               project.ignore_asset(name);
           }
 
+          std::cout << "Attempting to load: " << filename << std::endl;
           project.process();
+          
+          #ifdef __3DS__
+          std::cout << "DEBUG: project.process() returned." << std::endl;
+          std::cout << "Press START to continue." << std::endl;
+          while (aptMainLoop()) {
+              gspWaitForVBlank();
+              gfxSwapBuffers();
+              hidScanInput();
+              if (hidKeysDown() & KEY_START) break;
+          }
+          #endif
 
           // set command-line definitions
           for (auto& [name, value] : defines)
@@ -669,6 +696,16 @@ int umain (int argn, char** argv)
           #endif
       }
   }
+
+  #ifdef __3DS__
+  std::cout << "\n--- ENGINE STOPPED ---" << std::endl;
+  std::cout << "Press START to close the app." << std::endl;
+  while(aptMainLoop()) {
+      hidScanInput();
+      if (hidKeysDown() & KEY_START) break;
+      gfxSwapBuffers();
+  }
+  #endif
 
   return 0;
 }

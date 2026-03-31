@@ -17,7 +17,7 @@
 
 > **⚠️ Current Port Status**: The core logic, memory manager (`linearAlloc`), and bytecode interpreter are fully ported. Basic `citro2d` shape rendering (rectangles, circles) and background clearing are now functional. 
 > 
-> **Important Note**: This engine only supports loading **GameMaker Project Files** (`.project.gmx`). It does **not** support compiled `.exe` or `.win` data files directly. Any compiled GameMaker game must be decompiled back into a project structure before it can be run on this 3DS port.
+> **Important Note**: This engine currently natively supports loading **GameMaker Project Files** (`.project.gmx`). Direct support for compiled `.win` data files is currently a Work In Progress (W.I.P).
 
 ## 🚧 Roadmap & Todo
 State of the 3DS Port as of latest push:
@@ -34,6 +34,7 @@ State of the 3DS Port as of latest push:
     - [ ] Hardware blend modes via `C3D_TexEnv`.
 - [ ] **Input System**: `hid` keys mapped to GML `vk_` constants.
 - [ ] **Audio**: `ndsp` raw PCM buffer implementation.
+- [ ] **Data.win Loader (W.I.P)**: Direct parsing of compiled GameMaker IFF files without full decompilation.
 
 For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
 

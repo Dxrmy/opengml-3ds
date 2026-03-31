@@ -1,4 +1,5 @@
 #include "ogm/project/Project.hpp"
+#include "ogm/project/DataWinLoader.hpp"
 
 #include "ogm/project/resource/ResourceScript.hpp"
 #include "ogm/project/resource/ResourceSprite.hpp"
@@ -173,8 +174,16 @@ void Project::process()
     {
         process_json();
     }
+    else if (ends_with(m_project_file, ".win"))
+    {
+        DataWinLoader loader(get_project_file_path().c_str());
+        if (!loader.load()) {
+            std::cout << "Skipped DataWinLoader (failed to load)" << std::endl;
+        }
+    }
     else
     {
+        std::cout << "Skipped DataWinLoader (not a .win file)" << std::endl;
         throw ProjectError(ErrorCode::F::unkprojext, "Unrecognized extension for project file \"{}\"", m_project_file);
     }
 }
