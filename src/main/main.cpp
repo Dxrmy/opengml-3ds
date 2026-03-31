@@ -48,6 +48,8 @@ using namespace ogm;
 
 #ifdef __3DS__
 #include <3ds.h>
+#include <citro3d.h>
+#include <citro2d.h>
 u32 __stacksize__ = 1024 * 1024;
 #endif
 
@@ -55,7 +57,10 @@ int umain (int argn, char** argv)
 {
     #ifdef __3DS__
     gfxInitDefault();
-    consoleInit(GFX_TOP, NULL);
+    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+    C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+    C2D_Prepare();
+    consoleInit(GFX_BOTTOM, NULL);
     #endif
 
     #if defined(EMSCRIPTEN)

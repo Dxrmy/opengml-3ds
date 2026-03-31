@@ -37,7 +37,6 @@ namespace ogm::interpreter {
 // Static constants for 3DS rendering
 static C2D_TextBuf g_textBuf;
 static C3D_RenderTarget* g_topTarget;
-static C3D_RenderTarget* g_bottomTarget;
 
 // Shader Program Data
 static DVLB_s* g_defaultDvlb;
@@ -49,15 +48,8 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
         throw MiscError("Multiple displays not supported");
     }
 
-    // Initialize citro2d and hardware
-    gfxInitDefault();
-    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
-    C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
-    C2D_Prepare();
-
     // Setup screens
     g_topTarget = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
-    g_bottomTarget = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
     // Initialize text buffer
     g_textBuf = C2D_TextBufNew(4096);
@@ -150,13 +142,20 @@ void Display::shader_set_alpha_test_threshold(real_t value) {
     C3D_AlphaTest(true, GPU_GREATER, static_cast<int>(value * 255));
 }
 
+static uint32_t g_clear_colour = 0;
+static uint32_t g_draw_colour = 0xffffffff;
+static float g_draw_alpha = 1.0f;
+
 void Display::begin_render() {
     C2D_TextBufClear(g_textBuf);
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 }
 
 void Display::clear_render() {
-    C2D_TargetClear(g_topTarget, C2D_Color32(0, 0, 0, 255));
+    uint8_t r = (g_clear_colour & 0x0000FF);
+    uint8_t g = (g_clear_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_clear_colour & 0xFF0000) >> 16;
+    C2D_TargetClear(g_topTarget, C2D_Color32(r, g, b, 255));
     C2D_SceneBegin(g_topTarget);
 }
 
@@ -200,11 +199,6 @@ void Display::process_keys() {
     // TODO: Map these to staticExecutor.m_mouse_x/y if accessible, 
     // but for now we'll handle them in the GML mouse functions.
     // The bottom screen is always 320x240.
-}
-
-// Basic Shape Drawing
-void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
-    C2D_DrawRectSolid(x1, y1, 0, x2 - x1, y2 - y1, C2D_Color32(255, 255, 255, 255));
 }
 
 // 3DS Texture Allocation Helper
@@ -269,10 +263,10 @@ void Display::free_vertex_format(uint32_t id) {}
 void Display::vertex_format_finish(uint32_t id) {}
 void Display::free_vertex_buffer(uint32_t id) {}
 
-float Display::get_alpha() { return 1.0f; }
-void Display::set_alpha(float a) {}
-uint32_t Display::get_colour() { return 0xffffffff; }
-void Display::set_colour(uint32_t c) {}
+float Display::get_alpha() { return g_draw_alpha; }
+void Display::set_alpha(float a) { g_draw_alpha = a; }
+uint32_t Display::get_colour() { return g_draw_colour; }
+void Display::set_colour(uint32_t c) { g_draw_colour = c; }
 
 matrix_t Display::get_matrix_view() { return {}; }
 matrix_t Display::get_matrix_model() { return {}; }
@@ -331,7 +325,23 @@ void Display::write_vertex(float*, coord_t, coord_t, coord_t, uint32_t, coord_t,
 uint32_t Display::get_vertex_size() const { return 0; }
 void Display::render_array(size_t, float*, TexturePage*, uint32_t) {}
 void Display::draw_outline_rectangle(coord_t, coord_t, coord_t, coord_t) {}
-void Display::draw_filled_circle(coord_t, coord_t, coord_t) {}
+
+void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    C2D_DrawRectSolid(x1, y1, 0.5f, x2 - x1, y2 - y1, C2D_Color32(r, g, b, a));
+}
+
+void Display::draw_filled_circle(coord_t x, coord_t y, coord_t radius) {
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    C2D_DrawCircleSolid(x, y, 0.5f, radius, C2D_Color32(r, g, b, a));
+}
+
 void Display::draw_outline_circle(coord_t, coord_t, coord_t) {}
 void Display::draw_fill_colour(uint32_t) {}
 void Display::set_circle_precision(uint32_t) {}
@@ -355,8 +365,8 @@ void Display::set_fog(bool, real_t, real_t, uint32_t) {}
 void Display::set_window_position(real_t, real_t) {}
 void Display::set_window_size(real_t, real_t) {}
 geometry::Vector<real_t> Display::get_display_dimensions() { return {0, 0}; }
-uint32_t Display::get_clear_colour() { return 0; }
-void Display::set_clear_colour(uint32_t) {}
+uint32_t Display::get_clear_colour() { return g_clear_colour; }
+void Display::set_clear_colour(uint32_t c) { g_clear_colour = c; }
 geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {0, 0}; }
 geometry::Vector<real_t> Display::get_mouse_coord() { return {0, 0}; }
 void Display::set_vsync(bool) {}

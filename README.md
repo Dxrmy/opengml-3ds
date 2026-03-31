@@ -15,18 +15,22 @@
 
 **OpenGML** is a free, open-source, cross-platform interpreter for GameMaker: Studio 1.4. This specific branch is a dedicated native port to the Nintendo 3DS, heavily optimized for the Old 3DS's ARM11 hardware.
 
-> **⚠️ Current Port Status**: The core logic, memory manager (`linearAlloc`), and bytecode interpreter are fully ported and running natively. The engine successfully parses GML `.project.gmx` files on the 3DS. However, native `citro2d` / `citro3d` rendering is currently **pending implementation**. You will not see graphical output yet!
+> **⚠️ Current Port Status**: The core logic, memory manager (`linearAlloc`), and bytecode interpreter are fully ported. Basic `citro2d` shape rendering (rectangles, circles) and background clearing are now functional. 
+> 
+> **Important Note**: This engine only supports loading **GameMaker Project Files** (`.project.gmx`). It does **not** support compiled `.exe` or `.win` data files directly. Any compiled GameMaker game must be decompiled back into a project structure before it can be run on this 3DS port.
 
 ## 🚧 Roadmap & Todo
 State of the 3DS Port as of latest push:
 
 - [x] **Core Interpreter**: C++17 bytecode interpreter ported to `devkitARM`.
 - [x] **Optimizations**: GCC Computed Gotos implemented for ARM11 performance.
-- [x] **Memory Management**: 3DS-specific Garbage Collector tuning and `linearAlloc` integration for PICA200 compatibility.
-- [x] **Build System**: SCons replaced with native 3DS `Makefile.3ds`.
-- [ ] **Display Backend**:
-    - [ ] `citro3d` render loop initialization.
-    - [ ] `citro2d` basic shape and sprite rendering.
+- [x] **Memory Management**: 3DS-specific Garbage Collector tuning and `linearAlloc` integration.
+- [x] **Build System**: Native 3DS `Makefile.3ds`.
+- [x] **Display Backend**:
+    - [x] `citro3d` render loop initialization.
+    - [x] Basic shape rendering (Filled Rectangles & Circles).
+    - [x] Dynamic background clearing.
+    - [ ] `citro2d` sprite rendering.
     - [ ] Hardware blend modes via `C3D_TexEnv`.
 - [ ] **Input System**: `hid` keys mapped to GML `vk_` constants.
 - [ ] **Audio**: `ndsp` raw PCM buffer implementation.
