@@ -118,3 +118,8 @@ These combine all of the above to offer all of the different tools needed to cre
 
 - The best and most reliable IDE and compiler available for this programming language can be found [here](https://www.yoyogames.com/). Neither free nor open source.
 - [LateralGM](http://lateralgm.org/), an open source IDE for GML and ENIGMA. Might be out of date.
+
+## Acknowledgements and References
+
+* **Butterscotch**: [MrPowerGamerBR/Butterscotch](https://github.com/MrPowerGamerBR/Butterscotch) - Used as a crucial reference for C-based IFF (`data.win`) binary parsing and GameMaker bytecode execution.
+* **OpenGM**: [misternebula/OpenGM](https://github.com/misternebula/OpenGM) - Used for general structural insights and GameMaker data chunk definitions.
