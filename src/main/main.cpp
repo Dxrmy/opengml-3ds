@@ -523,6 +523,9 @@ int umain (int argn, char** argv)
                   );
                   SD_PRINT("  -> Window size set: " + std::to_string(project.m_data_win_loader->m_meta.window_width) + "x" + std::to_string(project.m_data_win_loader->m_meta.window_height));
 
+                  ogm::interpreter::staticExecutor.m_frame.m_data.m_desired_fps = project.m_data_win_loader->m_meta.fps;
+                  SD_PRINT("  -> Engine target speed (FPS) set to: " + std::to_string(project.m_data_win_loader->m_meta.fps));
+
                   // Inject textures
                   SD_PRINT("  -> Injecting textures...");
                   size_t tex_count = 0;
@@ -536,7 +539,7 @@ int umain (int argn, char** argv)
               // Inject variables
               SD_PRINT("  -> Injecting variables...");
               for (auto& var : project.m_data_win_loader->m_variables) {
-                  ogm::interpreter::staticExecutor.m_frame.m_reflection->m_namespace_instance.add_id(var.name, var.id);
+                  ogm::interpreter::staticExecutor.m_frame.m_reflection.add_id(var.name, var.id);
               }
               SD_PRINT("  -> Variables injected: " + std::to_string(project.m_data_win_loader->m_variables.size()));
 
@@ -571,7 +574,7 @@ int umain (int argn, char** argv)
               if (verbose) std::cout << "Compiling..." << std::endl;
               ogm::bytecode::ProjectAccumulator acc{
                   ogm::interpreter::standardLibrary,
-                  ogm::interpreter::staticExecutor.m_frame.m_reflection,
+                  &ogm::interpreter::staticExecutor.m_frame.m_reflection,
                   &ogm::interpreter::staticExecutor.m_frame.m_assets,
                   &ogm::interpreter::staticExecutor.m_frame.m_bytecode,
                   &ogm::interpreter::staticExecutor.m_frame.m_config
@@ -603,9 +606,9 @@ int umain (int argn, char** argv)
 
           if (verbose) std::cout << "Compiling..." << std::endl;
 
-          ogm::bytecode::ProjectAccumulator acc{ogm::interpreter::standardLibrary, ogm::interpreter::staticExecutor.m_frame.m_reflection, &ogm::interpreter::staticExecutor.m_frame.m_assets, &ogm::interpreter::staticExecutor.m_frame.m_bytecode, &ogm::interpreter::staticExecutor.m_frame.m_config};
+          ogm::bytecode::ProjectAccumulator acc{ogm::interpreter::standardLibrary, &ogm::interpreter::staticExecutor.m_frame.m_reflection, &ogm::interpreter::staticExecutor.m_frame.m_assets, &ogm::interpreter::staticExecutor.m_frame.m_bytecode, &ogm::interpreter::staticExecutor.m_frame.m_config};
           DecoratedAST dast{ast, filename.c_str(), fileContents.c_str()};
-          ogm::bytecode::bytecode_preprocess(dast, reflection, &ogm::interpreter::staticExecutor.m_frame.m_config);
+          ogm::bytecode::bytecode_preprocess(dast, ogm::interpreter::staticExecutor.m_frame.m_reflection, &ogm::interpreter::staticExecutor.m_frame.m_config);
 
           // set command-line definitions
           for (auto& [name, value] : defines)
@@ -673,7 +676,7 @@ int umain (int argn, char** argv)
                       std::cout << (int32_t)bytecode_section.m_argc;
                   }
                   std::cout << " -> " << (int32_t)bytecode_section.m_retc << std::endl;
-                  ogm::bytecode::bytecode_dis(bytecode_section, cout, ogm::interpreter::standardLibrary, dis_raw ? nullptr : &reflection, lines);
+                  ogm::bytecode::bytecode_dis(bytecode_section, cout, ogm::interpreter::standardLibrary, dis_raw ? nullptr : &ogm::interpreter::staticExecutor.m_frame.m_reflection, lines);
               }
           }
 
