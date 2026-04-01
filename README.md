@@ -42,7 +42,7 @@ State of the 3DS Port as of latest push:
     - [ ] `OBJT` and `ROOM` layout parsing.
     - [ ] `CODE` execution mapping.
 - [x] **Testing & Security**: Comprehensive `Catch2` unit testing for string utilities and `AssetTable`, plus cross-platform socket error (`EAGAIN`) handling and `fn_filesystem`, `fs_unix`, and `fs_windows` buffer overflow fixes.
-- [x] **Analysis Tools**: Python-based IFF chunk validators and bytecode disassemblers (in progress), and a native 3DS Memory Profiler.
+- [x] **Analysis Tools**: Python-based IFF chunk validators and bytecode disassemblers, and a native 3DS Memory Profiler.
 
 For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
 
