@@ -900,7 +900,7 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     glCheckErrorStr("graphics module initialization.");
 
     #ifdef GFX_TEXT_AVAILABLE
-    // TODO: use Arimo https://www.fontsquirrel.com/fonts/arimo
+    // using Arimo https://www.fontsquirrel.com/fonts/arimo
     // (it is metrically compatible with the default font.)
     g_font = TTF_OpenFontRW(
         SDL_RWFromConstMem(_binary_Default_Font_ttf, _binary_Default_Font_ttf_len), 1,
