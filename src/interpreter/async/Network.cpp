@@ -31,7 +31,7 @@
 
 namespace ogm { namespace interpreter
 {
-    
+
     void SocketEvent::produce_info(ds_index_t map_index)
     {
         // set async map
@@ -61,7 +61,7 @@ namespace ogm { namespace interpreter
             produce_real(map_index, "succeeded", m_success);
         }
     }
-    
+
     #ifdef NETWORKING_ENABLED
 
     const size_t K_BUFF_SIZE = 4096;
@@ -75,7 +75,7 @@ namespace ogm { namespace interpreter
     #else
     typedef int socket_t;
     #endif
-    
+
     #ifdef NO_MAGIC_HEADER_CANARY
     typedef uint64_t message_id_t;
     #else
@@ -92,7 +92,7 @@ namespace ogm { namespace interpreter
 
         // the opengml instance that receives these updates.
         async_listener_id_t m_listener;
-        
+
         // waiting for non-blocking result.
         bool m_nonblocking_wait = false;
 
@@ -107,7 +107,7 @@ namespace ogm { namespace interpreter
         size_t m_magic_recv_buffer_offset = 0;
         size_t m_magic_recv_buffer_length = 0;
     };
-    
+
     namespace
     {
         void set_nonblocking(socket_t _sock)
@@ -121,9 +121,22 @@ namespace ogm { namespace interpreter
         }
     }
 
-    static bool errno_eagain()
+    static int get_net_error()
     {
-        return errno == EAGAIN || errno == EWOULDBLOCK;
+        #ifdef _WIN32
+        return WSAGetLastError();
+        #else
+        return errno;
+        #endif
+    }
+
+    static bool errno_eagain(int err)
+    {
+        #ifdef _WIN32
+        return err == EAGAIN || err == EWOULDBLOCK || err == WSAEWOULDBLOCK || err == EINTR || err == WSAEINTR;
+        #else
+        return err == EAGAIN || err == EWOULDBLOCK || err == EINTR;
+        #endif
     }
 
     // this is the non-raw header.
@@ -135,7 +148,7 @@ namespace ogm { namespace interpreter
         // OpenGMl Packet
         char m_canary[4];
         #endif
-        
+
         // message ID.
         message_id_t m_message_n;
 
@@ -165,7 +178,7 @@ namespace ogm { namespace interpreter
     {
         if (s->m_protocol == NetworkProtocol::TCP)
         {
-            setsockopt(s->m_socket_fd, SOL_SOCKET, TCP_NODELAY, 
+            setsockopt(s->m_socket_fd, SOL_SOCKET, TCP_NODELAY,
                 reinterpret_cast<char*>(&g_opt_enabled[enable]), sizeof(int));
         }
     }
@@ -357,7 +370,12 @@ namespace ogm { namespace interpreter
         {
             if (m_config_nonblocking)
             {
-                if (errno == EINPROGRESS || errno == EINTR)
+                int err = get_net_error();
+                #ifdef _WIN32
+                if (err == WSAEINPROGRESS || err == WSAEWOULDBLOCK || err == WSAEINTR || err == EINPROGRESS || err == EINTR)
+                #else
+                if (err == EINPROGRESS || err == EINTR)
+                #endif
                 {
                     return true;
                 }
@@ -418,7 +436,7 @@ namespace ogm { namespace interpreter
                 if (s->m_raw)
                 {
                     int32_t r = ::send(s->m_socket_fd, datav, datac, 0);
-                    if (r == 0 || (r == -1 && errno_eagain()))
+                    if (r == 0 || (r == -1 && errno_eagain(get_net_error())))
                     {
                         return 0;
                     }
@@ -479,7 +497,7 @@ namespace ogm { namespace interpreter
                             // send data now (unless there is a queued message ahead of us.)
                             r = ::send(s->m_socket_fd, b, c, 0);
                         }
-                        if (r == 0 || (r == -1 && errno_eagain()))
+                        if (r == 0 || (r == -1 && errno_eagain(get_net_error())))
                         // no data could be written.
                         {
                             send_blocked = true;
@@ -562,7 +580,7 @@ namespace ogm { namespace interpreter
                     {
                         std::cout << "Connection received." << std::endl;
                         auto* event = new SocketEvent(id, s->m_listener, SocketEvent::CONNECTION_ACCEPTED);
-                        
+
                         // create new socket for this
                         event->m_connected_socket = add_receiving_socket(new_socket, s->m_raw, s->m_protocol, s->m_listener);
                         out.emplace_back(event);
@@ -588,12 +606,19 @@ namespace ogm { namespace interpreter
                     );
                     if (result < 0)
                     {
-                        if (errno_eagain() || errno == ENOTCONN)
+                        int err = get_net_error();
+                        if (errno_eagain(err) ||
+                            #ifdef _WIN32
+                            err == WSAENOTCONN
+                            #else
+                            err == ENOTCONN
+                            #endif
+                        )
                         {
                             // we'll check again next loop.
                             continue;
                         }
-                        else switch (errno)
+                        else switch (err)
                         {
                             default:
                                 // FIXME: is there a constant better suited to this?
@@ -609,7 +634,7 @@ namespace ogm { namespace interpreter
                     {
                         // this actually shouldn't be possible on UDP.
                         ogm_assert(false);
-                        
+
                         out.emplace_back(new SocketEvent(id, s->m_listener, SocketEvent::CONNECTION_ENDED));
                         close_socket = true;
 
@@ -639,7 +664,7 @@ namespace ogm { namespace interpreter
                         for (size_t i = 0; i < poll_c; ++i)
                         {
                             pfd[i].fd = s->m_socket_fd;
-                            pollresult[i] = 
+                            pollresult[i] =
                             #ifdef WIN32
                             WSAPoll
                             #else
@@ -647,7 +672,7 @@ namespace ogm { namespace interpreter
                             #endif
                             (pfd + i, 1, 0);
                         }
-                        
+
                         bool complete = false;
                         bool valid;
                         if (pollresult[0] || pollresult[1])
@@ -660,7 +685,7 @@ namespace ogm { namespace interpreter
                             complete = true;
                             valid = true;
                         }
-                        
+
                         if (complete)
                         {
                             auto* event = new SocketEvent(id, s->m_listener, SocketEvent::NONBLOCKING);
@@ -676,21 +701,27 @@ namespace ogm { namespace interpreter
                                 break;
                             }
                         }
-                        
+
                         break;
                     }
-                    
+
                     // receive data
                     int result = recv(s->m_socket_fd, g_buffer, K_BUFF_SIZE, 0);
-                    // TODO: check errno = EAGAIN
                     if (result < 0)
                     {
-                        if (errno_eagain() || errno == ENOTCONN)
+                        int err = get_net_error();
+                        if (errno_eagain(err) ||
+                            #ifdef _WIN32
+                            err == WSAENOTCONN
+                            #else
+                            err == ENOTCONN
+                            #endif
+                        )
                         {
                             // we'll check again next loop.
                             continue;
                         }
-                        else switch (errno)
+                        else switch (err)
                         {
                             default:
                                 perror("TCP recv error");
@@ -890,7 +921,7 @@ namespace ogm { namespace interpreter
         s->m_socket_fd = socket;
         s->m_listener = listener;
         s->m_raw = raw;
-        
+
         // UDP is connectionless.
         ogm_assert(np != NetworkProtocol::UDP);
 
@@ -904,7 +935,7 @@ namespace ogm { namespace interpreter
         return 0;
         #endif
     }
-    
+
     void NetworkManager::set_option(size_t option_index, real_t value)
     {
         #ifdef NETWORKING_ENABLED
