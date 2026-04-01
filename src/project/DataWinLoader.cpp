@@ -153,6 +153,7 @@ bool DataWinLoader::load() {
             else if (chunk_name == "TXTR") {
                 uint32_t texture_count;
                 fread(&texture_count, 4, 1, file);
+                SD_PRINT("  -> Texture Count: " + std::to_string(texture_count));
                 std::vector<uint32_t> offsets(texture_count);
                 fread(offsets.data(), 4, texture_count, file);
 
@@ -176,13 +177,19 @@ bool DataWinLoader::load() {
                     }
 
                     uint32_t blob_size = next_png_offset - png_offset;
-                    if (blob_size > 0 && blob_size < 50 * 1024 * 1024) {
+                    if (i < 5 || i == texture_count - 1) {
+                        SD_PRINT("    -> Tex[" + std::to_string(i) + "] Offset=" + std::to_string(png_offset) + " Size=" + std::to_string(blob_size));
+                    }
+
+                    if (blob_size > 0 && blob_size < 10 * 1024 * 1024) { // Cap at 10MB per texture
                         std::vector<uint8_t> buffer(blob_size);
                         fseek(file, png_offset, SEEK_SET);
                         fread(buffer.data(), 1, blob_size, file);
                         ogm::asset::Image img;
                         img.load_from_memory(buffer.data(), blob_size);
                         m_images.push_back(std::move(img));
+                    } else if (blob_size > 0) {
+                        SD_PRINT("    -> WARNING: Skipping oversized texture (" + std::to_string(blob_size) + " bytes)");
                     }
                 }
             }
