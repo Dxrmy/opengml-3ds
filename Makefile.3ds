@@ -13,7 +13,7 @@ INCLUDES	:=	include src external/include external/soloud/include
 
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2
 
-CFLAGS	:=	-g -O3 $(ARCH) -Wall -Werror=return-type -Wno-switch -D__3DS__ -DGFX_AVAILABLE -DOGM_STRUCT_SUPPORT -DOGM_FUNCTION_SUPPORT -DOGM_X32 -DOGM_GARBAGE_COLLECTOR=1 -DOGM_CAMERAS=1 -DFMT_USE_FCNTL=0 -DCPP_FILESYSTEM_ENABLED=1
+CFLAGS	:=	-g -O3 $(ARCH) -Wall -Werror=return-type -Wno-switch -D__3DS__ -DNDEBUG -DGFX_AVAILABLE -DOGM_STRUCT_SUPPORT -DOGM_FUNCTION_SUPPORT -DOGM_X32 -DOGM_GARBAGE_COLLECTOR=1 -DOGM_CAMERAS=1 -DFMT_USE_FCNTL=0 -DCPP_FILESYSTEM_ENABLED=1
 CXXFLAGS :=	$(CFLAGS) -std=c++17
 LDFLAGS	:=	$(ARCH)
 
