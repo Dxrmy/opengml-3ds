@@ -731,8 +731,8 @@ int umain (int argn, char** argv)
               }
               catch (const ogm::interpreter::ExceptionTrace& e)
               {
-                  std::cout << "\nThe program aborted due to a fatal error.\n";
-                  std::cout << e.what() << std::endl;
+                  SD_PRINT("\nThe program aborted due to a fatal error.");
+                  SD_PRINT(e.what());
               }
           }
       }
@@ -741,20 +741,14 @@ int umain (int argn, char** argv)
           #ifdef IMGUI
           ogm::gui::run(&project);
           #else
-          std::cout << "OpenGML was not built with GUI support." << std::endl;
+          SD_PRINT("OpenGML was not built with GUI support.");
           exit(1);
           #endif
       }
   }
 
   #ifdef __3DS__
-  std::cout << "\n--- ENGINE STOPPED ---" << std::endl;
-  std::cout << "Press START to close the app." << std::endl;
-  while(aptMainLoop()) {
-      hidScanInput();
-      if (hidKeysDown() & KEY_START) break;
-      gfxSwapBuffers();
-  }
+  SD_PRINT("\n--- ENGINE FINISHED ---");
   #endif
 
   return 0;
@@ -774,15 +768,20 @@ int main (int argc, char** argv)
     catch (std::exception& e)
     {
         std::string exception_name = pretty_typeid(typeid(e).name());
-        std::cout << std::string("An unhandled exception `") + pretty_typeid(exception_name) + "` was thrown:\n" + e.what() + "\n";
+        std::string err = std::string("An unhandled exception `") + exception_name + "` was thrown:\n" + e.what() + "\n";
+        #ifdef __3DS__
+        SD_PRINT(err);
+        #else
+        std::cout << err;
+        #endif
     }
     
     // cleanup.
     restore_terminal_colours();
 
     #ifdef __3DS__
-    std::cout << "\n--- ENGINE STOPPED ---" << std::endl;
-    std::cout << "Press START to close the app." << std::endl;
+    SD_PRINT("\n--- ENGINE STOPPED ---");
+    SD_PRINT("Press START to close the app.");
     while(aptMainLoop()) {
         hidScanInput();
         if (hidKeysDown() & KEY_START) break;
