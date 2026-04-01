@@ -290,7 +290,12 @@ TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureVi
     // Return to previous framebuffer.
     glBindFramebuffer(GL_FRAMEBUFFER, g_gl_framebuffer);
 
-    // TODO: delete framebuffer for new asset's tpage?
+    if (page->m_gl_framebuffer)
+    {
+        glDeleteFramebuffers(1, &page->m_gl_framebuffer);
+        page->m_gl_framebuffer = 0;
+    }
+
     return view;
 #endif
 }
@@ -464,9 +469,14 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
             C2D_Flush();
             C3D_RenderTargetDelete(tempTarget);
         }
+#else
+        if (page->m_gl_framebuffer)
+        {
+            glDeleteFramebuffers(1, &page->m_gl_framebuffer);
+            page->m_gl_framebuffer = 0;
+        }
 #endif
 
-        // TODO: delete framebuffer for new tpage?
         return page;
     }
 }

@@ -13,7 +13,6 @@ TEST_CASE( "ends_with" )
     REQUIRE(!ends_with("b/a.gml", ".."));
 }
 
-
 TEST_CASE( "split" )
 {
     std::vector<std::string> out;
