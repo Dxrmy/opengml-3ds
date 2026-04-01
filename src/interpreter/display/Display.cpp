@@ -449,8 +449,6 @@ namespace
         }
 
         switch (key)
-        // TODO: finish this
-        // keycodes: https://www.libsdl.org/release/SDL-1.2.15/docs/html/sdlkey.html
         {
         case SDLK_SPACE:
             return vk_space;
@@ -461,6 +459,7 @@ namespace
         case SDLK_ESCAPE:
             return vk_escape;
         case SDLK_RETURN:
+        case SDLK_KP_ENTER:
             return vk_enter;
         case SDLK_BACKSPACE:
             return vk_backspace;
@@ -480,31 +479,68 @@ namespace
             return vk_up;
         case SDLK_PAUSE:
             return vk_pause;
+        case SDLK_PRINT:
+            return vk_printscreen;
+        case SDLK_INSERT:
+            return vk_insert;
+        case SDLK_DELETE:
+            return vk_delete;
         case SDLK_RSHIFT:
+            return vk_rshift;
         case SDLK_LSHIFT:
-            return vk_shift;
+            return vk_lshift;
         case SDLK_RCTRL:
+            return vk_rcontrol;
         case SDLK_LCTRL:
-            return vk_control;
-        case SDLK_LALT:
+            return vk_lcontrol;
         case SDLK_RALT:
-            return vk_alt;
+            return vk_ralt;
+        case SDLK_LALT:
+            return vk_lalt;
         case SDLK_SEMICOLON:
             return vk_semicolon;
         case SDLK_QUOTE:
             return vk_quote;
         case SDLK_COMMA:
             return vk_comma;
-        case SDLK_KP_PERIOD:
         case SDLK_PERIOD:
             return vk_period;
-        case SDLK_KP_DIVIDE:
         case SDLK_SLASH:
             return vk_slash;
         case SDLK_LEFTBRACKET:
             return vk_open_square_bracket;
         case SDLK_RIGHTBRACKET:
             return vk_close_square_bracket;
+        case SDLK_KP0:
+            return vk_numpad0;
+        case SDLK_KP1:
+            return vk_numpad1;
+        case SDLK_KP2:
+            return vk_numpad2;
+        case SDLK_KP3:
+            return vk_numpad3;
+        case SDLK_KP4:
+            return vk_numpad4;
+        case SDLK_KP5:
+            return vk_numpad5;
+        case SDLK_KP6:
+            return vk_numpad6;
+        case SDLK_KP7:
+            return vk_numpad7;
+        case SDLK_KP8:
+            return vk_numpad8;
+        case SDLK_KP9:
+            return vk_numpad9;
+        case SDLK_KP_MULTIPLY:
+            return vk_multiply;
+        case SDLK_KP_PLUS:
+            return vk_add;
+        case SDLK_KP_MINUS:
+            return vk_subtract;
+        case SDLK_KP_PERIOD:
+            return vk_decimal;
+        case SDLK_KP_DIVIDE:
+            return vk_divide;
         default:
             return vk_nokey;
         }
