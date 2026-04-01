@@ -14,6 +14,7 @@
     #else
         #include <3ds.h>
         #include <citro3d.h>
+        #include <citro2d.h>
     #endif
     #include <SDL2/SDL.h>
     #ifdef GFX_TEXT_AVAILABLE
@@ -57,7 +58,7 @@ bool TexturePage::cache()
         m_dimensions = image->m_dimensions;
 
         //std::cout << "    loaded image " << width << "x" << height << ", " << channel_count << " channels.\n";
-        
+
         #ifdef __3DS__
         if (m_dimensions.x > 1024 || m_dimensions.y > 1024) {
             fprintf(stderr, "[3DS GFX] CRITICAL: Texture size %dx%d exceeds hardware limit (1024x1024)!\n", m_dimensions.x, m_dimensions.y);
@@ -76,15 +77,15 @@ bool TexturePage::cache()
 
         C3D_Tex* tex3ds = new C3D_Tex();
         C3D_TexInit(tex3ds, m_dimensions.x, m_dimensions.y, GPU_RGBA8);
-        
+
         // In a real 3DS implementation, we would convert standard RGBA to PICA200 tiled format here.
         // For now, we upload the raw data to VRAM.
         C3D_TexUpload(tex3ds, linear_data);
-        
+
         linearFree(linear_data);
-        
+
         m_gl_tex = reinterpret_cast<uint32_t>(tex3ds);
-        
+
         #else
         glGenTextures(1, &m_gl_tex);
         glBindTexture(GL_TEXTURE_2D, m_gl_tex);
@@ -131,7 +132,7 @@ TexturePage::~TexturePage()
     {
         glDeleteTextures(1, &m_gl_tex);
     }
-    
+
     if (m_gl_tex_depth)
     {
         glDeleteTextures(1, &m_gl_tex_depth);
@@ -178,7 +179,7 @@ namespace
         // framebuffer allows rendering to the surface as a target.
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-        
+
         if (depthbuffer)
         {
             // FIXME: this depth buffer addition is only relevant to application surface.
@@ -226,7 +227,38 @@ namespace
 TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureView* tv, geometry::AABB<uint32_t> from)
 {
 #ifdef __3DS__
-    return nullptr;
+    surface_id_t dst = create_surface(from.diagonal());
+    TextureView* view = get_surface_texture_view(dst);
+    TexturePage* page = view->m_tpage;
+
+    if (tv->m_tpage->m_gl_tex && page->m_gl_tex) {
+        C3D_Tex* srcTex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+        C3D_Tex* dstTex = reinterpret_cast<C3D_Tex*>(page->m_gl_tex);
+
+        C3D_RenderTarget* tempTarget = C3D_RenderTargetCreateFromTex(dstTex, GPU_TEX_2D, 0, -1);
+        if (tempTarget) {
+            C2D_SceneBegin(tempTarget);
+
+            Tex3DS_SubTexture subtex;
+            subtex.width = from.right() - from.left();
+            subtex.height = from.bottom() - from.top();
+            subtex.left = (float)tv->u_global_i(from.left()) / srcTex->width;
+            subtex.top = (float)tv->v_global_i(from.top()) / srcTex->height;
+            subtex.right = (float)tv->u_global_i(from.right()) / srcTex->width;
+            subtex.bottom = (float)tv->v_global_i(from.bottom()) / srcTex->height;
+
+            C2D_Image img;
+            img.tex = srcTex;
+            img.subtex = &subtex;
+
+            C2D_DrawImageAt(img, 0, 0, 0, nullptr, 1.0f, 1.0f);
+
+            C2D_Flush();
+            C3D_RenderTargetDelete(tempTarget);
+        }
+    }
+
+    return view;
 #else
 
     // create a texture page and view for the asset.
@@ -263,9 +295,6 @@ TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureVi
 
 TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& sources, std::vector<ogm::geometry::AABB<real_t>>& outUVs, bool smart)
 {
-#ifdef __3DS__
-    return nullptr;
-#else
 
     const ogm::geometry::Vector<uint32_t> TPAGE_DIM_MAX = { 1024, 1024 };
 
@@ -298,6 +327,7 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
             )
         );
 
+#ifndef __3DS__
         // ensure source has framebuffer (will blit later)
         if (!src->m_tpage->m_gl_framebuffer)
         {
@@ -306,6 +336,7 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
                 return nullptr;
             }
         }
+#endif
     }
 
     rectpack2D::rect_wh result_bounds = rectpack2D::find_best_packing<spaces_type>(
@@ -362,6 +393,17 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
 
         TexturePage* page = get_surface(dst);
 
+#ifdef __3DS__
+        C3D_RenderTarget* tempTarget = nullptr;
+        if (page->m_gl_tex) {
+            C3D_Tex* dstTex = reinterpret_cast<C3D_Tex*>(page->m_gl_tex);
+            tempTarget = C3D_RenderTargetCreateFromTex(dstTex, GPU_TEX_2D, 0, -1);
+            if (tempTarget) {
+                C2D_SceneBegin(tempTarget);
+            }
+        }
+#endif
+
         // copy sources onto dst
         for (size_t i = 0; i < sources.size(); ++i)
         {
@@ -372,7 +414,25 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
             if (rect.x == TPAGE_DIM_MAX.x) continue;
 
             // copy source texture view to new asset
+#ifdef __3DS__
+            if (source->m_tpage->m_gl_tex && tempTarget) {
+                C3D_Tex* srcTex = reinterpret_cast<C3D_Tex*>(source->m_tpage->m_gl_tex);
 
+                Tex3DS_SubTexture subtex;
+                subtex.width = source->u_global_i(1) - source->u_global_i(0);
+                subtex.height = source->v_global_i(1) - source->v_global_i(0);
+                subtex.left = (float)source->u_global_i(0) / srcTex->width;
+                subtex.top = (float)source->v_global_i(0) / srcTex->height;
+                subtex.right = (float)source->u_global_i(1) / srcTex->width;
+                subtex.bottom = (float)source->v_global_i(1) / srcTex->height;
+
+                C2D_Image img;
+                img.tex = srcTex;
+                img.subtex = &subtex;
+
+                C2D_DrawImageAt(img, rect.x, rect.y, 0, nullptr, 1.0f, 1.0f);
+            }
+#else
             glBindFramebuffer(GL_READ_FRAMEBUFFER, source->m_tpage->m_gl_framebuffer);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, page->m_gl_framebuffer);
 
@@ -394,12 +454,19 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
 
             // Return to previous framebuffer.
             glBindFramebuffer(GL_FRAMEBUFFER, g_gl_framebuffer);
+#endif
         }
+
+#ifdef __3DS__
+        if (tempTarget) {
+            C2D_Flush();
+            C3D_RenderTargetDelete(tempTarget);
+        }
+#endif
 
         // TODO: delete framebuffer for new tpage?
         return page;
     }
-#endif
 }
 
 void TextureStore::resize_surface(surface_id_t id, ogm::geometry::Vector<uint32_t> dimensions)
@@ -476,9 +543,9 @@ TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureVi
     surface_id_t dst = create_surface(
       from.diagonal()
     );
-    
+
     TextureView* view = get_surface_texture_view(dst);
-    
+
     return view;
 }
 
@@ -488,18 +555,20 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
     surface_id_t dst = create_surface(
       {128, 128}
     );
-    
+
     // very dummy
     for (size_t i = 0; i < sources.size(); ++i)
     {
         outUVs.emplace_back(0, 0, 128, 128);
     }
-    
+
     TextureView* view = get_surface_texture_view(dst);
     TexturePage* page = view->m_tpage;
-    
+
     return page;
 }
+
+
 
 void TextureStore::resize_surface(surface_id_t id, ogm::geometry::Vector<uint32_t> dimensions)
 { }
@@ -519,7 +588,7 @@ TexturePage::~TexturePage()
 // shared
 
 namespace ogm::interpreter
-{    
+{
 
 TextureStore::~TextureStore()
 {
@@ -567,40 +636,40 @@ surface_id_t TextureStore::create_surface(ogm::geometry::Vector<uint32_t> dimens
     m_surface_map.push_back({&tp, tv});
     return m_surface_map.size() - 1;
 }
-    
+
 TexturePage* TextureStore::create_tpage_from_callback(TexturePage::ImageSupplier supplier)
 {
     TexturePage* page = new TexturePage();
 
     page->m_callback = supplier;
-    
+
     m_pages.push_back(page);
-    
+
     return page;
 }
 
 TexturePage* TextureStore::create_tpage_from_image(asset::Image& image)
 {
     TexturePage* page = new TexturePage();
-    
+
     // cache immediately, because this callback will become invalid.
     page->m_callback = [&image]() -> asset::Image* {
         return &image;
     };
-    
+
     // load image.
     page->cache();
-    
+
     // remove callback.
     page->m_callback = []() -> asset::Image* {
         return nullptr;
     };
-    
+
     m_pages.push_back(page);
-    
+
     return page;
 }
-    
+
 TextureView* TextureStore::get_texture(ImageDescriptor id)
 {
     auto result = m_descriptor_map.find(id);
