@@ -325,7 +325,11 @@ public:
         ogm_assert(bytecode_index != k_no_bytecode);
         if (!(bytecode_index < m_bytecode.size()))
         {
-             throw ogm::AssertionError("BytecodeTable::get_bytecode index {} out of range (size {})", (uint32_t)bytecode_index, (uint32_t)m_bytecode.size());
+             std::string err = "BytecodeTable::get_bytecode index " + std::to_string((uint32_t)bytecode_index) + " out of range (size " + std::to_string((uint32_t)m_bytecode.size()) + ")";
+             #ifdef __3DS__
+             SD_PRINT(err);
+             #endif
+             throw ogm::AssertionError(err.c_str());
         }
         return m_bytecode.at(bytecode_index);
     }

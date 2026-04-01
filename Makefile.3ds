@@ -37,7 +37,7 @@ CITRA_SDMC := C:/Users/kmric/AppData/Roaming/Citra/sdmc/3ds/OpenGML/OpenGML.3dsx
 
 all: $(TARGET).3dsx
 	@echo "Copying to Citra SDMC..."
-	@powershell -Command "Copy-Item -Path $(TARGET).3dsx -Destination $(CITRA_SDMC) -Force"
+	@powershell -Command "Copy-Item -Path $(TARGET).3dsx -Destination $(CITRA_SDMC) -Force -ErrorAction Stop"
 
 $(TARGET).3dsx: $(TARGET).elf
 	@3dsxtool $< $@
