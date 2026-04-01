@@ -79,6 +79,9 @@ namespace ogm::interpreter
         // if this is set, execute in debug mode.
         Debugger* m_debugger = nullptr;
 
+        real_t m_mouse_x = 0;
+        real_t m_mouse_y = 0;
+
     public:
         inline ogm::interpreter::Variable
         pop()
@@ -270,7 +273,7 @@ namespace ogm::interpreter
         void debugger_detach();
 
         std::string stack_trace() const;
-        
+
         // note that this does not cleanup stack variables.
         void reset()
         {
@@ -284,6 +287,8 @@ namespace ogm::interpreter
             m_self = nullptr;
             m_with_iterators.clear();
             m_library = nullptr;
+            m_mouse_x = 0;
+            m_mouse_y = 0;
             m_frame.reset_hard();
         }
     };

@@ -5,6 +5,7 @@
 #include <citro2d.h>
 
 #include "ogm/interpreter/display/Display.hpp"
+#include "ogm/interpreter/Executor.hpp"
 #include "ogm/common/types.hpp"
 
 // Embedded Shader Symbols (from bin2s)
@@ -196,9 +197,10 @@ void Display::process_keys() {
     
     touchPosition touch;
     hidTouchRead(&touch);
-    // TODO: Map these to staticExecutor.m_mouse_x/y if accessible, 
-    // but for now we'll handle them in the GML mouse functions.
-    // The bottom screen is always 320x240.
+    if (held & KEY_TOUCH) {
+        staticExecutor.m_mouse_x = touch.px;
+        staticExecutor.m_mouse_y = touch.py;
+    }
 }
 
 // 3DS Texture Allocation Helper
@@ -367,8 +369,8 @@ void Display::set_window_size(real_t, real_t) {}
 geometry::Vector<real_t> Display::get_display_dimensions() { return {0, 0}; }
 uint32_t Display::get_clear_colour() { return g_clear_colour; }
 void Display::set_clear_colour(uint32_t c) { g_clear_colour = c; }
-geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {0, 0}; }
-geometry::Vector<real_t> Display::get_mouse_coord() { return {0, 0}; }
+geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
+geometry::Vector<real_t> Display::get_mouse_coord() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
 void Display::set_vsync(bool) {}
 void Display::set_font(asset::AssetFont*, TextureView*) {}
 void Display::disable_scissor() {}
