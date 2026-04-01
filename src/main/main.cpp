@@ -698,9 +698,12 @@ int umain (int argn, char** argv)
               }
 
               SD_PRINT("Verifying bytecode 0 exists...");
-              ogm_assert(
-                  ogm::interpreter::staticExecutor.m_frame.m_bytecode.has_bytecode(0)
-              );
+              size_t bc_count = ogm::interpreter::staticExecutor.m_frame.m_bytecode.count();
+              bool has_bc0 = ogm::interpreter::staticExecutor.m_frame.m_bytecode.has_bytecode(0);
+              SD_PRINT("  -> Bytecode Count: " + std::to_string(bc_count));
+              SD_PRINT("  -> Has Bytecode 0: " + std::string(has_bc0 ? "YES" : "NO"));
+              
+              ogm_assert(has_bc0);
 
               try
               {
