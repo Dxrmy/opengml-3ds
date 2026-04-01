@@ -612,9 +612,12 @@ int umain (int argn, char** argv)
 
       if (compile)
       {
+          SD_PRINT("Post-build phase started");
           if (strip)
           {
+              SD_PRINT("Stripping bytecode...");
               bytecode.strip();
+              SD_PRINT("Bytecode stripped.");
           }
 
           if (dis)
@@ -655,6 +658,7 @@ int umain (int argn, char** argv)
 
           if (execute)
           {
+              SD_PRINT("Execution block started");
               if (verbose) std::cout << "Executing..." << std::endl;
               
               // set gc enabled
@@ -663,6 +667,7 @@ int umain (int argn, char** argv)
               #endif
               
               // TODO: get rid of "anonymous" instance, replace with global instance.
+              SD_PRINT("Creating anonymous instance...");
               ogm::interpreter::Instance anonymous;
               anonymous.m_data.m_frame_owner = &ogm::interpreter::staticExecutor.m_frame;
               ogm::interpreter::staticExecutor.m_library = ogm::interpreter::standardLibrary;
@@ -672,6 +677,8 @@ int umain (int argn, char** argv)
               {
                   parameters.push_back(argv[i]);
               }
+              
+              SD_PRINT("Attaching debugger...");
               ogm::interpreter::Debugger debugger;
               debugger.m_config.m_trace_permitted = allow_trace;
               if (debug)
@@ -690,6 +697,7 @@ int umain (int argn, char** argv)
                   debug_args.clear();
               }
 
+              SD_PRINT("Verifying bytecode 0 exists...");
               ogm_assert(
                   ogm::interpreter::staticExecutor.m_frame.m_bytecode.has_bytecode(0)
               );
@@ -698,6 +706,7 @@ int umain (int argn, char** argv)
               {
                   #ifndef EMSCRIPTEN
                   // execute first bytecode
+                  SD_PRINT("Starting execute_bytecode(0)...");
                   if (ogm::interpreter::execute_bytecode(0))
                   {
                       // if execution suspended (does not generally happen),
