@@ -41,8 +41,16 @@ State of the 3DS Port as of latest push:
     - [ ] `TXTR` and `TPAG` chunk parsing.
     - [ ] `OBJT` and `ROOM` layout parsing.
     - [ ] `CODE` execution mapping.
-- [x] **Testing & Security**: Comprehensive `Catch2` unit testing for string utilities and `AssetTable`, plus cross-platform socket error (`EAGAIN`) handling and `fn_filesystem`, `fs_unix`, and `fs_windows` buffer overflow fixes.
-- [x] **Analysis Tools**: Python-based IFF chunk validators and bytecode disassemblers, and a native 3DS Memory Profiler.
+- [x] **Testing & Security**: 
+    - [x] Comprehensive `Catch2` unit testing for string utilities and `AssetTable`.
+    - [x] Cross-platform socket error (`EAGAIN`) handling.
+    - [x] **Full Security Suite**: Fixed buffer overflows and OOB writes in `Filesystem`, `fs_unix`, and `fs_windows`.
+    - [x] **Headless VM Stepper**: Standalone VM loop testing.
+    - [x] **GML Bytecode Fuzzer**: VM stress testing.
+- [x] **Analysis & Profiling**: 
+    - [x] Python-based IFF chunk validators and bytecode disassemblers.
+    - [x] Native 3DS Memory Profiler.
+    - [x] **Instruction Cycle Profiler**: Native opcode performance tracking on ARM11.
 
 For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
 
