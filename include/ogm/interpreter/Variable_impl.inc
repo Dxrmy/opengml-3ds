@@ -305,11 +305,13 @@ inline_if_ndebug int32_t Variable::castCoerce() const
     }
 }
 
+#if !defined(__LP64__)
 template<>
 inline_if_ndebug int Variable::castCoerce() const
 {
     return castCoerce<int32_t>();
 }
+#endif
 
 template<>
 inline_if_ndebug const int32_t& Variable::coerce()
@@ -444,11 +446,13 @@ inline_if_ndebug uint32_t Variable::castCoerce() const
     return castCoerce<uint64_t>();
 }
 
+#if !defined(__LP64__)
 template<>
 inline_if_ndebug unsigned int Variable::castCoerce() const
 {
     return castCoerce<uint64_t>();
 }
+#endif
 
 #if defined(__clang__) && defined(OGM_X64)
 // FIXME: unsure why this is necessary.
