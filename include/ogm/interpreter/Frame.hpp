@@ -359,9 +359,9 @@ namespace ogm::interpreter
             catch (const typename decltype(m_globals)::ItemNotFoundException&)
             {
                 std::string s = ".";
-                if (m_reflection && m_reflection->m_namespace_instance.has_name(id))
+                if (m_reflection.m_namespace_instance.has_name(id))
                 {
-                    s = " \"" + std::string(m_reflection->m_namespace_instance.find_name(id)) + "\".";
+                    s = " \"" + std::string(m_reflection.m_namespace_instance.find_name(id)) + "\".";
                 }
                 throw MiscError("Read on unset global variable" + s);
             }

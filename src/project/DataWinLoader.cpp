@@ -177,11 +177,12 @@ bool DataWinLoader::load() {
                     }
 
                     uint32_t blob_size = next_png_offset - png_offset;
+                    
                     if (i < 5 || i == texture_count - 1) {
                         SD_PRINT("    -> Tex[" + std::to_string(i) + "] Offset=" + std::to_string(png_offset) + " Size=" + std::to_string(blob_size));
                     }
 
-                    if (blob_size > 0 && blob_size < 10 * 1024 * 1024) { // Cap at 10MB per texture
+                    if (blob_size > 0 && blob_size < 10 * 1024 * 1024) { // 10MB safety cap
                         std::vector<uint8_t> buffer(blob_size);
                         fseek(file, png_offset, SEEK_SET);
                         fread(buffer.data(), 1, blob_size, file);
