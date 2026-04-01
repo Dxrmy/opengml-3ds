@@ -144,13 +144,21 @@ static inline std::string ext_rtrim(std::string s)
 template<typename Out>
 static inline void split(std::vector<Out>& out, std::string_view s, const std::string& delimiter=" ", bool combine=true)
 {
-    int start = 0;
-    while (start < s.size())
+    if (delimiter.empty())
+    {
+        if (!combine || !s.empty())
+        {
+            out.emplace_back(s);
+        }
+        return;
+    }
+
+    while (true)
     {
         auto next = s.find(delimiter);
         if (next == std::string_view::npos)
         {
-            if (!combine || s != "")
+            if (!combine || !s.empty())
             {
                 out.emplace_back(s);
             }
@@ -159,7 +167,7 @@ static inline void split(std::vector<Out>& out, std::string_view s, const std::s
         else
         {
             std::string_view r = s.substr(0, next);
-            if (!combine || r != "")
+            if (!combine || !r.empty())
             {
                 out.emplace_back(r);
             }
