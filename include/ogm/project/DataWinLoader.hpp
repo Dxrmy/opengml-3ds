@@ -4,6 +4,8 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <cstdio>
+#include <cstdint>
 
 namespace ogm { namespace project {
 
@@ -14,8 +16,18 @@ public:
     // Parses the IFF structure and prints chunk IDs
     bool load();
 
+    std::vector<std::string> m_strings;
+    
+    struct GameMetadata {
+        std::string game_name;
+        uint32_t window_width;
+        uint32_t window_height;
+    } m_meta;
+
 private:
     std::string m_path;
+    
+    std::string read_string_at(FILE* f, size_t offset);
     
     struct ChunkHeader {
         char id[4];

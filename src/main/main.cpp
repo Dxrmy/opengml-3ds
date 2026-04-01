@@ -15,7 +15,10 @@
 #include "ogm/interpreter/Garbage.hpp"
 #include "ogm/asset/AssetTable.hpp"
 #include "ogm/project/Project.hpp"
+#include "ogm/project/DataWinLoader.hpp"
+#include "ogm/interpreter/display/Display.hpp"
 #include "ogm/common/error.hpp"
+#include "ogm/common/Trace.hpp"
 
 #include "unzip.hpp"
 
@@ -42,6 +45,7 @@
 #define _STR(A) #A
 #define STR(A) _STR(A)
 #define VERSION_STR STR(VERSION)
+#include <exception>
 
 using namespace std;
 using namespace ogm;
@@ -51,18 +55,41 @@ using namespace ogm;
 #include <citro3d.h>
 #include <citro2d.h>
 u32 __stacksize__ = 1024 * 1024;
+
+void custom_terminate() {
+    std::cout << "\n[CRITICAL] Engine Terminated Unexpectedly!" << std::endl;
+    std::cout << "Press START to exit.\n";
+    while (aptMainLoop()) {
+        gspWaitForVBlank();
+        gfxSwapBuffers();
+        hidScanInput();
+        if (hidKeysDown() & KEY_START) break;
+    }
+    std::exit(1);
+}
 #endif
 
 int umain (int argn, char** argv)
 {
     #ifdef __3DS__
+    std::set_terminate(custom_terminate);
     gfxInitDefault();
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
     C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
     C2D_Prepare();
     consoleInit(GFX_BOTTOM, NULL);
+    remove("sdmc:/3ds/OpenGML/loader_log.txt"); // Clear old log
     consoleDebugInit(debugDevice_SVC);
-    std::cout << "LOGGING SYSTEM ONLINE: Citra should see this!" << std::endl;
+    std::cout << "--- SANITY CHECK: CONSOLE INIT SUCCESS ---" << std::endl;
+    std::cout << "Build ID: BUILD_2026_03_31_v9_SDLOG" << std::endl;
+    std::cout << "Press START to test the Loader." << std::endl;
+    while (aptMainLoop()) {
+        gspWaitForVBlank();
+        gfxSwapBuffers();
+        hidScanInput();
+        if (hidKeysDown() & KEY_START) break;
+    }
+    std::cout << "--- ENGINE BOOT ---" << std::endl;
     #endif
 
     #if defined(EMSCRIPTEN)
@@ -256,7 +283,7 @@ int umain (int argn, char** argv)
     exit(0);
   }
 
-
+  #ifndef __3DS__
   if (version)
   {
       std::cout << VERSION_STR << std::endl;
@@ -273,13 +300,6 @@ int umain (int argn, char** argv)
           std::cout << "Please run from a console for more options." << std::endl;
           ogm::sleep(500);
       }
-#ifdef __3DS__
-      filename = "sdmc:/3ds/OpenGML/data.win";
-      filename_index = 1;
-      compile = true;
-      execute = true;
-      std::cout << "3DS Fallback: Loading " << filename << std::endl;
-#else
       std::cout << "Opening popup window..." << std::endl;
       ogm::interpreter::Variable filter = "project file|*.project.gmx;*.project.ogm;*.yyp";
       ogm::interpreter::Variable fname = "";
@@ -308,27 +328,25 @@ int umain (int argn, char** argv)
       filter.cleanup();
       fname.cleanup();
       selected.cleanup();
-#endif
   }
   else
   {
       if (filename_index == -1)
       {
-          #ifdef __3DS__
-          filename = "sdmc:/3ds/OpenGML/data.win";
-          filename_index = 1;
-          compile = true;
-          execute = true;
-          #else
           std::cout << "Basic usage: " << argv[0] << " [--execute] [--dis] [--ast] [--gui] [--debug] [--rdebug] [--compile] [--single-thread] [--verbose] [--cache] [--show-license] file [parameters...]" << std::endl;
           exit(0);
-          #endif
       }
       else
       {
           filename = argv[filename_index];
       }
   }
+  #else
+  filename = "sdmc:/3ds/OpenGML/data.win";
+  filename_index = 1;
+  compile = true;
+  execute = true;
+  #endif
 
   if (gui && compile)
   {
@@ -338,15 +356,6 @@ int umain (int argn, char** argv)
 
   #ifdef __3DS__
   std::cout << "DEBUG: Filename is " << filename << std::endl;
-  {
-      FILE* f = fopen(filename.c_str(), "rb");
-      if (f) {
-          std::cout << "DEBUG: File found!" << std::endl;
-          fclose(f);
-      } else {
-          std::cout << "DEBUG: FILE NOT FOUND!" << std::endl;
-      }
-  }
   #endif
 
   ogm::interpreter::staticExecutor.m_frame.m_config.m_cache = cache;
@@ -360,10 +369,29 @@ int umain (int argn, char** argv)
   }
   #endif
 
-  ifstream inFile;
+  bool is_binary_win = ends_with(filename, ".win");
+  bool file_exists = false;
 
-  inFile.open(filename);
-  if (!inFile)
+  #ifdef __3DS__
+  FILE* check_f = fopen(filename.c_str(), "rb");
+  if (check_f) {
+      file_exists = true;
+      fclose(check_f);
+  }
+  #else
+  ifstream check_inFile(filename);
+  if (check_inFile) {
+      file_exists = true;
+      check_inFile.close();
+  }
+  #endif
+
+  ifstream inFile;
+  if (!is_binary_win) {
+      inFile.open(filename);
+  }
+
+  if (!file_exists)
   {
       std::cout << "Could not open file " << filename << std::endl;
       exit(1);
@@ -384,7 +412,7 @@ int umain (int argn, char** argv)
               exit(1);
           }
       }
-      else if (ends_with(filename, ".project.gmx") || ends_with(filename, ".project.arf") || ends_with(filename, ".project.ogm") || ends_with(filename, ".yyp"))
+      else if (ends_with(filename, ".project.gmx") || ends_with(filename, ".project.arf") || ends_with(filename, ".project.ogm") || ends_with(filename, ".yyp") || is_binary_win)
       {
           process_project = true;
       }
@@ -467,7 +495,9 @@ int umain (int argn, char** argv)
 
       if (process_project)
       {
-          inFile.close();
+          if (inFile.is_open()) {
+              inFile.close();
+          }
 
           // ignore assets with name matching a define.
           for (auto& [name, value] : defines)
@@ -479,8 +509,28 @@ int umain (int argn, char** argv)
           project.process();
           
           #ifdef __3DS__
-          std::cout << "DEBUG: project.process() returned." << std::endl;
-          std::cout << "Press START to continue." << std::endl;
+          if (project.m_data_win_loader)
+          {
+              SD_PRINT("Injecting data from DataWinLoader...");
+              // Inject strings
+              ogm::interpreter::staticExecutor.m_frame.m_string_table = std::move(project.m_data_win_loader->m_strings);
+              SD_PRINT("  -> Strings injected: " + std::to_string(ogm::interpreter::staticExecutor.m_frame.m_string_table.size()));
+              
+              // Inject metadata
+              if (ogm::interpreter::staticExecutor.m_frame.m_display)
+              {
+                  ogm::interpreter::staticExecutor.m_frame.m_display->set_window_size(
+                      project.m_data_win_loader->m_meta.window_width,
+                      project.m_data_win_loader->m_meta.window_height
+                  );
+                  SD_PRINT("  -> Window size set: " + std::to_string(project.m_data_win_loader->m_meta.window_width) + "x" + std::to_string(project.m_data_win_loader->m_meta.window_height));
+              }
+          }
+          #endif
+          
+          #ifdef __3DS__
+          SD_PRINT("DEBUG: project.process() returned.");
+          SD_PRINT("Press START to continue to compilation...");
           while (aptMainLoop()) {
               gspWaitForVBlank();
               gfxSwapBuffers();
@@ -729,6 +779,18 @@ int main (int argc, char** argv)
     
     // cleanup.
     restore_terminal_colours();
+
+    #ifdef __3DS__
+    std::cout << "\n--- ENGINE STOPPED ---" << std::endl;
+    std::cout << "Press START to close the app." << std::endl;
+    while(aptMainLoop()) {
+        hidScanInput();
+        if (hidKeysDown() & KEY_START) break;
+        gfxSwapBuffers();
+    }
+    #endif
+
+    return 0;
 }
 
 #ifdef OGM_MINIZIP_NOOPT

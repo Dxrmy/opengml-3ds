@@ -363,7 +363,10 @@ void Display::set_camera(coord_t, coord_t, coord_t, coord_t, coord_t, coord_t, c
 void Display::set_camera_ortho(real_t, real_t, real_t, real_t, real_t) {}
 void Display::set_fog(bool, real_t, real_t, uint32_t) {}
 void Display::set_window_position(real_t, real_t) {}
-void Display::set_window_size(real_t, real_t) {}
+void Display::set_window_size(real_t w, real_t h) {
+    g_window_width = static_cast<uint32_t>(w);
+    g_window_height = static_cast<uint32_t>(h);
+}
 geometry::Vector<real_t> Display::get_display_dimensions() { return {0, 0}; }
 uint32_t Display::get_clear_colour() { return g_clear_colour; }
 void Display::set_clear_colour(uint32_t c) { g_clear_colour = c; }

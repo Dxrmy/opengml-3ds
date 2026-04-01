@@ -1,0 +1,1 @@
+arm-none-eabi-gdb -ex "target remote localhost:24689" OpenGML.elf

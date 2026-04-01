@@ -994,6 +994,9 @@ public:
             return m_config.m_next_instance_id++;
         }
 
+        // Binary project string table
+        std::vector<std::string> m_string_table;
+
     public:
         //// member variables ////
         DataStructureManager<DSList> m_ds_list;

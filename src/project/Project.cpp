@@ -176,10 +176,12 @@ void Project::process()
     }
     else if (ends_with(m_project_file, ".win"))
     {
-        DataWinLoader loader(get_project_file_path().c_str());
-        if (!loader.load()) {
+        std::cout << "Routing to DataWinLoader..." << std::endl;
+        m_data_win_loader = std::make_unique<DataWinLoader>(get_project_file_path().c_str());
+        if (!m_data_win_loader->load()) {
             std::cout << "Skipped DataWinLoader (failed to load)" << std::endl;
         }
+        return;
     }
     else
     {

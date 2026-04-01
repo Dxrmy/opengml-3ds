@@ -14,6 +14,10 @@
 #include <random>
 #include <time.h>
 
+#ifdef __3DS__
+#include <3ds.h>
+#endif
+
 #if __has_include (<cxxabi.h>)
 #include <cxxabi.h>
 #define OGM_CXX_ABI_AVAILABLE
@@ -109,6 +113,32 @@ std::string encode_url(const std::string &value)
     }
 
     return escaped.str();
+}
+
+void HexDump(const void* data, size_t size) {
+    const unsigned char* p = static_cast<const unsigned char*>(data);
+    for (size_t i = 0; i < size; i += 16) {
+        printf("%06zx: ", i);
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < size) {
+                printf("%02x ", p[i + j]);
+            } else {
+                printf("   ");
+            }
+        }
+        printf(" ");
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < size) {
+                printf("%c", (p[i + j] >= 32 && p[i + j] <= 126) ? p[i + j] : '.');
+            }
+        }
+        printf("\n");
+        #ifdef __3DS__
+        if (i > 0 && i % 512 == 0) {
+            gfxSwapBuffers();
+        }
+        #endif
+    }
 }
 
 }

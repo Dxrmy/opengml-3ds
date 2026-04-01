@@ -9,11 +9,13 @@
 #include "ogm/common/util.hpp"
 #include "ogm/sys/util_sys.hpp"
 #include "ogm/common/parallel.hpp"
+#include "ogm/project/DataWinLoader.hpp"
 
 #include <cstring>
 #include <string>
 #include <vector>
 #include <set>
+#include <memory>
 
 #ifdef PARALLEL_COMPILE
 #include <mutex>
@@ -97,6 +99,7 @@ public:
     
     // tree of resource names. All entries can be looked up in m_resources.
     ResourceList m_tree;
+    std::unique_ptr<DataWinLoader> m_data_win_loader;
 
 private:
     bool m_processed = false;
