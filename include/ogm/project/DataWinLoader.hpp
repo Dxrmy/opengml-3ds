@@ -7,17 +7,20 @@
 #include <cstdio>
 #include <cstdint>
 
+#include "ogm/asset/Image.hpp"
+
 namespace ogm { namespace project {
 
 class DataWinLoader {
 public:
     DataWinLoader(const char* path);
-    
+
     // Parses the IFF structure and prints chunk IDs
     bool load();
 
     std::vector<std::string> m_strings;
-    
+    std::vector<ogm::asset::Image> m_images;
+
     struct GameMetadata {
         std::string game_name;
         uint32_t window_width;
@@ -26,9 +29,9 @@ public:
 
 private:
     std::string m_path;
-    
+
     std::string read_string_at(FILE* f, size_t offset);
-    
+
     struct ChunkHeader {
         char id[4];
         uint32_t size;
