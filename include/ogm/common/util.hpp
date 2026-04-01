@@ -142,19 +142,14 @@ static inline std::string ext_rtrim(std::string s)
 // OPTIMIZE: this whole function
 // combine: filter out empty strings in output
 template<typename Out>
-static inline void split(std::vector<Out>& out, std::string_view s, const std::string& delimiter=" ", bool combine=true)
+static inline void split(std::vector<Out>& out, std::string_view s, std::string_view delimiter=" ", bool combine=true)
 {
-    int start = 0;
-    while (start < s.size())
+    while (true)
     {
         auto next = s.find(delimiter);
         if (next == std::string_view::npos)
         {
-            if (!combine || s != "")
-            {
-                out.emplace_back(s);
-            }
-            return;
+            break;
         }
         else
         {
@@ -165,6 +160,11 @@ static inline void split(std::vector<Out>& out, std::string_view s, const std::s
             }
             s = s.substr(next + delimiter.size());
         }
+    }
+
+    if (!combine || s != "")
+    {
+        out.emplace_back(s);
     }
 }
 
