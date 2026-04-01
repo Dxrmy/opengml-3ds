@@ -132,9 +132,9 @@ PrBodyContainer* Parser::parse() {
         p->bodies.push_back(body);
         p->names.push_back(name);
     }
-    
+
     p->m_end = ts.location();
-    
+
     return p;
 }
 
@@ -143,7 +143,7 @@ PrExpression* Parser::parse_expression() {
 }
 
 Production* Parser::read_production() {
-  
+
   if (ts.peek().type == PPMACRO)
   {
     PrStatement* p = read_macro_definition();
@@ -180,22 +180,22 @@ PrMacroDefinition* Parser::read_macro_definition() {
   std::string s = *ts.peek().value;
   trim(s);
   ts.read();
-  
+
   static std::regex re ("#macro\\s+((" REGEX_IDENT "):)?(" REGEX_IDENT ")\\s+(.*)");
-  
+
   std::smatch sm;
   if (std::regex_match(s,sm,re))
   {
     ogm_assert(sm.size() == 5)
     cout << "matched.\n";
-    
+
     std::string config = sm[2].str();
     std::string name = sm[3].str();
     std::string value = sm[4].str();
     trim(config);
     trim(name);
     trim(value);
-    
+
     PrMacroDefinition* p = new PrMacroDefinition(config, name, value);
     p->m_start = lc;
     p->m_end = ts.location();
@@ -224,12 +224,12 @@ PrStatement* Parser::read_statement() {
           read_function_literal()
         }
       };
-      
+
       if (fn->fn->name.value->length() == 0)
       {
         throw ParseError(ErrorCode::P::fndefname, fn->m_start, "function declaration requires name");
       }
-      
+
       return fn.release();
     }
     else if (value == "if")
@@ -537,14 +537,14 @@ PrExpressionFn* Parser::read_expression_function() {
       new PrExpressionFn()
   };
   pfn->m_start = lc;
-  
+
   if (ts.peek() == CmpToken(KW, "new"))
   {
       ts.read();
       pfn->m_new = true;
       ignoreWS(pfn.get());
   }
-  
+
   pfn->callee = std::unique_ptr<PrExpression>(read_term(false));
 
   ignoreWS(pfn.get());
@@ -610,13 +610,13 @@ PrFunctionLiteral* Parser::read_function_literal() {
   LineColumn lc = ts.location();
   std::unique_ptr<PrFunctionLiteral> p{ new PrFunctionLiteral() };
   p->m_start = lc;
-  
+
   assert_peek(ErrorCode::P::litfnkw, CmpToken(KW,"function"),"%unexpected while expecting keyword \"function\"");
-  
+
   ts.read(); //function
-  
+
   ignoreWS(p.get());
-  
+
   if (ts.peek().type == ID)
   {
     p->name = ts.read();
@@ -625,12 +625,12 @@ PrFunctionLiteral* Parser::read_function_literal() {
   {
     p->name = {ID, ""};
   }
-  
+
   ignoreWS(p.get());
-  
+
   assert_peek(ErrorCode::P::litfnparen, CmpToken(PUNC,"("),"%unexpected while expecting open-parenthesis \"(\" for function literal");
   ts.read(); //(
-  
+
   while (true) {
     ignoreWS(p.get());
     Token next(ts.peek());
@@ -649,40 +649,40 @@ PrFunctionLiteral* Parser::read_function_literal() {
     }
     else break;
   }
-  
+
   assert_peek(ErrorCode::P::litfnargs, CmpToken(PUNC,")"),"%unexpected while parsing function literal; expected \",\" or \")\"");
   ts.read(); //)
-  
+
   ignoreWS(p.get());
-  
+
   if (ts.peek() == CmpToken(KW, "constructor"))
   {
     p->constructor = true;
     ts.read(); //constructor
   }
-  
+
   ignoreWS(p.get());
-  
+
   assert_peek(ErrorCode::P::litfnbrace, CmpToken(PUNC, "{"), "%unexpected while parsing function literal; expected body open-brace \"{\"");
   p->body = std::unique_ptr<PrBody>( read_block(true, false) );
-  
+
   p->m_end = ts.location();
   return p.release();
 }
 
 PrStructLiteral* Parser::read_struct_literal() {
-    
+
     #ifndef OGM_STRUCT_SUPPORT
     throw ParseError(ErrorCode::P::hasstruct, ts.location(), "Structs support is not enabled. Please recompile ogm with -DOGM_STRUCT_SUPPORT=ON.");
     #endif
-    
+
     LineColumn lc = ts.location();
     std::unique_ptr<PrStructLiteral> p{ new PrStructLiteral() };
     p->m_start = lc;
-    
+
     assert_peek(ErrorCode::P::litstruct, CmpToken(PUNC,"{"),"%unexpected while expecting \"{\"");
     ts.read(); //{
-        
+
     while (true)
     {
         ignoreWS(p.get());
@@ -693,15 +693,15 @@ PrStructLiteral* Parser::read_struct_literal() {
             ts.read();
             break;
         }
-        
+
         if (ts.peek().type != ID)
         {
             throw ParseError(ErrorCode::P::litobtok, ts.location(), "Unexpected token \"{}\" while reading object literal; expected member name.", *ts.peek().value);
         }
-        
+
         LineColumn lc = ts.location();
         PrVarDeclaration* d = new PrVarDeclaration(ts.read(), nullptr, lc);
-        
+
         ignoreWS(d);
         assert_peek(ErrorCode::P::litstructfield, CmpToken(PUNC,":"),"%unexpected while expecting \":\"");
         ts.read(); // :
@@ -786,7 +786,7 @@ PrStatementVar* Parser::read_statement_var() {
     if (ts.peek().type != ID)
     {
       //throw ParseError(ErrorCode::P::vartok, ts.location(), "Unexpected token \"{}\" while reading var declaration; expected variable name.", *ts.peek().value);
-      
+
       PrVarDeclaration* d = new PrVarDeclaration(Token(TokenType::WS, ""), nullptr, ts.location());
       p->declarations.push_back(d);
       return p;
@@ -1015,18 +1015,17 @@ void Parser::siphonWS(Production* src, Production* dst, bool as_postfix, bool co
 // This function discards exactly one newline from the end of the
 // whitespace postfixes.
 void Parser::removeExtraNewline(Production* p) {
-  //TODO: rewrite this to use iterators
   auto& infixes = p->infixes;
   auto& postfix_n = p->postfix_n;
 
   p->flattenPostfixes();
 
-  for (int i=0;i<postfix_n;i++) {
-    int iter = infixes.size() - i - 1;
-    if (infixes[iter]) {
-      if (infixes[iter]->val.value == "\n") {
-        delete(infixes[iter]);
-        infixes[iter] = nullptr;
+  auto it = infixes.rbegin();
+  for (int i=0; i < postfix_n && it != infixes.rend(); ++i, ++it) {
+    if (*it) {
+      if ((*it)->val.value == "\n") {
+        delete(*it);
+        *it = nullptr;
         return;
       } else {
         return;
@@ -1093,7 +1092,7 @@ static bool token_is_decoration(
 }
 
 bool Parser::peek_function() {
-    
+
     // try some common early-outs.
     if(ts.peek().type != ID) return false;
     if (ts.peek(1) == CmpToken(PUNC,"(")) {
