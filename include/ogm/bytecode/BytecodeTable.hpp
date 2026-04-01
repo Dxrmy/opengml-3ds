@@ -323,7 +323,10 @@ public:
     inline Bytecode get_bytecode_NOMUTEX(bytecode_index_t bytecode_index) const
     {
         ogm_assert(bytecode_index != k_no_bytecode);
-        ogm_assert(bytecode_index < m_bytecode.size());
+        if (!(bytecode_index < m_bytecode.size()))
+        {
+             throw ogm::AssertionError("BytecodeTable::get_bytecode index {} out of range (size {})", (uint32_t)bytecode_index, (uint32_t)m_bytecode.size());
+        }
         return m_bytecode.at(bytecode_index);
     }
 
