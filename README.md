@@ -30,11 +30,16 @@ State of the 3DS Port as of latest push:
     - [x] `citro3d` render loop initialization.
     - [x] Basic shape rendering (Filled Rectangles & Circles).
     - [x] Dynamic background clearing.
-    - [ ] `citro2d` sprite rendering.
+    - [x] `citro2d` sprite rendering.
     - [ ] Hardware blend modes via `C3D_TexEnv`.
-- [ ] **Input System**: `hid` keys mapped to GML `vk_` constants.
+- [x] **Input System**: `hid` keys mapped to GML `vk_` constants, including Touch-to-Mouse.
 - [ ] **Audio**: `ndsp` raw PCM buffer implementation.
-- [ ] **Data.win Loader (W.I.P)**: Direct parsing of compiled GameMaker IFF files without full decompilation.
+- [x] **Data.win Loader (W.I.P)**: Direct parsing of compiled GameMaker IFF files without full decompilation.
+    - [x] `FORM`, `GEN8`, and `STRG` chunk parsing.
+    - [ ] `TXTR` and `TPAG` chunk parsing.
+    - [ ] `OBJT` and `ROOM` layout parsing.
+    - [ ] `CODE` execution mapping.
+- [x] **Testing & Security**: Comprehensive `Catch2` unit testing for string utilities and `AssetTable`, plus cross-platform socket error (`EAGAIN`) handling and `fn_filesystem` buffer overflow fixes.
 
 For build instructions, see [3DS_BUILD.md](3DS_BUILD.md).
 
