@@ -524,6 +524,15 @@ int umain (int argn, char** argv)
                       project.m_data_win_loader->m_meta.window_height
                   );
                   SD_PRINT("  -> Window size set: " + std::to_string(project.m_data_win_loader->m_meta.window_width) + "x" + std::to_string(project.m_data_win_loader->m_meta.window_height));
+
+                  // Inject textures
+                  SD_PRINT("  -> Injecting textures...");
+                  size_t tex_count = 0;
+                  for (auto& img : project.m_data_win_loader->m_images) {
+                      ogm::interpreter::staticExecutor.m_frame.m_display->m_textures.create_tpage_from_image(img);
+                      tex_count++;
+                  }
+                  SD_PRINT("  -> Textures injected: " + std::to_string(tex_count));
               }
           }
           #endif

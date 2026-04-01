@@ -479,7 +479,7 @@ namespace
             return vk_up;
         case SDLK_PAUSE:
             return vk_pause;
-        case SDLK_PRINT:
+        case SDLK_PRINTSCREEN:
             return vk_printscreen;
         case SDLK_INSERT:
             return vk_insert;
@@ -511,25 +511,25 @@ namespace
             return vk_open_square_bracket;
         case SDLK_RIGHTBRACKET:
             return vk_close_square_bracket;
-        case SDLK_KP0:
+        case SDLK_KP_0:
             return vk_numpad0;
-        case SDLK_KP1:
+        case SDLK_KP_1:
             return vk_numpad1;
-        case SDLK_KP2:
+        case SDLK_KP_2:
             return vk_numpad2;
-        case SDLK_KP3:
+        case SDLK_KP_3:
             return vk_numpad3;
-        case SDLK_KP4:
+        case SDLK_KP_4:
             return vk_numpad4;
-        case SDLK_KP5:
+        case SDLK_KP_5:
             return vk_numpad5;
-        case SDLK_KP6:
+        case SDLK_KP_6:
             return vk_numpad6;
-        case SDLK_KP7:
+        case SDLK_KP_7:
             return vk_numpad7;
-        case SDLK_KP8:
+        case SDLK_KP_8:
             return vk_numpad8;
-        case SDLK_KP9:
+        case SDLK_KP_9:
             return vk_numpad9;
         case SDLK_KP_MULTIPLY:
             return vk_multiply;
