@@ -2421,6 +2421,11 @@ bool execute_bytecode_loop()
                     read(in, index);
                     read(in, argc);
                     TRACE_STACK(argc);
+                    
+                    if (!staticExecutor.m_frame.m_bytecode.has_bytecode(index)) {
+                        throw MiscError("Script index " + std::to_string((uint32_t)index) + " not found in BytecodeTable");
+                    }
+                    
                     Bytecode bytecode = staticExecutor.m_frame.m_bytecode.get_bytecode(index);
                     ogm_assert(bytecode.m_argc == static_cast<decltype(bytecode.m_argc)>(-1) || bytecode.m_argc == argc);
 

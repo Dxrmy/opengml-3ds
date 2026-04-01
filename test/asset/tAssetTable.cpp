@@ -39,10 +39,10 @@ TEST_CASE( "AssetTable clear", "[AssetTable]" )
 
     // Verify state is clean
     REQUIRE(table.asset_count() == 0);
-    REQUIRE(table.get_asset("asset1") == nullptr);
-    REQUIRE(table.get_asset("asset2") == nullptr);
-    REQUIRE(table.get_asset(index1) == nullptr);
-    REQUIRE(table.get_asset(index2) == nullptr);
+    REQUIRE(!table.get_asset("asset1"));
+    REQUIRE(!table.get_asset("asset2"));
+    REQUIRE(!table.get_asset(index1));
+    REQUIRE(!table.get_asset(index2));
 }
 
 TEST_CASE( "AssetTable add_asset", "[AssetTable]" ) {

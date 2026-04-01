@@ -235,7 +235,7 @@ TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureVi
         C3D_Tex* srcTex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
         C3D_Tex* dstTex = reinterpret_cast<C3D_Tex*>(page->m_gl_tex);
 
-        C3D_RenderTarget* tempTarget = C3D_RenderTargetCreateFromTex(dstTex, GPU_TEX_2D, 0, -1);
+        C3D_RenderTarget* tempTarget = C3D_RenderTargetCreateFromTex(dstTex, GPU_TEXFACE_2D, 0, -1);
         if (tempTarget) {
             C2D_SceneBegin(tempTarget);
 
@@ -397,7 +397,7 @@ TexturePage* TextureStore::arrange_tpage(const std::vector<TextureView*>& source
         C3D_RenderTarget* tempTarget = nullptr;
         if (page->m_gl_tex) {
             C3D_Tex* dstTex = reinterpret_cast<C3D_Tex*>(page->m_gl_tex);
-            tempTarget = C3D_RenderTargetCreateFromTex(dstTex, GPU_TEX_2D, 0, -1);
+            tempTarget = C3D_RenderTargetCreateFromTex(dstTex, GPU_TEXFACE_2D, 0, -1);
             if (tempTarget) {
                 C2D_SceneBegin(tempTarget);
             }
