@@ -47,6 +47,7 @@ State of the 3DS Port as of latest push:
     - [x] **Full Security Suite**: Fixed buffer overflows and OOB writes in `Filesystem`, `fs_unix`, and `fs_windows`.
     - [x] **Headless VM Stepper**: Standalone VM loop testing.
     - [x] **GML Bytecode Fuzzer**: VM stress testing.
+    - [x] **Asset Injection Mocker**: C++ unit tests for programmatic engine state injection.
 - [x] **Analysis & Profiling**: 
     - [x] Python-based IFF chunk validators and bytecode disassemblers.
     - [x] Native 3DS Memory Profiler.
