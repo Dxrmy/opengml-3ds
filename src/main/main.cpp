@@ -81,7 +81,7 @@ int umain (int argn, char** argv)
     remove("sdmc:/3ds/OpenGML/loader_log.txt"); // Clear old log
     consoleDebugInit(debugDevice_SVC);
     std::cout << "--- SANITY CHECK: CONSOLE INIT SUCCESS ---" << std::endl;
-    std::cout << "Build ID: BUILD_2026_04_01_v13_CHUNK_FIX" << std::endl;
+    std::cout << "Build ID: BUILD_2026_04_01_v14_PARSER_STABLE" << std::endl;
     std::cout << "Press START to test the Loader." << std::endl;
     while (aptMainLoop()) {
         gspWaitForVBlank();
