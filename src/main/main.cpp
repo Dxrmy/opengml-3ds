@@ -81,7 +81,7 @@ int umain (int argn, char** argv)
     remove("sdmc:/3ds/OpenGML/loader_log.txt"); // Clear old log
     consoleDebugInit(debugDevice_SVC);
     std::cout << "--- SANITY CHECK: CONSOLE INIT SUCCESS ---" << std::endl;
-    std::cout << "Build ID: BUILD_2026_04_01_v11_DEPLOY_FIXED" << std::endl;
+    std::cout << "Build ID: BUILD_2026_04_01_v13_CHUNK_FIX" << std::endl;
     std::cout << "Press START to test the Loader." << std::endl;
     while (aptMainLoop()) {
         gspWaitForVBlank();
@@ -534,6 +534,20 @@ int umain (int argn, char** argv)
                   }
                   SD_PRINT("  -> Textures injected: " + std::to_string(tex_count));
               }
+
+              // Inject variables
+              SD_PRINT("  -> Injecting variables...");
+              for (auto& var : project.m_data_win_loader->m_variables) {
+                  ogm::interpreter::staticExecutor.m_frame.m_reflection->m_namespace_instance.add_id(var.name, var.id);
+              }
+              SD_PRINT("  -> Variables injected: " + std::to_string(project.m_data_win_loader->m_variables.size()));
+
+              // Inject functions
+              SD_PRINT("  -> Injecting functions...");
+              for (auto& func : project.m_data_win_loader->m_functions) {
+                  ogm::interpreter::staticExecutor.m_frame.m_assets.add_asset_at<ogm::asset::AssetScript>(func.id, func.name.c_str());
+              }
+              SD_PRINT("  -> Functions injected: " + std::to_string(project.m_data_win_loader->m_functions.size()));
           }
           #endif
           

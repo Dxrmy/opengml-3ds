@@ -78,8 +78,8 @@ public:
         return nullptr;
     }
 
-    template<typename Asset>
-    Asset* add_asset(const char* assetName, asset_index_t* outAssetIndex = nullptr)
+    template<typename AssetT>
+    AssetT* add_asset(const char* assetName, asset_index_t* outAssetIndex = nullptr)
     {
         if (outAssetIndex)
         {
@@ -94,8 +94,28 @@ public:
         {
             m_index_name.emplace_back("");
         }
-        Asset* asset = new Asset();
+        AssetT* asset = new AssetT();
         m_index_asset.emplace_back(asset);
+        return asset;
+    }
+
+    template<typename AssetT>
+    AssetT* add_asset_at(asset_index_t index, const char* assetName)
+    {
+        if (index >= m_index_asset.size())
+        {
+            m_index_asset.resize(index + 1, nullptr);
+            m_index_name.resize(index + 1, "");
+        }
+
+        if (assetName != nullptr)
+        {
+            m_name_index[assetName] = index;
+            m_index_name[index] = assetName;
+        }
+
+        AssetT* asset = new AssetT();
+        m_index_asset[index] = asset;
         return asset;
     }
 

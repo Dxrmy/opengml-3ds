@@ -233,7 +233,7 @@ void Display::draw_image(TextureView* tv, coord_t x1, coord_t y1, coord_t x2, co
     if (!tv || !tv->m_tpage || !tv->m_tpage->m_gl_tex) return;
 
     // Use C2D_DrawImage for proper sprite rendering
-    C3D_Tex* tex = static_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+    C3D_Tex* tex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
 
     // Set up texture environment to blend sprite with vertex color
     C3D_TexEnv* env = C3D_GetTexEnv(0);
@@ -278,7 +278,7 @@ void Display::draw_image(TextureView* tv, coord_t x1, coord_t y1, coord_t x2, co
 void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t x, coord_t y, coord_t w, coord_t h, coord_t px, coord_t py, coord_t pw, coord_t ph) {
     if (!tv || !tv->m_tpage || !tv->m_tpage->m_gl_tex) return;
 
-    C3D_Tex* tex = static_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+    C3D_Tex* tex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
 
     C3D_TexEnv* env = C3D_GetTexEnv(0);
     C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);

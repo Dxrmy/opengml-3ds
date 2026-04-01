@@ -122,6 +122,17 @@ public:
         return get_id(name);
     }
 
+    void add_id(std::string name, variable_id_t id)
+    {
+        WRITE_LOCK(m_mutex)
+        m_name_id[name] = id;
+        m_id_name[id] = name;
+        if (id >= m_next)
+        {
+            m_next = id + 1;
+        }
+    }
+
     variable_id_t id_count() const
     {
         READ_LOCK(m_mutex)

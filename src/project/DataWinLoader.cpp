@@ -176,6 +176,60 @@ bool DataWinLoader::load() {
                     }
                 }
             }
+            else if (chunk_name == "VARI") {
+                uint32_t var_count;
+                fread(&var_count, 4, 1, file);
+                SD_PRINT("  -> Variable Count: " + std::to_string(var_count));
+
+                std::vector<uint32_t> offsets(var_count);
+                fread(offsets.data(), 4, var_count, file);
+
+                m_variables.reserve(var_count);
+                for (uint32_t i = 0; i < var_count; ++i) {
+                    fseek(file, offsets[i], SEEK_SET);
+                    uint32_t name_offset, scope, id, count, address;
+                    fread(&name_offset, 4, 1, file);
+                    fread(&scope, 4, 1, file);
+                    fread(&id, 4, 1, file);
+                    fread(&count, 4, 1, file);
+                    fread(&address, 4, 1, file);
+
+                    std::string name = read_string_at(file, name_offset);
+                    m_variables.push_back({name, id});
+
+                    if (i < 5 || i == var_count - 1) {
+                        SD_PRINT("    -> Var[" + std::to_string(i) + "] ID=" + std::to_string(id) + " Name=" + name);
+                    } else if (i == 5) {
+                        SD_PRINT("    -> ...");
+                    }
+                }
+            }
+            else if (chunk_name == "FUNC") {
+                uint32_t func_count;
+                fread(&func_count, 4, 1, file);
+                SD_PRINT("  -> Function Count: " + std::to_string(func_count));
+
+                std::vector<uint32_t> offsets(func_count);
+                fread(offsets.data(), 4, func_count, file);
+
+                m_functions.reserve(func_count);
+                for (uint32_t i = 0; i < func_count; ++i) {
+                    fseek(file, offsets[i], SEEK_SET);
+                    uint32_t name_offset, id, count;
+                    fread(&name_offset, 4, 1, file);
+                    fread(&id, 4, 1, file);
+                    fread(&count, 4, 1, file);
+
+                    std::string name = read_string_at(file, name_offset);
+                    m_functions.push_back({name, id});
+
+                    if (i < 5 || i == func_count - 1) {
+                        SD_PRINT("    -> Func[" + std::to_string(i) + "] ID=" + std::to_string(id) + " Name=" + name);
+                    } else if (i == 5) {
+                        SD_PRINT("    -> ...");
+                    }
+                }
+            }
             else if (chunk_name == "TXTR") {
                 uint32_t texture_count;
                 fread(&texture_count, 4, 1, file);
