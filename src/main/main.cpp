@@ -539,7 +539,7 @@ int umain (int argn, char** argv)
               // Inject variables
               SD_PRINT("  -> Injecting variables...");
               for (auto& var : project.m_data_win_loader->m_variables) {
-                  ogm::interpreter::staticExecutor.m_frame.m_reflection.add_id(var.name, var.id);
+                  ogm::interpreter::staticExecutor.m_frame.m_reflection.m_namespace_instance.add_id(var.name, var.id);
               }
               SD_PRINT("  -> Variables injected: " + std::to_string(project.m_data_win_loader->m_variables.size()));
 
