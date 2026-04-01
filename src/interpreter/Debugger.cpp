@@ -163,7 +163,7 @@ std::string Debugger::location_for_bytecode_stream(const ogm::interpreter::bytec
     if (show_asm)
     {
         std::stringstream ss;
-        ogm::bytecode::bytecode_dis(staticExecutor.m_pc, ss, standardLibrary, staticExecutor.m_frame.m_reflection, false, staticExecutor.m_pc.m_pos + 1);
+        ogm::bytecode::bytecode_dis(staticExecutor.m_pc, ss, standardLibrary, &staticExecutor.m_frame.m_reflection, false, staticExecutor.m_pc.m_pos + 1);
         line = ss.str();
         trim(line);
     }
@@ -805,7 +805,7 @@ void Debugger::tick_trace(bytecode::BytecodeStream& in)
 
             {
                 std::stringstream ss;
-                ogm::bytecode::bytecode_dis(in, ss, standardLibrary, staticExecutor.m_frame.m_reflection, false, staticExecutor.m_pc.m_pos + 1);
+                ogm::bytecode::bytecode_dis(in, ss, standardLibrary, &staticExecutor.m_frame.m_reflection, false, staticExecutor.m_pc.m_pos + 1);
                 std::string s = ss.str();
                 trim(s);
                 trace_stream << s;
@@ -1733,7 +1733,7 @@ void Debugger::cmd_info_instance(Instance* instance)
         return;
     }
     
-    const bytecode::ReflectionAccumulator* reflection = staticExecutor.m_frame.m_reflection;
+    const bytecode::ReflectionAccumulator* reflection = &staticExecutor.m_frame.m_reflection;
     
     #ifdef OGM_STRUCT_SUPPORT
     if (instance->m_is_struct)
@@ -1965,7 +1965,7 @@ bytecode::Bytecode Debugger::compile_inline(std::string code, const ogm::bytecod
             // use host's local variables.
             cfg.m_existing_locals_namespace = &host.m_debug_symbols->m_namespace_local;
         }
-        bytecode::ProjectAccumulator acc{staticExecutor.m_library, staticExecutor.m_frame.m_reflection, &staticExecutor.m_frame.m_assets, &staticExecutor.m_frame.m_bytecode, &ogm::interpreter::staticExecutor.m_frame.m_config};
+        bytecode::ProjectAccumulator acc{staticExecutor.m_library, &staticExecutor.m_frame.m_reflection, &staticExecutor.m_frame.m_assets, &staticExecutor.m_frame.m_bytecode, &ogm::interpreter::staticExecutor.m_frame.m_config};
         index = bytecode_generate(
             {ast, "ogmdb anonymous bytecode section", code.c_str(), retc, 0},
             acc,

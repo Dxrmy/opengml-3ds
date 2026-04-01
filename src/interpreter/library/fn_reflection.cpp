@@ -25,9 +25,6 @@ void ogm::interpreter::fn::string_execute(VO out, V v)
 {
     static std::map<size_t, bytecode_index_t> indices;
     
-    // can't perform string execution without reflection.
-    if (!frame.m_reflection) throw MiscError("Reflection is not enabled.");
-    
     // check if code is already cached.
     bytecode_index_t index;;
     std::string code = v.castCoerce<std::string>();
@@ -62,7 +59,7 @@ void ogm::interpreter::fn::string_execute(VO out, V v)
             GenerateConfig cfg;
             bytecode::ProjectAccumulator acc{
                 staticExecutor.m_library,
-                staticExecutor.m_frame.m_reflection,
+                &staticExecutor.m_frame.m_reflection,
                 &staticExecutor.m_frame.m_assets,
                 &staticExecutor.m_frame.m_bytecode,
                 &ogm::interpreter::staticExecutor.m_frame.m_config
@@ -100,213 +97,164 @@ void ogm::interpreter::fn::string_execute(VO out, V v)
 
 void ogm::interpreter::fn::variable_global_exists(VO out, V v)
 {
-    if (frame.m_reflection)
+    std::string name = v.castCoerce<std::string>();
+    const auto& namesp = frame.m_reflection.m_namespace_instance;
+    if (namesp.has_id(name))
     {
-        std::string name = v.castCoerce<std::string>();
-        const auto& namesp = frame.m_reflection->m_namespace_instance;
-        if (namesp.has_id(name))
+        variable_id_t variable_id = namesp.find_id(name);
+        if (frame.has_global_variable(variable_id))
         {
-            variable_id_t variable_id = namesp.find_id(name);
-            if (frame.has_global_variable(variable_id))
-            {
-                out = true;
-                return;
-            }
+            out = true;
+            return;
         }
+    }
 
-        out = false;
-        return;
-    }
-    else
-    {
-        throw MiscError("Reflection is not enabled.");
-    }
+    out = false;
+    return;
 }
 
 void ogm::interpreter::fn::variable_global_get(VO out, V v)
 {
-    if (frame.m_reflection)
+    std::string name = v.castCoerce<std::string>().c_str();
+    const auto& namesp = frame.m_reflection.m_namespace_instance;
+    if (namesp.has_id(name))
     {
-        std::string name = v.castCoerce<std::string>().c_str();
-        const auto& namesp = frame.m_reflection->m_namespace_instance;
-        if (namesp.has_id(name))
+        variable_id_t variable_id = namesp.find_id(name);
+        if (frame.has_global_variable(variable_id))
         {
-            variable_id_t variable_id = namesp.find_id(name);
-            if (frame.has_global_variable(variable_id))
-            {
-                out.copy(frame.get_global_variable(variable_id));
-                return;
-            }
+            out.copy(frame.get_global_variable(variable_id));
+            return;
+        }
 
-            out.copy(k_undefined_variable);
-            return;
-        }
-        else
-        {
-            out.copy(k_undefined_variable);
-            return;
-        }
+        out.copy(k_undefined_variable);
+        return;
     }
     else
     {
-        throw MiscError("Reflection is not enabled.");
+        out.copy(k_undefined_variable);
+        return;
     }
 }
 
 void ogm::interpreter::fn::variable_global_set(VO out, V v, V value)
 {
-    if (frame.m_reflection)
-    {
-        std::string name = v.castCoerce<std::string>().c_str();
-        auto& namesp = frame.m_reflection->m_namespace_instance;
-        variable_id_t variable_id = namesp.get_id(name);
-        Variable _value;
-        _value.copy(value);
-        frame.store_global_variable(variable_id, std::move(_value));
-        return;
-    }
-    else
-    {
-        throw MiscError("Reflection is not enabled.");
-    }
+    std::string name = v.castCoerce<std::string>().c_str();
+    auto& namesp = frame.m_reflection.m_namespace_instance;
+    variable_id_t variable_id = namesp.get_id(name);
+    Variable _value;
+    _value.copy(value);
+    frame.store_global_variable(variable_id, std::move(_value));
+    return;
 }
 
 void ogm::interpreter::fn::variable_instance_exists(VO out, V id, V v)
 {
-    if (frame.m_reflection)
+    const Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
+    if (!instance)
     {
-        const Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
-        if (!instance)
+        throw MiscError("Instance does not exist.");
+    }
+    std::string name = v.castCoerce<std::string>();
+    const auto& namesp = frame.m_reflection.m_namespace_instance;
+    if (namesp.has_id(name))
+    {
+        variable_id_t variable_id = namesp.find_id(name);
+        if (instance->hasVariable(variable_id))
         {
-            throw MiscError("Instance does not exist.");
+            out = true;
+            return;
         }
-        std::string name = v.castCoerce<std::string>();
-        const auto& namesp = frame.m_reflection->m_namespace_instance;
-        if (namesp.has_id(name))
-        {
-            variable_id_t variable_id = namesp.find_id(name);
-            if (instance->hasVariable(variable_id))
-            {
-                out = true;
-                return;
-            }
-        }
+    }
 
-        out = false;
-        return;
-    }
-    else
-    {
-        throw MiscError("Reflection is not enabled.");
-    }
+    out = false;
+    return;
 }
 
 void ogm::interpreter::fn::variable_instance_get(VO out, V id, V v)
 {
-    if (frame.m_reflection)
+    const Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
+    if (!instance)
     {
-        const Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
-        if (!instance)
+        throw MiscError("Instance does not exist.");
+    }
+    std::string name = v.castCoerce<std::string>().c_str();
+    const auto& namesp = frame.m_reflection.m_namespace_instance;
+    if (namesp.has_id(name))
+    {
+        variable_id_t variable_id = namesp.find_id(name);
+        if (instance->hasVariable(variable_id))
         {
-            throw MiscError("Instance does not exist.");
+            out.copy(instance->findVariable(variable_id));
+            return;
         }
-        std::string name = v.castCoerce<std::string>().c_str();
-        const auto& namesp = frame.m_reflection->m_namespace_instance;
-        if (namesp.has_id(name))
-        {
-            variable_id_t variable_id = namesp.find_id(name);
-            if (instance->hasVariable(variable_id))
-            {
-                out.copy(instance->findVariable(variable_id));
-                return;
-            }
 
-            out.copy(k_undefined_variable);
-            return;
-        }
-        else
-        {
-            out.copy(k_undefined_variable);
-            return;
-        }
+        out.copy(k_undefined_variable);
+        return;
     }
     else
     {
-        throw MiscError("Reflection is not enabled.");
+        out.copy(k_undefined_variable);
+        return;
     }
 }
 
 void ogm::interpreter::fn::variable_instance_get_names(VO out, V id)
 {
-    if (frame.m_reflection)
+    const Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
+    if (!instance)
     {
-        const Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
-        if (!instance)
-        {
-            throw MiscError("Instance does not exist.");
-        }
-
-        const auto& namesp = frame.m_reflection->m_namespace_instance;
-        // OPTIMIZE: iterate through the IDs in the instance's variables directly
-
-        std::vector<const char*> names;
-        for (variable_id_t i = 0; i < namesp.id_count(); ++i)
-        {
-            if (instance->hasVariable(i))
-            {
-                names.push_back(namesp.find_name(i));
-            }
-        }
-
-        std::sort(names.begin(), names.end(), [](const char* a, const char* b) -> bool
-            {
-                return strcmp(a, b) < 0;
-            }
-        );
-        
-        #if defined(__GNUC__) && !defined(__llvm__)
-            // MSVC has trouble with this constructor.
-            Variable arr(names);
-        #else
-            Variable arr;
-            for (size_t i = 0; i < names.size(); ++i)
-            {
-                arr.array_get(
-                    #ifdef OGM_2DARRAY
-                    0,
-                    #endif
-                    i
-                ) = std::string(names.at(i));
-            }
-        #endif
-        out = std::move(arr);
+        throw MiscError("Instance does not exist.");
     }
-    else
+
+    const auto& namesp = frame.m_reflection.m_namespace_instance;
+    // OPTIMIZE: iterate through the IDs in the instance's variables directly
+
+    std::vector<const char*> names;
+    for (variable_id_t i = 0; i < namesp.id_count(); ++i)
     {
-        throw MiscError("Reflection is not enabled.");
+        if (instance->hasVariable(i))
+        {
+            names.push_back(namesp.find_name(i));
+        }
     }
+
+    std::sort(names.begin(), names.end(), [](const char* a, const char* b) -> bool
+        {
+            return strcmp(a, b) < 0;
+        }
+    );
+    
+    #if defined(__GNUC__) && !defined(__llvm__)
+        // MSVC has trouble with this constructor.
+        Variable arr(names);
+    #else
+        Variable arr;
+        for (size_t i = 0; i < names.size(); ++i)
+        {
+            arr.array_get(
+                #ifdef OGM_2DARRAY
+                0,
+                #endif
+                i
+            ) = std::string(names.at(i));
+        }
+    #endif
+    out = std::move(arr);
 }
 
 void ogm::interpreter::fn::variable_instance_set(VO out, V id, V v, V value)
 {
-    if (frame.m_reflection)
+    Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
+    if (!instance)
     {
-        Instance* instance = frame.get_instance_single(id, staticExecutor.m_self, staticExecutor.m_other);
-        if (!instance)
-        {
-            throw MiscError("Instance does not exist.");
-        }
-        auto& namesp = frame.m_reflection->m_namespace_instance;
-        variable_id_t variable_id = namesp.get_id(
-            v.castCoerce<std::string>().c_str()
-        );
-        Variable _value;
-        _value.copy(value);
-        instance->storeVariable(variable_id, std::move(_value));
-        return;
+        throw MiscError("Instance does not exist.");
     }
-    else
-    {
-        throw MiscError("Reflection is not enabled.");
-    }
+    auto& namesp = frame.m_reflection.m_namespace_instance;
+    variable_id_t variable_id = namesp.get_id(
+        v.castCoerce<std::string>().c_str()
+    );
+    Variable _value;
+    _value.copy(value);
+    instance->storeVariable(variable_id, std::move(_value));
+    return;
 }

@@ -467,7 +467,7 @@ const Variable& Instance::findVariable(variable_id_t id) const
         std::string s = ".";
         if (m_data.m_frame_owner)
         {
-            if (bytecode::ReflectionAccumulator* reflection = m_data.m_frame_owner->m_reflection)
+            if (bytecode::ReflectionAccumulator* reflection = &m_data.m_frame_owner->m_reflection)
             {
                 if (reflection->m_namespace_instance.has_name(id))
                 {

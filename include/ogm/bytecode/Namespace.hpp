@@ -133,6 +133,14 @@ public:
         }
     }
 
+    void clear()
+    {
+        WRITE_LOCK(m_mutex)
+        m_name_id.clear();
+        m_id_name.clear();
+        m_next = 0;
+    }
+
     variable_id_t id_count() const
     {
         READ_LOCK(m_mutex)

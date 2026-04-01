@@ -658,7 +658,20 @@ public:
     
     // compiles and writes macro. (Flags should come from config.m_parse_flags)
     // TODO: (should ReflectionAccumulator gain a reference to config...?)
-    void set_macro(const char* name, const char* value, int flags);
+    void set_macro(const char* name, const char* value, int flags=0);
+
+    void clear()
+    {
+        m_namespace_instance.clear();
+        m_bare_globals.clear();
+        for (auto& pair : m_ast_macros)
+        {
+            ogm_ast_free(pair.second);
+        }
+        m_ast_macros.clear();
+        // enums aren't cleared for now as they are owned by const pointer.
+        // TODO: clear enums.
+    }
 
     #ifdef PARALLEL_COMPILE
     // TODO: make these private.

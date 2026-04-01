@@ -1137,7 +1137,7 @@ void Frame::reset_hard()
     // tables
     m_assets.clear();
     m_bytecode.clear();
-    m_reflection = nullptr;
+    m_reflection.clear();
 
     // data
     m_tiles.clear();
