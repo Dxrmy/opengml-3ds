@@ -525,6 +525,9 @@ int umain (int argn, char** argv)
                   );
                   SD_PRINT("  -> Window size set: " + std::to_string(project.m_data_win_loader->m_meta.window_width) + "x" + std::to_string(project.m_data_win_loader->m_meta.window_height));
 
+                  ogm::interpreter::staticExecutor.m_frame.m_data.m_desired_fps = project.m_data_win_loader->m_meta.fps;
+                  SD_PRINT("  -> Engine target speed (FPS) set to: " + std::to_string(project.m_data_win_loader->m_meta.fps));
+
                   // Inject textures
                   SD_PRINT("  -> Injecting textures...");
                   size_t tex_count = 0;

@@ -144,6 +144,10 @@ bool DataWinLoader::load() {
                 fread(&m_meta.window_height, 4, 1, file);
 
                 SD_PRINT("  -> Window: " + std::to_string(m_meta.window_width) + "x" + std::to_string(m_meta.window_height));
+
+                fseek(file, chunk_data_start + 0x70, SEEK_SET);
+                fread(&m_meta.fps, 4, 1, file);
+                SD_PRINT("  -> FPS: " + std::to_string(m_meta.fps));
             }
             else if (chunk_name == "STRG") {
                 uint32_t string_count;

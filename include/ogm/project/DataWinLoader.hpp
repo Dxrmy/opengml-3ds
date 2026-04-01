@@ -25,6 +25,7 @@ public:
         std::string game_name;
         uint32_t window_width;
         uint32_t window_height;
+        uint32_t fps;
     } m_meta;
 
 private:
