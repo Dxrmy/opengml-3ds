@@ -17,7 +17,7 @@ namespace ogm::interpreter {
     volatile bool g_key_down[256];
     volatile bool g_key_pressed[256];
     volatile bool g_key_released[256];
-    
+
     uint32_t g_window_width = 0;
     uint32_t g_window_height = 0;
 
@@ -61,7 +61,7 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
         shaderProgramInit(&g_defaultShader);
         shaderProgramSetVsh(&g_defaultShader, &g_defaultDvlb->DVLE[0]);
         C3D_BindProgram(&g_defaultShader);
-        
+
         // Locate projection uniform (defined in default.v.pica)
         g_uLocProjection = shaderInstanceGetUniformLocation(g_defaultShader.vertexShader, "projection");
     }
@@ -69,7 +69,7 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     g_active_display = this;
     g_window_width = width;
     g_window_height = height;
-    
+
     // Clear screen on start
     begin_render();
     clear_render();
@@ -89,12 +89,12 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
 
 Display::~Display() {
     C2D_TextBufDelete(g_textBuf);
-    
+
     if (g_defaultDvlb) {
         shaderProgramFree(&g_defaultShader);
         DVLB_Free(g_defaultDvlb);
     }
-    
+
     C2D_Fini();
     C3D_Fini();
     gfxExit();
@@ -194,7 +194,7 @@ void Display::process_keys() {
 
     // Mouse / Touch
     map_key(KEY_TOUCH, mb_left);
-    
+
     touchPosition touch;
     hidTouchRead(&touch);
     if (held & KEY_TOUCH) {
@@ -229,7 +229,100 @@ void Display::draw_text(coord_t x, coord_t y, const char* text, real_t halign, r
     C2D_DrawText(&c2dText, C2D_WithColor, x, y, 0, 1.0f, 1.0f, C2D_Color32(255, 255, 255, 255));
 }
 
+void Display::draw_image(TextureView* tv, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2) {
+    if (!tv || !tv->m_tpage || !tv->m_tpage->m_gl_tex) return;
 
+    // Use C2D_DrawImage for proper sprite rendering
+    C3D_Tex* tex = static_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+
+    // Set up texture environment to blend sprite with vertex color
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+
+    C2D_ImageTint tint;
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    C2D_PlainImageTint(&tint, c, 1.0f);
+
+    // tv has already been mapped to absolute atlas texture coords, tx1/ty1/tx2/ty2 are the local bounds within it
+    Tex3DS_SubTexture subtex;
+    subtex.left = tx1;
+    subtex.top = ty1;
+    subtex.right = tx2;
+    subtex.bottom = ty2;
+    subtex.width = std::abs((float)(tx2 - tx1) * tex->width);
+    subtex.height = std::abs((float)(ty2 - ty1) * tex->height);
+
+    C2D_Image img;
+    img.tex = tex;
+    img.subtex = &subtex;
+
+    // Transform coordinates using x1, y1 and size
+    float w = x2 - x1;
+    float h = y2 - y1;
+
+    C2D_DrawImageAt(img, x1, y1, 0.5f, &tint, w / subtex.width, h / subtex.height);
+}
+
+void Display::draw_image(TextureView* tv, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3, coord_t y3, coord_t x4, coord_t y4, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2, coord_t tx3, coord_t ty3, coord_t tx4, coord_t ty4) {
+    // Advanced quad drawing, potentially requires building C3D vertex buffers
+    // For now, fallback to basic draw_image using bounding box
+    draw_image(tv, x1, y1, x3, y3, tx1, ty1, tx3, ty3);
+}
+
+void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t x, coord_t y, coord_t w, coord_t h, coord_t px, coord_t py, coord_t pw, coord_t ph) {
+    if (!tv || !tv->m_tpage || !tv->m_tpage->m_gl_tex) return;
+
+    C3D_Tex* tex = static_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+
+    C2D_ImageTint tint;
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    C2D_PlainImageTint(&tint, c, 1.0f);
+
+    // tv has already been mapped to absolute atlas texture coords, tx1/ty1/tx2/ty2 are the local bounds within it
+    Tex3DS_SubTexture subtex;
+    subtex.left = px;
+    subtex.top = py;
+    subtex.right = px + pw;
+    subtex.bottom = py + ph;
+    subtex.width = std::abs((float)(pw) * tex->width);
+    subtex.height = std::abs((float)(ph) * tex->height);
+
+    C2D_Image img;
+    img.tex = tex;
+    img.subtex = &subtex;
+
+    // Transform coordinates using x1, y1 and size
+    float scaled_w = w / subtex.width;
+    float scaled_h = h / subtex.height;
+
+    // Simplistic tiled drawing
+    coord_t cx = x;
+    while (cx < x + w) {
+        coord_t cy = y;
+        while (cy < y + h) {
+            C2D_DrawImageAt(img, cx, cy, 0.5f, &tint, scaled_w, scaled_h);
+            cy += subtex.height * scaled_h;
+            if (!tiley) break;
+        }
+        cx += subtex.width * scaled_w;
+        if (!tilex) break;
+    }
+}
 
 // Linker Stubs for missing Display methods on 3DS
 void Display::set_matrix_view(real_t x, real_t y, real_t z, real_t w, real_t h) {}
@@ -248,7 +341,6 @@ void Display::freeze_vertex_buffer(uint32_t vb) {}
 void Display::render_buffer(uint32_t vb, TexturePage* tp, uint32_t glenum) {}
 void Display::bind_and_compile_shader(uint32_t s, const std::string& v, const std::string& f) {}
 geometry::AABB<coord_t> Display::get_viewable_aabb() { return {}; }
-void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t x, coord_t y, coord_t w, coord_t h, coord_t px, coord_t py, coord_t pw, coord_t ph) {}
 
 template<bool write>
 void Display::serialize(typename state_stream<write>::state_stream_t& s) {}
@@ -315,9 +407,6 @@ size_t Display::get_joystick_button_count(size_t index) { return 0; }
 bool Display::get_joystick_button_down(size_t index, size_t b) { return false; }
 bool Display::get_joystick_button_pressed(size_t index, size_t b) { return false; }
 bool Display::get_joystick_button_released(size_t index, size_t b) { return false; }
-
-void Display::draw_image(TextureView*, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2) {}
-void Display::draw_image(TextureView*, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t x3, coord_t y3, coord_t x4, coord_t y4, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2, coord_t tx3, coord_t ty3, coord_t tx4, coord_t ty4) {}
 
 uint32_t Display::get_colour4() { return 0xffffffff; }
 void Display::set_colours4(uint32_t[4]) {}
