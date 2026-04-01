@@ -1831,5 +1831,13 @@ void matrix_to_variable(const matrix_t& matrix, Variable& out)
 namespace ogm { namespace interpreter {
 template const VariableArrayData& VariableComponentHandle<VariableArrayData>::getReadable<false>() const;
 template const VariableArrayData& VariableComponentHandle<VariableArrayData>::getReadable<true>() const;
+
+template bool Variable::castCoerce<bool>() const;
+template uint32_t Variable::castCoerce<uint32_t>() const;
+template int32_t Variable::castCoerce<int32_t>() const;
+template uint64_t Variable::castCoerce<uint64_t>() const;
+template int64_t Variable::castCoerce<int64_t>() const;
+template real_t Variable::castCoerce<real_t>() const;
+template std::string Variable::castCoerce<std::string>() const;
 } }
 #endif

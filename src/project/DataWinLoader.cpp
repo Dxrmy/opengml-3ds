@@ -159,6 +159,10 @@ bool DataWinLoader::load() {
 
                 m_images.reserve(texture_count);
                 for (uint32_t i = 0; i < texture_count; ++i) {
+                    if (offsets[i] >= form_size || offsets[i] < 8) {
+                        SD_PRINT("    -> ERROR: Texture offset " + std::to_string(offsets[i]) + " is invalid (File size: " + std::to_string(form_size) + ")");
+                        continue;
+                    }
                     fseek(file, offsets[i] + 4, SEEK_SET); // Skip 4-byte dummy
                     uint32_t png_offset;
                     fread(&png_offset, 4, 1, file);

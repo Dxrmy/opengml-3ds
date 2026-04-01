@@ -306,6 +306,12 @@ namespace
     }
 }
 
+namespace ogm::interpreter::fn {
+    void ogm_extension_init(VO out) {
+        // stub for 3DS boot
+    }
+}
+
 namespace ogm { namespace interpreter
 {
 
