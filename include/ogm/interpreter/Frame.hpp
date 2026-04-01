@@ -1011,7 +1011,7 @@ public:
         Filesystem m_fs;
         AssetTable m_assets;
         BytecodeTable m_bytecode;
-        ReflectionAccumulator* m_reflection = nullptr;
+        ReflectionAccumulator m_reflection;
         collision::World<real_t, direct_instance_id_t, collision::SpatialHash<coord_t, 64951>> m_collision;
         collision::World<real_t, direct_instance_id_t, collision::SpatialHash<coord_t, 127>> m_inactive_collision;
         Display* m_display;

@@ -475,9 +475,7 @@ int umain (int argn, char** argv)
       }
 
       using namespace ogm::bytecode;
-      ReflectionAccumulator reflection;
-      ogm::interpreter::standardLibrary->reflection_add_instance_variables(reflection);
-      ogm::interpreter::staticExecutor.m_frame.m_reflection = &reflection;
+      ogm::interpreter::standardLibrary->reflection_add_instance_variables(ogm::interpreter::staticExecutor.m_frame.m_reflection);
       ogm::bytecode::BytecodeTable& bytecode = ogm::interpreter::staticExecutor.m_frame.m_bytecode;
 
       // reserve bytecode slots. (It can expand if needed.)
