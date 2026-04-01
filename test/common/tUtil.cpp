@@ -12,7 +12,6 @@ TEST_CASE( "ends_with" )
     REQUIRE(!ends_with("b/a.gml", "."));
     REQUIRE(!ends_with("b/a.gml", ".."));
 }
-<<<<<<< HEAD
 
 TEST_CASE( "split" )
 {
