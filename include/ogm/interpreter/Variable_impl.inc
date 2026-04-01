@@ -305,11 +305,7 @@ inline_if_ndebug int32_t Variable::castCoerce() const
     }
 }
 
-template<>
-inline_if_ndebug int Variable::castCoerce() const
-{
-    return castCoerce<int32_t>();
-}
+// removed castCoerce<int> redundant specializations since it clashes with int32_t when they are the same type.
 
 template<>
 inline_if_ndebug const int32_t& Variable::coerce()
@@ -444,11 +440,7 @@ inline_if_ndebug uint32_t Variable::castCoerce() const
     return castCoerce<uint64_t>();
 }
 
-template<>
-inline_if_ndebug unsigned int Variable::castCoerce() const
-{
-    return castCoerce<uint64_t>();
-}
+// removed castCoerce<unsigned int> redundant specializations since it clashes with uint32_t when they are the same type.
 
 #if defined(__clang__) && defined(OGM_X64)
 // FIXME: unsure why this is necessary.
