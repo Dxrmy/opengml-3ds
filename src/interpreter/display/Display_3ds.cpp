@@ -32,6 +32,10 @@ namespace ogm::interpreter {
     const int vk_right = 39;
     const int vk_control = 17;
     const int vk_alt = 18;
+    const int vk_x = 88;
+    const int vk_y = 89;
+    const int vk_zl = 162;
+    const int vk_zr = 163;
     const int mb_left = 1;
 
 
@@ -183,12 +187,16 @@ void Display::process_keys() {
 
     map_key(KEY_A, vk_space);
     map_key(KEY_B, vk_shift);
+    map_key(KEY_X, vk_x);
+    map_key(KEY_Y, vk_y);
+    map_key(KEY_ZL, vk_zl);
+    map_key(KEY_ZR, vk_zr);
     map_key(KEY_START, vk_enter);
     map_key(KEY_SELECT, vk_escape);
-    map_key(KEY_UP | KEY_CPAD_UP, vk_up);
-    map_key(KEY_DOWN | KEY_CPAD_DOWN, vk_down);
-    map_key(KEY_LEFT | KEY_CPAD_LEFT, vk_left);
-    map_key(KEY_RIGHT | KEY_CPAD_RIGHT, vk_right);
+    map_key(KEY_UP | KEY_CPAD_UP | KEY_CSTICK_UP, vk_up);
+    map_key(KEY_DOWN | KEY_CPAD_DOWN | KEY_CSTICK_DOWN, vk_down);
+    map_key(KEY_LEFT | KEY_CPAD_LEFT | KEY_CSTICK_LEFT, vk_left);
+    map_key(KEY_RIGHT | KEY_CPAD_RIGHT | KEY_CSTICK_RIGHT, vk_right);
     map_key(KEY_L, vk_control);
     map_key(KEY_R, vk_alt);
 
