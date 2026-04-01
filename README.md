@@ -38,6 +38,7 @@ State of the 3DS Port as of latest push:
     - [x] `FORM`, `GEN8`, and `STRG` chunk parsing.
     - [x] Engine data injection (`STRG` table and `GEN8` metadata).
     - [x] VM entrypoint exception handling (`MiscError` implemented for unlinked scripts).
+    - [x] `VARI` and `FUNC` chunk parsing.
     - [ ] `TXTR` and `TPAG` chunk parsing.
     - [ ] `OBJT` and `ROOM` layout parsing.
     - [ ] `CODE` execution mapping.
