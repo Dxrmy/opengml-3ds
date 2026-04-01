@@ -22,6 +22,8 @@
 #include <set>
 #include <atomic>
 
+#include "ogm/common/Trace.hpp"
+
 namespace ogm::project {
 
 // source code for some default code
@@ -383,6 +385,7 @@ namespace
 
 bool Project::build(bytecode::ProjectAccumulator& accumulator)
 {
+    SD_PRINT("Project::build started");
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     // skip 0, which is the special entrypoint.
     bytecode_index_t entrypoint_bytecode_index = accumulator.next_bytecode_index();
@@ -399,9 +402,10 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
     }
 
     auto print_category = [](std::string s) {
-        std::cout << ansi_colour("1;35") << s << ansi_colour("0");
+        SD_PRINT(s);
     };
 
+    SD_PRINT("Calculating work...");
     // determine how much work there is to do.
     for_resource(&m_tree, [this](Resource* r)
         {
@@ -419,7 +423,7 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
     #define CHECK_ERROR_SET()           \
     if (m_error)                        \
     {                                   \
-        std::cout << "Build failed.\n"; \
+        SD_PRINT("Build failed."); \
         return false;                   \
     };
 
@@ -437,6 +441,7 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
     CHECK_ERROR_SET();
 
     // parsing
+    print_category("Parsing...\n");
     for_resource(
         &m_tree,
         [&accumulator](Resource* r)
@@ -452,6 +457,7 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
     print_category("Built-in events...\n");
     if (accumulator.m_config)
     {
+        SD_PRINT("  -> Generating default step...");
         {
             ogm_ast* default_step_ast = ogm_ast_parse(k_default_step_builtin);
             bytecode_index_t bi =bytecode::bytecode_generate(
@@ -462,6 +468,7 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
             ogm_ast_free(default_step_ast);
         }
 
+        SD_PRINT("  -> Generating default draw...");
         {
             ogm_ast* default_draw_ast = ogm_ast_parse(k_default_draw_normal);
             bytecode_index_t bi = bytecode::bytecode_generate(
@@ -499,9 +506,11 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
     join(); // paranoia
     CHECK_ERROR_SET();
 
+    SD_PRINT("Checking entrypoint...");
     if (!accumulator.m_bytecode->has_bytecode(0))
     // default entrypoint
     {
+        SD_PRINT("  -> Generating default entrypoint...");
         ogm_ast_t* entrypoint_ast;
         // TODO: put in an actual game loop here, preferably written in its own file.
         entrypoint_ast = ogm_ast_parse(k_default_entrypoint);
@@ -530,8 +539,7 @@ bool Project::build(bytecode::ProjectAccumulator& accumulator)
     
     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-    print_category("Build complete");
-    std::cout << " (" << duration << " ms)" << std::endl;
+    SD_PRINT("Build complete (" + std::to_string(duration) + " ms)");
     return true;
 }
 
