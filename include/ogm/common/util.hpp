@@ -243,6 +243,7 @@ inline std::string_view common_substring(std::string_view a, std::string_view b)
 
 // from https://stackoverflow.com/a/24315631
 inline std::string replace_all(std::string str, const std::string& from, const std::string& to) {
+    if (from.empty()) return str;
     size_t start_pos = 0;
     while((start_pos = str.find(from, start_pos)) != std::string::npos) {
         str.replace(start_pos, from.length(), to);
