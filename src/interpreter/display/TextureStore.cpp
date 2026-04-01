@@ -226,7 +226,52 @@ namespace
 TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureView* tv, geometry::AABB<uint32_t> from)
 {
 #ifdef __3DS__
-    return nullptr;
+    // create a texture page and view for the asset.
+    surface_id_t dst = create_surface(
+      from.diagonal()
+    );
+
+    TextureView* view = get_surface_texture_view(dst);
+    TexturePage* page = view->m_tpage;
+
+    C3D_Tex* dst_tex = reinterpret_cast<C3D_Tex*>(page->m_gl_tex);
+    C3D_Tex* src_tex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+
+    // Create temporary render target
+    C3D_RenderTarget* target = C3D_RenderTargetCreateFromTex(dst_tex, GPU_TEX_2D, 0, -1);
+    if (!target) return view;
+
+    bool own_frame = false;
+    if (!C3D_FrameBufGetActive()) {
+        own_frame = true;
+        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    }
+
+    C2D_SceneBegin(target);
+
+    Tex3DS_SubTexture subtex;
+    subtex.width = (uint16_t)from.diagonal().x;
+    subtex.height = (uint16_t)from.diagonal().y;
+    subtex.left = tv->u_global(from.left());
+    subtex.top = tv->v_global(from.top());
+    subtex.right = tv->u_global(from.right());
+    subtex.bottom = tv->v_global(from.bottom());
+
+    C2D_Image img;
+    img.tex = src_tex;
+    img.subtex = &subtex;
+
+    C2D_DrawImageAt(img, 0.0f, 0.0f, 0.0f, nullptr, 1.0f, 1.0f);
+
+    if (own_frame) {
+        C3D_FrameEnd(0);
+    } else {
+        C2D_Flush();
+    }
+
+    C3D_RenderTargetDelete(target);
+
+    return view;
 #else
 
     // create a texture page and view for the asset.
@@ -256,7 +301,8 @@ TextureView* TextureStore::bind_asset_copy_texture(ImageDescriptor id, TextureVi
     // Return to previous framebuffer.
     glBindFramebuffer(GL_FRAMEBUFFER, g_gl_framebuffer);
 
-    // TODO: delete framebuffer for new asset's tpage?
+    glDeleteFramebuffers(1, &page->m_gl_framebuffer);
+    page->m_gl_framebuffer = 0;
     return view;
 #endif
 }
