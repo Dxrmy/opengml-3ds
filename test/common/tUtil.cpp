@@ -12,3 +12,80 @@ TEST_CASE( "ends_with" )
     REQUIRE(!ends_with("b/a.gml", "."));
     REQUIRE(!ends_with("b/a.gml", ".."));
 }
+
+TEST_CASE( "split" )
+{
+    std::vector<std::string> out;
+
+    SECTION( "default split (space, combine=true)" )
+    {
+        split(out, "  a  b   c ");
+        REQUIRE(out.size() == 3);
+        REQUIRE(out[0] == "a");
+        REQUIRE(out[1] == "b");
+        REQUIRE(out[2] == "c");
+    }
+
+    SECTION( "split (space, combine=false)" )
+    {
+        out.clear();
+        split(out, " a  b ", " ", false);
+        // expected: "", "a", "", "b", ""
+        REQUIRE(out.size() == 5);
+        if (out.size() >= 5)
+        {
+            REQUIRE(out[0] == "");
+            REQUIRE(out[1] == "a");
+            REQUIRE(out[2] == "");
+            REQUIRE(out[3] == "b");
+            REQUIRE(out[4] == "");
+        }
+    }
+
+    SECTION( "multi-character delimiter" )
+    {
+        out.clear();
+        split(out, "abc--def--", "--", true);
+        REQUIRE(out.size() == 2);
+        REQUIRE(out[0] == "abc");
+        REQUIRE(out[1] == "def");
+
+        out.clear();
+        split(out, "abc--def--", "--", false);
+        // expected: "abc", "def", ""
+        REQUIRE(out.size() == 3);
+        if (out.size() >= 3)
+        {
+            REQUIRE(out[0] == "abc");
+            REQUIRE(out[1] == "def");
+            REQUIRE(out[2] == "");
+        }
+    }
+
+    SECTION( "empty string" )
+    {
+        out.clear();
+        split(out, "", " ", true);
+        REQUIRE(out.size() == 0);
+
+        out.clear();
+        split(out, "", " ", false);
+        REQUIRE(out.size() == 1);
+        if (out.size() >= 1)
+        {
+            REQUIRE(out[0] == "");
+        }
+    }
+
+    SECTION( "only delimiters" )
+    {
+        out.clear();
+        split(out, "   ", " ", true);
+        REQUIRE(out.size() == 0);
+
+        out.clear();
+        split(out, "   ", " ", false);
+        // " ", " ", " " -> "", "", "", ""
+        REQUIRE(out.size() == 4);
+    }
+}
