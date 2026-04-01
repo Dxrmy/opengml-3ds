@@ -27,7 +27,7 @@ public:
     template<typename AssetType=Asset*>
     AssetType get_asset(asset_index_t id) const
     {
-        if (id < m_index_asset.size())
+        if (id < m_index_asset.size() && m_index_asset.at(id) != nullptr)
         {
             return dynamic_cast<AssetType>(m_index_asset.at(id));
         }
@@ -36,10 +36,15 @@ public:
 
     Asset* get_asset(const char* assetName, asset_index_t& outAssetIndex) const
     {
-        if (m_name_index.find(assetName) != m_name_index.end())
+        if (assetName != nullptr && assetName[0] != '\0')
         {
-            outAssetIndex = m_name_index.at(assetName);
-            return m_index_asset.at(outAssetIndex);
+            std::string s_assetName(assetName);
+            auto iter = m_name_index.find(s_assetName);
+            if (iter != m_name_index.end())
+            {
+                outAssetIndex = iter->second;
+                return m_index_asset.at(outAssetIndex);
+            }
         }
         outAssetIndex = k_no_asset;
         return nullptr;
@@ -47,18 +52,27 @@ public:
 
     Asset* get_asset(const char* assetName) const
     {
-        if (m_name_index.find(assetName) != m_name_index.end())
+        if (assetName != nullptr && assetName[0] != '\0')
         {
-            asset_index_t index = m_name_index.at(assetName);
-            return m_index_asset.at(index);
+            std::string s_assetName(assetName);
+            auto iter = m_name_index.find(s_assetName);
+            if (iter != m_name_index.end())
+            {
+                asset_index_t index = iter->second;
+                return m_index_asset.at(index);
+            }
         }
         return nullptr;
     }
 
-    const char* get_asset_name(asset_index_t id)
+    const char* get_asset_name(asset_index_t id) const
     {
         if (id < m_index_name.size())
         {
+            if (m_index_name.at(id) == "")
+            {
+                return nullptr;
+            }
             return m_index_name.at(id).c_str();
         }
         return nullptr;
@@ -71,8 +85,15 @@ public:
         {
             *outAssetIndex = m_index_asset.size();
         }
-        m_name_index[assetName] = m_index_asset.size();
-        m_index_name.emplace_back(assetName);
+        if (assetName != nullptr)
+        {
+            m_name_index[assetName] = m_index_asset.size();
+            m_index_name.emplace_back(assetName);
+        }
+        else
+        {
+            m_index_name.emplace_back("");
+        }
         Asset* asset = new Asset();
         m_index_asset.emplace_back(asset);
         return asset;
