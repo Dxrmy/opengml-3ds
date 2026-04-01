@@ -549,6 +549,45 @@ int umain (int argn, char** argv)
                   ogm::interpreter::staticExecutor.m_frame.m_assets.add_asset_at<ogm::asset::AssetScript>(func.id, func.name.c_str());
               }
               SD_PRINT("  -> Functions injected: " + std::to_string(project.m_data_win_loader->m_functions.size()));
+
+              // Inject objects
+              SD_PRINT("  -> Injecting objects...");
+              for (auto& obj : project.m_data_win_loader->m_objects) {
+                  ogm::asset::AssetObject* aobj = ogm::interpreter::staticExecutor.m_frame.m_assets.add_asset_at<ogm::asset::AssetObject>(obj.id, obj.name.c_str());
+                  aobj->m_init_sprite_index = obj.sprite_index;
+                  aobj->m_init_mask_index = obj.mask_index;
+                  aobj->m_init_depth = obj.depth;
+                  aobj->m_init_persistent = obj.persistent;
+                  aobj->m_init_solid = obj.solid;
+                  aobj->m_init_visible = obj.visible;
+                  aobj->m_parent = obj.parent_id;
+              }
+              SD_PRINT("  -> Objects injected: " + std::to_string(project.m_data_win_loader->m_objects.size()));
+
+              // Inject rooms
+              SD_PRINT("  -> Injecting rooms...");
+              for (auto& room : project.m_data_win_loader->m_rooms) {
+                  ogm::asset::AssetRoom* aroom = ogm::interpreter::staticExecutor.m_frame.m_assets.add_asset_at<ogm::asset::AssetRoom>(room.id, room.name.c_str());
+                  aroom->m_dimensions.x = room.width;
+                  aroom->m_dimensions.y = room.height;
+                  aroom->m_speed = room.fps;
+                  aroom->m_persistent = room.persistent;
+                  aroom->m_colour = room.background_color;
+                  aroom->m_show_colour = room.draw_background_color;
+
+                  for (auto& inst : room.instances) {
+                      ogm::asset::AssetRoom::InstanceDefinition idef;
+                      idef.m_id = inst.id;
+                      idef.m_object_index = inst.object_index;
+                      idef.m_position.x = inst.x;
+                      idef.m_position.y = inst.y;
+                      idef.m_scale.x = inst.scale_x;
+                      idef.m_scale.y = inst.scale_y;
+                      idef.m_blend = inst.blend;
+                      aroom->m_instances.push_back(idef);
+                  }
+              }
+              SD_PRINT("  -> Rooms injected: " + std::to_string(project.m_data_win_loader->m_rooms.size()));
           }
           #endif
           
