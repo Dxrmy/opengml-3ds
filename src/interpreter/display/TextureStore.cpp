@@ -8,6 +8,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 
+#include "ogm/common/mem_tracker.hpp"
+
 #ifndef EMSCRIPTEN
     #ifndef __3DS__
         #include <GL/glew.h>
@@ -66,7 +68,7 @@ bool TexturePage::cache()
         }
 
         // Allocate from Linear RAM (required for PICA200)
-        void* linear_data = linearAlloc(m_dimensions.x * m_dimensions.y * 4);
+        void* linear_data = tracked_linearAlloc(m_dimensions.x * m_dimensions.y * 4);
         if (!linear_data) {
             fprintf(stderr, "[3DS GFX] FAILED to allocate linear memory for texture.\n");
             return false;
@@ -82,7 +84,7 @@ bool TexturePage::cache()
         // For now, we upload the raw data to VRAM.
         C3D_TexUpload(tex3ds, linear_data);
 
-        linearFree(linear_data);
+        tracked_linearFree(linear_data);
 
         m_gl_tex = reinterpret_cast<uint32_t>(tex3ds);
 

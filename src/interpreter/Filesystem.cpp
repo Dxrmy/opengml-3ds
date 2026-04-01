@@ -160,7 +160,8 @@ std::string Filesystem::resolve_file_path(const std::string& path, bool write)
         {
             buff[i] = 0;
         }
-        strcpy(buff, path.c_str());
+        strncpy(buff, path.c_str(), MAX_PATH - 1);
+        buff[MAX_PATH - 1] = '\0';
         PathStripToRootA(buff);
         return case_insensitive_native_path(buff, path.substr(strlen(buff)));
         #else
