@@ -181,7 +181,8 @@ namespace
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = nullptr;
         ofn.lpstrFile = &fbuff[0];
-        strcpy(fbuff, name);
+        strncpy(fbuff, name, sizeof(fbuff));
+        fbuff[sizeof(fbuff) - 1] = 0;
         ofn.nMaxFile = sizeof(fbuff);
         char* filtersub = nullptr;
         if (strlen(filter) > 0)
@@ -189,7 +190,7 @@ namespace
             size_t filterlen = strlen(filter) + 2;
             filtersub = (char*)malloc(filterlen);
             memset(filtersub, 0, filterlen);
-            strcpy(filtersub, filter);
+            memcpy(filtersub, filter, strlen(filter));
             for (size_t i = 0; i < filterlen; ++i)
             {
                 if (filtersub[i] == '|')
@@ -198,11 +199,12 @@ namespace
                 }
             }
 
-            ofn.lpstrFilter = filter;
+            ofn.lpstrFilter = filtersub;
             ofn.nFilterIndex = 0;
         }
         ofn.lpstrFileTitle = &fbuff2[0];
-        strcpy(fbuff2, name);
+        strncpy(fbuff2, name, sizeof(fbuff2));
+        fbuff2[sizeof(fbuff2) - 1] = 0;
         ofn.nMaxFileTitle = sizeof(fbuff2);
         ofn.lpstrInitialDir = dir;
         ofn.lpstrTitle = caption;
