@@ -72,7 +72,7 @@ std::string get_binary_directory()
         bufsize = 2048;
     char buf[bufsize];
     #ifdef __unix__
-        int64_t len = readlink("/proc/self/exe", buf, bufsize);
+        int64_t len = readlink("/proc/self/exe", buf, bufsize - 1);
     #elif defined(__APPLE__)
         // Apple
         int64_t len;
@@ -82,7 +82,7 @@ std::string get_binary_directory()
         }
         else
         {
-            len = bufsize;
+            len = strlen(buf);
         }
     #else
         #error ""
@@ -90,8 +90,7 @@ std::string get_binary_directory()
     if (len >= 0)
     {
         buf[len] = 0;
-        strcpy(buf, path_directory(buf).c_str());
-        return static_cast<char*>(buf);
+        return path_directory(buf);
     }
     else
     {

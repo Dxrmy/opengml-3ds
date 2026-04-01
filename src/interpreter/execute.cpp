@@ -18,6 +18,7 @@
 #include "ogm/bytecode/stream_macro.hpp"
 #include "ogm/common/error.hpp"
 #include "ogm/common/types.hpp"
+#include "ogm/common/op_profiler.hpp"
 
 #include <cstddef>
 #include <map>
@@ -193,15 +194,15 @@ void pop_row_col(uint32_t& row
     Variable& v_col = staticExecutor.popRef();
     #endif
     Variable& v_row = staticExecutor.popRef();
-    
+
     int32_t irow;
     irow = v_row.castCoerce<int32_t>();
-    
+
     #ifdef OGM_2DARRAY
     int32_t icol;
     icol = v_col.castCoerce<int32_t>();
     #endif
-    
+
     if (irow < 0
         #ifdef OGM_2DARRAY
         || icol < 0
@@ -219,7 +220,7 @@ void pop_row_col(uint32_t& row
     v_col.cleanup();
     col = icol;
     #endif
-    
+
     v_row.cleanup();
     row = irow;
 }
@@ -273,13 +274,13 @@ FORCEINLINE void unravel_load_array(const Variable& array, int depth)
 {
     const Variable* av = &array;
     uint32_t row COL;
-    
+
     for (size_t i = 0; i < depth + 1; ++i)
     {
         pop_row_col(row COL);
         av = &av->array_at(row COL);
     }
-    
+
     staticExecutor.pushRef().copy(*av);
 }
 
@@ -294,7 +295,7 @@ FORCEINLINE void unravel_store_array(
 {
     Variable* av = &array;
     uint32_t row COL;
-    
+
     Variable* prev;
     (void)prev;
     for (size_t i = 0; i < depth + 1; ++i)
@@ -309,20 +310,20 @@ FORCEINLINE void unravel_store_array(
         prev = av;
         av = next;
     }
-    
+
     #ifdef OGM_GARBAGE_COLLECTOR
     if (!gc_node && make_root)
     {
         array.make_root();
     }
-    
+
     prev->get_gc_node()->remove_reference(av->get_gc_node());
     prev->get_gc_node()->add_reference(v.get_gc_node());
     #endif
-    
+
     // remove previous
     av->cleanup();
-    
+
     // replace with new var
     if (copy)
     {
@@ -405,22 +406,22 @@ bool execute_bytecode_loop()
             switch (op)
             {
             case ldi_false:
-                {
+                { PROFILE_OP(ldi_false);
                     staticExecutor.pushRef() = false;
                 }
                 break;
             case ldi_true:
-                {
+                { PROFILE_OP(ldi_true);
                     staticExecutor.pushRef() = true;
                 }
                 break;
             case ldi_zero:
-                {
+                { PROFILE_OP(ldi_zero);
                     staticExecutor.pushRef() = 0.0;
                 }
                 break;
             case ldi_self:
-                {
+                { PROFILE_OP(ldi_self);
                     ogm_assert(staticExecutor.m_self);
                     #ifdef OGM_STRUCT_SUPPORT
                     if (staticExecutor.m_self->m_is_struct)
@@ -433,7 +434,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldi_other:
-                {
+                { PROFILE_OP(ldi_other);
                     ogm_assert(staticExecutor.m_other);
                     #ifdef OGM_STRUCT_SUPPORT
                     if (staticExecutor.m_other->m_is_struct)
@@ -446,34 +447,34 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldi_undef:
-                {
+                { PROFILE_OP(ldi_undef);
                     Variable v;
                     staticExecutor.pushRef() = std::move(v);
                 }
                 break;
             case ldi_f32:
-                {
+                { PROFILE_OP(ldi_f32);
                     nostack float immf;
                     read(in, immf);
                     staticExecutor.pushRef() = immf;
                 }
                 break;
             case ldi_f64:
-                {
+                { PROFILE_OP(ldi_f64);
                     nostack double immf;
                     read(in, immf);
                     staticExecutor.pushRef() = immf;
                 }
                 break;
             case ldi_s32:
-                {
+                { PROFILE_OP(ldi_s32);
                     nostack int32_t immi;
                     read(in, immi);
                     staticExecutor.pushRef() = immi;
                 }
                 break;
             case ldi_u64:
-                {
+                { PROFILE_OP(ldi_u64);
                     nostack uint64_t immu;
                     read(in, immu);
                     //staticExecutor.pushRef() = immu;
@@ -481,7 +482,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldi_string:
-                {
+                { PROFILE_OP(ldi_string);
                     static int32_t bufflen = 0x20;
                     static char* buff = (char*)malloc(bufflen);
 
@@ -518,16 +519,16 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldi_arr:
-                {
+                { PROFILE_OP(ldi_arr);
                     staticExecutor.pushRef() = 0.0;
                     staticExecutor.peekRef().array_ensure(true);
                 }
                 break;
             case ldi_fn:
-                {
+                { PROFILE_OP(ldi_fn);
                     nostack bytecode_index_t immbi;
                     read(in, immbi);
-                    
+
                     #ifdef OGM_FUNCTION_SUPPORT
                     staticExecutor.pushRef() = 0.0;
                     staticExecutor.peekRef().set_function_binding({}, immbi);
@@ -538,7 +539,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldi_struct:
-                {
+                { PROFILE_OP(ldi_struct);
                     #ifdef OGM_STRUCT_SUPPORT
                     staticExecutor.pushRef() = 0.0;
                     staticExecutor.peekRef().make_struct();
@@ -549,7 +550,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case tstruct:
-                {
+                { PROFILE_OP(tstruct);
                     #if defined(OGM_STRUCT_SUPPORT) && defined(OGM_FUNCTION_SUPPORT)
                     staticExecutor.m_self->m_struct_type = staticExecutor.popRef().get_bytecode_index();
                     #else
@@ -558,19 +559,19 @@ bool execute_bytecode_loop()
                 }
                 break;
             case inc:
-                {
+                { PROFILE_OP(inc);
                     staticExecutor.peekRef()+=1.0;
                     TRACE(staticExecutor.peekRef());
                 }
                 break;
             case dec:
-                {
+                { PROFILE_OP(dec);
                     staticExecutor.peekRef()-=1.0;
                     TRACE(staticExecutor.peekRef());
                 }
                 break;
             case incl:
-                {
+                { PROFILE_OP(incl);
                     nostack uint32_t id;
                     read(in, id);
                     staticExecutor.local(id) += 1.0;
@@ -580,7 +581,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case decl:
-                {
+                { PROFILE_OP(decl);
                     nostack uint32_t id;
                     read(in, id);
                     staticExecutor.local(id) -= 1.0;
@@ -590,7 +591,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case seti:
-                {
+                { PROFILE_OP(seti);
                     ogm::interpreter::Variable& value = staticExecutor.popRef();
                     #ifdef OGM_2DARRAY
                     ogm::interpreter::Variable& j = staticExecutor.popRef();
@@ -607,7 +608,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case add2:
-                {
+                { PROFILE_OP(add2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 += v2;
@@ -618,7 +619,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case sub2:
-                {
+                { PROFILE_OP(sub2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 -= v2;
@@ -629,7 +630,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case mult2:
-                {
+                { PROFILE_OP(mult2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 *= v2;
@@ -640,7 +641,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case fdiv2:
-                {
+                { PROFILE_OP(fdiv2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 /= v2;
@@ -651,7 +652,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case idiv2:
-                {
+                { PROFILE_OP(idiv2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1.idiv(v2);
@@ -662,7 +663,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case mod2:
-                {
+                { PROFILE_OP(mod2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 %= v2;
@@ -673,7 +674,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case lsh2:
-                {
+                { PROFILE_OP(lsh2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 <<= v2;
@@ -684,7 +685,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case rsh2:
-                {
+                { PROFILE_OP(rsh2);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 >>= v2;
@@ -695,7 +696,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case lt:
-                {
+                { PROFILE_OP(lt);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v1 < v2;
@@ -707,7 +708,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case lte:
-                {
+                { PROFILE_OP(lte);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v1 <= v2;
@@ -719,7 +720,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case gt:
-                {
+                { PROFILE_OP(gt);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v1 > v2;
@@ -731,7 +732,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case gte:
-                {
+                { PROFILE_OP(gte);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v1 >= v2;
@@ -743,7 +744,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case eq:
-                {
+                { PROFILE_OP(eq);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v1 == v2;
@@ -755,7 +756,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case neq:
-                {
+                { PROFILE_OP(neq);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v1 != v2;
@@ -767,7 +768,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case bland:
-                {
+                { PROFILE_OP(bland);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     nostack bool b;
@@ -781,7 +782,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case blor:
-                {
+                { PROFILE_OP(blor);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     nostack bool b;
@@ -795,7 +796,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case blxor:
-                {
+                { PROFILE_OP(blxor);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.popRef();
                     v1.cleanup();
@@ -807,7 +808,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case band:
-                {
+                { PROFILE_OP(band);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 &= v2;
@@ -818,7 +819,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case bor:
-                {
+                { PROFILE_OP(bor);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 |= v2;
@@ -829,7 +830,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case bxor:
-                {
+                { PROFILE_OP(bxor);
                     ogm::interpreter::Variable& v2 = staticExecutor.popRef();
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1 ^= v2;
@@ -840,7 +841,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case bnot:
-                {
+                { PROFILE_OP(bnot);
                     ogm::interpreter::Variable& v1 = staticExecutor.peekRef();
                     v1.invert();
                     TRACE(staticExecutor.peekRef());
@@ -849,7 +850,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case cond:
-                {
+                { PROFILE_OP(cond);
                     ogm::interpreter::Variable& v = staticExecutor.popRef();
                     staticExecutor.m_statusCond = v.cond();
                     v.cleanup();
@@ -859,7 +860,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ncond:
-                {
+                { PROFILE_OP(ncond);
                     ogm::interpreter::Variable& v = staticExecutor.popRef();
                     staticExecutor.m_statusCond = !v.cond();
                     v.cleanup();
@@ -869,7 +870,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case pcond:
-                {
+                { PROFILE_OP(pcond);
                     staticExecutor.pushRef() = staticExecutor.m_statusCond;
                     TRACE(staticExecutor.peekRef());
 
@@ -877,18 +878,18 @@ bool execute_bytecode_loop()
                 }
                 break;
             case sfx:
-                {
+                { PROFILE_OP(sfx);
                     staticExecutor.m_statusCOW = false;
                 }
                 break;
             case ufx:
-                {
+                { PROFILE_OP(ufx);
                     staticExecutor.m_statusCOW = true;
                 }
                 break;
             case all:
                 // allocate locals
-                {
+                { PROFILE_OP(all);
                     // push previous locals-start onto the stack
                     staticExecutor.pushRef() = static_cast<uint64_t>(staticExecutor.m_locals_start);
                     nostack uint32_t count;
@@ -908,7 +909,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stl:
-                {
+                { PROFILE_OP(stl);
                     nostack uint32_t id;
                     read(in, id);
 
@@ -920,7 +921,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldl:
-                {
+                { PROFILE_OP(ldl);
                     nostack uint32_t id;
                     read(in, id);
                     staticExecutor.pushRef().copy(staticExecutor.local(id));
@@ -928,7 +929,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case sts:
-                {
+                { PROFILE_OP(sts);
                     nostack variable_id_t id;
                     read(in, id);
                     staticExecutor.m_self->getVariable(id).cleanup();
@@ -938,7 +939,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case lds:
-                {
+                { PROFILE_OP(lds);
                     nostack variable_id_t id;
                     read(in, id);
                     staticExecutor.pushRef().copy(staticExecutor.m_self->findVariable(id));
@@ -948,14 +949,14 @@ bool execute_bytecode_loop()
                 }
                 break;
             case sto:
-                {
+                { PROFILE_OP(sto);
                     nostack variable_id_t variable_id;
                     read(in, variable_id);
                     Variable& v = staticExecutor.popRef();
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -965,7 +966,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                     }
@@ -1009,14 +1010,14 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldo:
-                {
+                { PROFILE_OP(ldo);
                     nostack variable_id_t id;
                     read(in, id);
                     Instance* instance;
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -1025,7 +1026,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                         instance = staticExecutor.m_frame.get_ex_instance_from_ex_id(owner_id);
@@ -1067,7 +1068,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stg:
-                {
+                { PROFILE_OP(stg);
                     nostack variable_id_t id;
                     read(in, id);
                     staticExecutor.m_frame.get_global_variable(id).cleanup();
@@ -1075,7 +1076,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldg:
-                {
+                { PROFILE_OP(ldg);
                     nostack variable_id_t id;
                     read(in, id);
                     staticExecutor.pushRef().copy(staticExecutor.m_frame.find_global_variable(id));
@@ -1083,14 +1084,14 @@ bool execute_bytecode_loop()
                 }
                 break;
             case okg:
-                {
+                { PROFILE_OP(okg);
                     nostack variable_id_t id;
                     read(in, id);
                     staticExecutor.m_statusCond = staticExecutor.m_frame.has_global_variable(id);
                 }
                 break;
             case stt:
-                {
+                { PROFILE_OP(stt);
                     nostack variable_id_t id;
                     read(in, id);
                     Variable& v = staticExecutor.popRef();
@@ -1099,7 +1100,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldt:
-                {
+                { PROFILE_OP(ldt);
                     nostack variable_id_t id;
                     read(in, id);
                     Variable& v = staticExecutor.pushRef();
@@ -1108,14 +1109,14 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stp:
-                {
+                { PROFILE_OP(stp);
                     nostack variable_id_t id;
                     read(in, id);
                     Variable& v = staticExecutor.popRef();
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -1125,7 +1126,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                     }
@@ -1161,25 +1162,25 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldp:
-                {
+                { PROFILE_OP(ldp);
                     nostack variable_id_t id;
                     read(in, id);
                     Instance* instance;
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
                             Instance* instance = v_owner_id.get_struct();
                             Variable& v = staticExecutor.pushRef();
-                            
+
                             instance->get_value(id, v);
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                         instance = staticExecutor.m_frame.get_ex_instance_from_ex_id(owner_id);
@@ -1220,7 +1221,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stla:
-                {
+                { PROFILE_OP(stla);
                     nostack uint32_t id;
                     read(in, id);
 
@@ -1237,7 +1238,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldla:
-                {
+                { PROFILE_OP(ldla);
                     nostack uint32_t id;
                     read(in, id);
 
@@ -1253,42 +1254,42 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stlax:
-                {
+                { PROFILE_OP(stlax);
                     nostack uint32_t id;
                     read(in, id);
-                    
+
                     nostack uint32_t depth;
                     read(in, depth);
 
                     Variable& v = staticExecutor.popRef();
 
                     Variable& av = staticExecutor.local(id);
-                    
+
                     unravel_store_array(av, depth, v);
-                    
+
                     ogm_assert(staticExecutor.m_varStackIndex == op_pre_varStackIndex - POPS_ARRAY * (depth + 1) - 1);
                 }
                 break;
             case ldlax:
-                {
+                { PROFILE_OP(ldlax);
                     nostack uint32_t id;
                     read(in, id);
-                    
+
                     nostack uint32_t depth;
                     read(in, depth);
 
                     // get array value
                     const Variable& av = staticExecutor.local(id);
-                    
+
                     unravel_load_array(av, depth);
-                    
+
                     TRACE(staticExecutor.peekRef());
-                    
+
                     ogm_assert(staticExecutor.m_varStackIndex == op_pre_varStackIndex - POPS_ARRAY * (depth + 1) + 1);
                 }
                 break;
             case stsa:
-                {
+                { PROFILE_OP(stsa);
                     nostack variable_id_t id;
                     read(in, id);
 
@@ -1305,7 +1306,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldsa:
-                {
+                { PROFILE_OP(ldsa);
                     nostack variable_id_t id;
                     read(in, id);
 
@@ -1321,7 +1322,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stoa:
-                {
+                { PROFILE_OP(stoa);
                     nostack uint32_t row COL;
                     nostack variable_id_t variable_id;
                     read(in, variable_id);
@@ -1329,14 +1330,14 @@ bool execute_bytecode_loop()
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
                             Instance* instance = v_owner_id.get_struct();
-                            
+
                             pop_row_col(row COL);
-                            
+
                             store_array<false>(
                                 instance->getVariable(variable_id),
                                 row COL, v INSTANCE_GC_ARG(instance)
@@ -1344,7 +1345,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                     }
@@ -1400,7 +1401,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldoa:
-                {
+                { PROFILE_OP(ldoa);
                     nostack uint32_t row COL;
                     nostack variable_id_t id;
                     read(in, id);
@@ -1408,7 +1409,7 @@ bool execute_bytecode_loop()
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -1420,7 +1421,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                         instance = staticExecutor.m_frame.get_ex_instance_from_ex_id(owner_id);
@@ -1468,23 +1469,23 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stoax:
-                {
+                { PROFILE_OP(stoax);
                     nostack variable_id_t variable_id;
                     read(in, variable_id);
-                    
+
                     nostack uint32_t depth;
                     read(in, depth);
-                    
+
                     Variable& v = staticExecutor.popRef();
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
                             Instance* instance = v_owner_id.get_struct();
-                            
+
                             unravel_store_array<false>(
                                 instance->getVariable(variable_id),
                                 depth, v INSTANCE_GC_ARG(instance)
@@ -1492,7 +1493,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                     }
@@ -1549,18 +1550,18 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldoax:
-                {
+                { PROFILE_OP(ldoax);
                     nostack variable_id_t id;
                     read(in, id);
-                    
+
                     nostack uint32_t depth;
                     read(in, depth);
-                    
+
                     Instance* instance;
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -1569,7 +1570,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                         instance = staticExecutor.m_frame.get_ex_instance_from_ex_id(owner_id);
@@ -1615,7 +1616,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stga:
-                {
+                { PROFILE_OP(stga);
                     nostack variable_id_t id;
                     read(in, id);
 
@@ -1633,7 +1634,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldga:
-                {
+                { PROFILE_OP(ldga);
                     nostack variable_id_t id;
                     read(in, id);
 
@@ -1647,7 +1648,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case stpa:
-                {
+                { PROFILE_OP(stpa);
                     nostack uint32_t row COL;
                     nostack variable_id_t variable_id;
                     read(in, variable_id);
@@ -1655,7 +1656,7 @@ bool execute_bytecode_loop()
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -1666,7 +1667,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                     }
@@ -1707,7 +1708,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case ldpa:
-                {
+                { PROFILE_OP(ldpa);
                     nostack uint32_t row COL;
                     nostack variable_id_t id;
                     read(in, id);
@@ -1715,7 +1716,7 @@ bool execute_bytecode_loop()
                     nostack ex_instance_id_t owner_id;
                     {
                         Variable& v_owner_id = staticExecutor.popRef();
-                        
+
                         #ifdef OGM_STRUCT_SUPPORT
                         if (v_owner_id.is_struct())
                         {
@@ -1725,7 +1726,7 @@ bool execute_bytecode_loop()
                             break;
                         }
                         #endif
-                        
+
                         owner_id = v_owner_id.castCoerce<ex_instance_id_t>();
                         v_owner_id.cleanup();
                         instance = staticExecutor.m_frame.get_ex_instance_from_ex_id(owner_id);
@@ -1768,21 +1769,21 @@ bool execute_bytecode_loop()
                 }
                 break;
             case pop:
-                {
+                { PROFILE_OP(pop);
                     TRACE(staticExecutor.peekRef(), " popped.");
                     staticExecutor.popRef().cleanup();
                     TRACE(staticExecutor.peekRef(), " revealed.");
                 }
                 break;
             case dup:
-                {
+                { PROFILE_OP(dup);
                     ogm::interpreter::Variable& v = (staticExecutor.peekRef());
                     staticExecutor.pushRef().copy(v);
                     TRACE(staticExecutor.peekRef());
                 }
                 break;
             case dup2:
-                {
+                { PROFILE_OP(dup2);
                     ogm::interpreter::Variable& v0 = (staticExecutor.peekRef());
                     ogm::interpreter::Variable& v1 = (staticExecutor.peekRef(1));
                     staticExecutor.pushRef().copy(v1);
@@ -1792,7 +1793,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case dup3:
-                {
+                { PROFILE_OP(dup3);
                     ogm::interpreter::Variable& v0 = (staticExecutor.peekRef());
                     ogm::interpreter::Variable& v1 = (staticExecutor.peekRef(1));
                     ogm::interpreter::Variable& v2 = (staticExecutor.peekRef(2));
@@ -1805,7 +1806,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case dupn:
-                {
+                { PROFILE_OP(dupn);
                     nostack uint8_t n;
                     read(in, n);
 
@@ -1817,7 +1818,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case dupi:
-                {
+                { PROFILE_OP(dupi);
                     nostack uint8_t n;
                     read(in, n);
 
@@ -1827,7 +1828,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case deli:
-                {
+                { PROFILE_OP(deli);
                     nostack uint8_t n;
                     read(in, n);
 
@@ -1842,7 +1843,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case swap:
-                {
+                { PROFILE_OP(swap);
                     ogm::interpreter::Variable v0 = std::move(staticExecutor.popRef());
                     ogm::interpreter::Variable v1 = std::move(staticExecutor.popRef());
                     staticExecutor.pushRef() = std::move(v0);
@@ -1851,7 +1852,7 @@ bool execute_bytecode_loop()
                 break;
             case nat:
                 // for efficiency reasons, this is hardcoded (and not part of the StandardLibrary class.)
-                {
+                { PROFILE_OP(nat);
                     void* vfptr;
                     int8_t argc;
                     read(in, vfptr);
@@ -2318,23 +2319,23 @@ bool execute_bytecode_loop()
                 }
                 break;
             case wti:
-                {
+                { PROFILE_OP(wti);
                     // determine WithIterator index
                     nostack size_t iterator_index;
                     iterator_index = staticExecutor.m_with_iterators.size();
-                    
+
                     // pop the iterand
                     Variable& v = staticExecutor.popRef();
-                    
+
                     // initialize the WithIterator
                     #ifdef OGM_STRUCT_SUPPORT
                     if (v.is_struct())
                     {
                         Instance* instance = v.get_struct();
-                        
+
                         // TODO: store a separate reference to prevent struct cleanup.
                         v.cleanup();
-                        
+
                         WithIterator& withIterator = staticExecutor.m_with_iterators.emplace_back(instance);
                     }
                     else
@@ -2343,7 +2344,7 @@ bool execute_bytecode_loop()
                         nostack ex_instance_id_t id;
                         id = v.castCoerce<ex_instance_id_t>();
                         v.cleanup();
-                        
+
                         WithIterator& withIterator = staticExecutor.m_with_iterators.emplace_back();
                         staticExecutor.m_frame.get_instance_iterator(id, withIterator, staticExecutor.m_self, staticExecutor.m_other);
                     }
@@ -2359,7 +2360,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case wty:
-                {
+                { PROFILE_OP(wty);
                     nostack size_t iterator_index;
 					iterator_index = staticExecutor.peekRef().get<uint64_t>();
                     WithIterator& withIterator = staticExecutor.m_with_iterators.at(iterator_index);
@@ -2385,7 +2386,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case wtd:
-                {
+                { PROFILE_OP(wtd);
                     staticExecutor.pop();
                     staticExecutor.popSelf();
                     staticExecutor.m_with_iterators.pop_back();
@@ -2393,14 +2394,14 @@ bool execute_bytecode_loop()
                 }
                 break;
             case jmp:
-                {
+                { PROFILE_OP(jmp);
                     nostack bytecode_address_t address;
                     read(in, address);
                     in.seekg(address);
                 }
                 break;
             case bcond:
-                {
+                { PROFILE_OP(bcond);
                     nostack bytecode_address_t address;
                     read(in, address);
                     if (staticExecutor.m_statusCond)
@@ -2415,17 +2416,17 @@ bool execute_bytecode_loop()
                 }
                 break;
             case call: // call another bytecode section
-                {
+                { PROFILE_OP(call);
                     nostack bytecode_index_t index;
                     uint8_t argc;
                     read(in, index);
                     read(in, argc);
                     TRACE_STACK(argc);
-                    
+
                     if (!staticExecutor.m_frame.m_bytecode.has_bytecode(index)) {
                         throw MiscError("Script index " + std::to_string((uint32_t)index) + " not found in BytecodeTable");
                     }
-                    
+
                     Bytecode bytecode = staticExecutor.m_frame.m_bytecode.get_bytecode(index);
                     ogm_assert(bytecode.m_argc == static_cast<decltype(bytecode.m_argc)>(-1) || bytecode.m_argc == argc);
 
@@ -2445,15 +2446,15 @@ bool execute_bytecode_loop()
                 break;
             #ifdef OGM_FUNCTION_SUPPORT
             case calls: // call another bytecode section (indirect)
-                {
+                { PROFILE_OP(calls);
                     uint8_t argc;
                     read(in, argc);
                     TRACE_STACK(argc);
-                    
+
                     nostack bytecode_index_t index;
                     index = staticExecutor.peekRef().get_bytecode_index();
                     staticExecutor.popRef().cleanup();
-                    
+
                     Bytecode bytecode = staticExecutor.m_frame.m_bytecode.get_bytecode(index);
                     ogm_assert(bytecode.m_argc == static_cast<decltype(bytecode.m_argc)>(-1) || bytecode.m_argc == argc);
 
@@ -2473,7 +2474,7 @@ bool execute_bytecode_loop()
                 break;
             #endif
             case ret:
-                {
+                { PROFILE_OP(ret);
                     // save the most recent n variables on the stack
                     nostack uint8_t count;
                     read(in, count);
@@ -2517,7 +2518,7 @@ bool execute_bytecode_loop()
                 }
                 break;
             case sus:
-                {
+                { PROFILE_OP(sus);
                     // suspend execution.
                     // since pc is set, can be returned to later.
                     // FIXME: this generally only works from the top-level call, because
@@ -2525,11 +2526,14 @@ bool execute_bytecode_loop()
                     return true;
                 }
             case eof:
-                {
+                { PROFILE_OP(eof);
                     throw MiscError("Execution reached end of unit");
                 }
                 break;
             case nop:
+                {
+                    PROFILE_OP(nop);
+                }
                 break;
             default:
                 throw MiscError(std::string("Attempted to execute bytecode command which is not implemented: ") + std::string(get_opcode_string(op)));
