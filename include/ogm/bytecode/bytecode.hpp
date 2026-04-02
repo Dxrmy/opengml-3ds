@@ -613,7 +613,6 @@ const char* get_opcode_string(opcode_t);
 
 static_assert((int)opcode::eof <= 0xff, "Opcode must be 1 byte.");
 
-// TODO: extract these struct definitions into another header.
 struct EnumTable;
 
 /**
@@ -655,7 +654,7 @@ public:
     {
         return m_ast_macros.find(s) != m_ast_macros.end();
     }
-    
+
     // compiles and writes macro. (Flags should come from config.m_parse_flags)
     // TODO: (should ReflectionAccumulator gain a reference to config...?)
     void set_macro(const char* name, const char* value, int flags=0);
@@ -832,4 +831,7 @@ void bytecode_dis(bytecode::BytecodeStream inBytecode, std::ostream& outDis, con
 
 }
 }
+
+#include "ogm/bytecode/generate_utils.hpp"
+
 #endif
