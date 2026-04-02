@@ -444,7 +444,13 @@ void Display::draw_filled_circle(coord_t x, coord_t y, coord_t radius) {
 void Display::draw_outline_circle(coord_t, coord_t, coord_t) {}
 void Display::draw_fill_colour(uint32_t) {}
 void Display::set_circle_precision(uint32_t) {}
-void Display::set_colour_mask(bool, bool, bool, bool) {}
+void Display::set_colour_mask(bool r, bool g, bool b, bool a) {
+    if (!r && !g && !b && !a) {
+        C3D_ColorLogicOp(GPU_LOGICOP_NOOP);
+    } else {
+        C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    }
+}
 void Display::set_depth_test(bool) {}
 void Display::set_culling(bool) {}
 void Display::set_zwrite(bool) {}
