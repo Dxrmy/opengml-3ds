@@ -135,6 +135,122 @@ bool DataWinLoader::load() {
                     m_variables.push_back({read_string_at(file, name_offset), id});
                 }
             }
+            else if (chunk_name == "OBJT") {
+                uint32_t obj_count;
+                fread(&obj_count, 4, 1, file);
+                SD_PRINT("  -> Object Count: " + std::to_string(obj_count));
+
+                std::vector<uint32_t> offsets(obj_count);
+                if (obj_count > 0) {
+                    fread(offsets.data(), 4, obj_count, file);
+                }
+
+                m_objects.reserve(obj_count);
+                for (uint32_t i = 0; i < obj_count; ++i) {
+                    ObjectDef obj;
+                    obj.id = i;
+
+                    fseek(file, offsets[i], SEEK_SET);
+
+                    uint32_t name_offset;
+                    fread(&name_offset, 4, 1, file);
+                    obj.name = read_string_at(file, name_offset);
+
+                    fread(&obj.sprite_index, 4, 1, file);
+                    uint32_t vis;
+                    fread(&vis, 4, 1, file);
+                    obj.visible = (vis != 0);
+
+                    uint32_t solid;
+                    fread(&solid, 4, 1, file);
+                    obj.solid = (solid != 0);
+
+                    fread(&obj.depth, 4, 1, file);
+
+                    uint32_t pers;
+                    fread(&pers, 4, 1, file);
+                    obj.persistent = (pers != 0);
+
+                    fread(&obj.parent_id, 4, 1, file);
+                    fread(&obj.mask_index, 4, 1, file);
+
+                    m_objects.push_back(std::move(obj));
+                }
+            }
+            else if (chunk_name == "ROOM") {
+                uint32_t room_count;
+                fread(&room_count, 4, 1, file);
+                SD_PRINT("  -> Room Count: " + std::to_string(room_count));
+
+                std::vector<uint32_t> offsets(room_count);
+                if (room_count > 0) {
+                    fread(offsets.data(), 4, room_count, file);
+                }
+
+                m_rooms.reserve(room_count);
+                for (uint32_t i = 0; i < room_count; ++i) {
+                    RoomDef room;
+                    room.id = i;
+
+                    fseek(file, offsets[i], SEEK_SET);
+
+                    uint32_t name_offset;
+                    fread(&name_offset, 4, 1, file);
+                    room.name = read_string_at(file, name_offset);
+
+                    fseek(file, offsets[i] + 0x08, SEEK_SET);
+                    fread(&room.width, 4, 1, file);
+                    fread(&room.height, 4, 1, file);
+                    fread(&room.fps, 4, 1, file);
+
+                    uint32_t pers;
+                    fread(&pers, 4, 1, file);
+                    room.persistent = (pers != 0);
+
+                    fread(&room.background_color, 4, 1, file);
+
+                    uint32_t draw_bg;
+                    fread(&draw_bg, 4, 1, file);
+                    room.draw_background_color = (draw_bg != 0);
+
+                    fseek(file, offsets[i] + 0x2C, SEEK_SET);
+                    uint32_t instances_list_offset;
+                    fread(&instances_list_offset, 4, 1, file);
+
+                    if (instances_list_offset > 0) {
+                        fseek(file, instances_list_offset, SEEK_SET);
+                        uint32_t instance_count;
+                        fread(&instance_count, 4, 1, file);
+
+                        std::vector<uint32_t> inst_offsets(instance_count);
+                        if (instance_count > 0) {
+                            fread(inst_offsets.data(), 4, instance_count, file);
+                        }
+
+                        room.instances.reserve(instance_count);
+                        for (uint32_t j = 0; j < instance_count; ++j) {
+                            InstanceDef inst;
+                            fseek(file, inst_offsets[j], SEEK_SET);
+
+                            fread(&inst.x, 4, 1, file);
+                            fread(&inst.y, 4, 1, file);
+                            fread(&inst.object_index, 4, 1, file);
+                            fread(&inst.id, 4, 1, file);
+
+                            fseek(file, inst_offsets[j] + 0x14, SEEK_SET);
+                            fread(&inst.scale_x, 4, 1, file);
+                            fread(&inst.scale_y, 4, 1, file);
+                            fread(&inst.image_speed, 4, 1, file);
+                            fread(&inst.image_index, 4, 1, file);
+                            fread(&inst.blend, 4, 1, file);
+
+                            room.instances.push_back(inst);
+                        }
+                    }
+
+                    m_rooms.push_back(std::move(room));
+                }
+            }
             else if (chunk_name == "FUNC") {
                 uint32_t func_count;
                 fread(&func_count, 4, 1, file);
