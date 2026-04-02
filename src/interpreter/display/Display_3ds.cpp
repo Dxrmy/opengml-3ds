@@ -423,7 +423,22 @@ void Display::get_colours4(uint32_t*) {}
 void Display::write_vertex(float*, coord_t, coord_t, coord_t, uint32_t, coord_t, coord_t) const {}
 uint32_t Display::get_vertex_size() const { return 0; }
 void Display::render_array(size_t, float*, TexturePage*, uint32_t) {}
-void Display::draw_outline_rectangle(coord_t, coord_t, coord_t, coord_t) {}
+void Display::draw_outline_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    // Top
+    C2D_DrawLine(x1, y1, c, x2, y1, c, 1.0f, 0.5f);
+    // Right
+    C2D_DrawLine(x2, y1, c, x2, y2, c, 1.0f, 0.5f);
+    // Bottom
+    C2D_DrawLine(x2, y2, c, x1, y2, c, 1.0f, 0.5f);
+    // Left
+    C2D_DrawLine(x1, y2, c, x1, y1, c, 1.0f, 0.5f);
+}
 
 void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
     uint8_t r = (g_draw_colour & 0x0000FF);
