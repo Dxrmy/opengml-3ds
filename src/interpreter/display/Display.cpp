@@ -123,6 +123,7 @@ namespace
     SDL_GLContext g_context;
     TexturePage* g_target = nullptr;
     uint32_t g_square_vbo;
+    size_t g_square_vbo_capacity = 0;
     uint32_t g_square_vao;
     uint32_t g_blank_texture;
     uint32_t g_circle_precision=32;
@@ -697,6 +698,7 @@ namespace
         } m_state;
         std::vector<char> m_data;
         size_t m_size;
+        size_t m_capacity = 0;
         uint32_t m_vbo;
         uint32_t m_format = std::numeric_limits<uint32_t>::max();
     };
@@ -1036,7 +1038,19 @@ void Display::render_vertices(float* vertices, size_t count, uint32_t texture, u
 {
     glBindVertexArray(g_square_vao);
     glBindBuffer(GL_ARRAY_BUFFER, g_square_vbo);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * k_vertex_data_size, vertices, GL_STREAM_DRAW);
+
+    size_t required_size = count * sizeof(float) * k_vertex_data_size;
+    if (required_size > g_square_vbo_capacity)
+    {
+        g_square_vbo_capacity = required_size * 2;
+        glBufferData(GL_ARRAY_BUFFER, g_square_vbo_capacity, nullptr, GL_STREAM_DRAW);
+    }
+
+    if (required_size > 0)
+    {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, required_size, vertices);
+    }
+
     bindTexture(texture);
     glDrawArrays(render_glenum, 0, count);
 }
@@ -2888,7 +2902,16 @@ void Display::render_buffer(uint32_t vertex_buffer, TexturePage* texture, uint32
     // fill array if dirty
     if (vb.m_state == VertexBuffer::dirty)
     {
-        glBufferData(GL_ARRAY_BUFFER, vb.m_size, &vb.m_data.front(), GL_STREAM_DRAW);
+        if (vb.m_size > vb.m_capacity)
+        {
+            vb.m_capacity = vb.m_size * 2;
+            glBufferData(GL_ARRAY_BUFFER, vb.m_capacity, nullptr, GL_STREAM_DRAW);
+        }
+
+        if (vb.m_size > 0)
+        {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vb.m_size, &vb.m_data.front());
+        }
         vb.m_state = VertexBuffer::clean;
     }
 
