@@ -139,7 +139,7 @@ void Display::set_blendmode_separate(int32_t src, int32_t dst, int32_t srca, int
 }
 
 void Display::shader_set_alpha_test_enabled(bool enabled) {
-    C3D_AlphaTest(enabled, GPU_GREATER, 0);
+    C3D_AlphaTest(enabled, GPU_GREATER, 0x80);
 }
 
 void Display::shader_set_alpha_test_threshold(real_t value) {
