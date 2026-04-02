@@ -266,6 +266,7 @@ public:
     // 3d setup
     void set_depth_test(bool);
     void set_culling(bool);
+    void reset_render_state();
     void set_zwrite(bool);
     void set_colour_mask(bool r, bool g, bool b, bool a);
 
