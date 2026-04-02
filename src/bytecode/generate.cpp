@@ -214,7 +214,7 @@ void preprocess_function_special(const ogm_ast_t& ast)
     {
         const char* function_name = (char*) ast.m_sub[0].m_payload;
         uint8_t argc = ast.m_sub_count - 1;
-        
+
         // TODO
     }
 }
@@ -232,7 +232,7 @@ bool generate_function_special(std::ostream& out, const ogm_ast_t& ast, Generate
             // TODO:
             return true;
         }
-        
+
         if (strcmp(function_name, "gml_release_mode") == 0)
         {
             // TODO:
@@ -244,13 +244,13 @@ bool generate_function_special(std::ostream& out, const ogm_ast_t& ast, Generate
             // TODO:
             return true;
         }
-        
+
         if (strcmp(function_name, "ogm_release_mode") == 0)
         {
             // TODO:
             return true;
         }
-        
+
         if (strcmp(function_name, "ogm_volatile") == 0 && argc == 1)
         {
             bytecode_generate_ast(out, ast.m_sub[1], context_args);
@@ -381,20 +381,20 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                 #ifdef OGM_STRUCT_SUPPORT
                 ogm_ast_declaration_t* payload;
                 ogm_ast_tree_get_payload_declaration(&ast, &payload);
-                
+
                 // create an empty struct
                 write_op(out, ldi_struct);
-                
+
                 // set its initial members
                 for (int32_t i = 0; i < ast.m_sub_count; ++i)
                 {
                     write_op(out, dup);
                     bytecode_generate_ast(out, ast.m_sub[i], context_args);
-                    
+
                     // determine variable ID from name.
                     LValue lv;
                     lv.m_memspace = memspace_other;
-                    
+
                     lv.m_address = context_args.m_instance_variables.get_id(
                         // the member's name
                         payload->m_identifier[i]
@@ -409,21 +409,21 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
             case ogm_ast_st_exp_literal_function:
             {
                 #ifdef OGM_FUNCTION_SUPPORT
-                
+
                 // push function onto stack
                 write_op(out, ldi_fn);
-                
+
                 ogm_ast_literal_function_t* payload;
                 ogm_ast_tree_get_payload_function_literal(&ast, &payload);
-                
+
                 std::string name = "<lambda-" + std::to_string((*context_args.m_lambda_id)++) + ">";
                 if (payload->m_name)
                 {
                     name = payload->m_name;
                 }
-                
+
                 ogm_assert(payload->m_arg_count <= 16);
-                
+
                 DecoratedAST dast{
                     // body of function
                     ast.m_sub,
@@ -432,7 +432,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                     1, // return count
                     static_cast<uint8_t>(payload->m_arg_count) // arguments
                 };
-                
+
                 // set named arguments
                 if (payload->m_arg_count >= 0)
                 {
@@ -442,28 +442,28 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         dast.m_named_args[i] = payload->m_arg[i];
                     }
                 }
-                
+
                 // remove some config flags that lambdas should ignore.
                 GenerateConfig _config = *context_args.m_config;
                 _config.m_no_locals = false;
                 _config.m_existing_locals_namespace = nullptr;
                 _config.m_return_is_suspend = false;
-                
+
                 bytecode_index_t lambda_index = bytecode_generate(
                     dast,
                     *context_args.m_accumulator,
                     &_config
                 );
-                
+
                 write(out, lambda_index);
-                
+
                 // TODO: assign to instance variable.
                 // (make sure to assert the variable name doesn't already exist.)
                 if (ast.m_type == ogm_ast_t_imp)
                 {
                     write_op(out, pop);
                 }
-                
+
                 #else
                 throw CompileError(ErrorCode::C::haslitfn, ast.m_start, "function literal support is not enabled. Please recompile with -DOGM_FUNCTION_SUPPORT=ON");
                 #endif
@@ -859,9 +859,9 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                     {
                         break;
                     }
-                    
+
                     const bool is_new = ast.m_subtype == ogm_ast_st_exp_new;
-                    
+
                     if (is_new)
                     {
                         #if OGM_STRUCT_SUPPORT
@@ -876,9 +876,9 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         CompileError(ErrorCode::C::hasstruct, ast.m_start, "\"new\" keyword requires struct support. Please recompile with -DOGM_STRUCT_SUPPORT.");
                         #endif
                     }
-                    
+
                     assert(ast.m_sub_count >= 1);
-                    
+
                     uint8_t retc = 0;
                     uint8_t argc = ast.m_sub_count - 1;
 
@@ -887,7 +887,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                     {
                         bytecode_generate_ast(out, ast.m_sub[i + 1], context_args);
                     }
-                    
+
                     auto struct_context = [is_new, &out](uint8_t context_depth)
                     {
                         // switch to context of new struct.
@@ -902,12 +902,12 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             write_op(out, pop);
                         }
                     };
-                    
+
                     // figure out what function is being called.
                     if (ast.m_sub[0].m_subtype == ogm_ast_st_exp_identifier)
                     {
                         const char* function_name = (char*) ast.m_sub[0].m_payload;
-                        
+
                         size_t macro_iters = 0;
                         while (context_args.m_reflection->has_macro_NOMUTEX(function_name))
                         // macro?
@@ -922,13 +922,13 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             {
                                 CompileError(ErrorCode::C::fnmacid, ast.m_start, "function identifier matched a macro which did not evaluate to an identifier.");
                             }
-                            
+
                             if (macro_iters++ > 0x500)
                             {
                                 CompileError(ErrorCode::C::macdepth, ast.m_start, "macro replacement depth exceeded (for function identifier).");
                             }
                         }
-                        
+
                         if (context_args.m_library->generate_function_bytecode(out, function_name, argc))
                         // library function
                         {
@@ -978,10 +978,10 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         {
                             // set self to the struct
                             struct_context(argc + 1);
-                            
+
                             // copy the function on the stack
                             write_op(out, dup);
-                            
+
                             // set the struct-type to the function
                             write_op(out, tstruct);
                         }
@@ -1000,7 +1000,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             write_op(out, pop);
                         }
                     }
-                    
+
                     if (is_new)
                     {
                         // restore context.
@@ -1026,7 +1026,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         {
                             dectype = payload->m_types[i];
                         }
-                        
+
                         // select type
                         bool is_static = false;
                         bool is_bare = false;
@@ -1044,11 +1044,11 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         {
                             type_lv.m_memspace = memspace_local;
                         }
-                        
+
                         // lvalue
                         const char* identifier = payload->m_identifier[i];
                         if (!identifier) continue;
-                        
+
                         LValue lv = type_lv;
                         if (lv.m_memspace == memspace_local)
                         {
@@ -1063,15 +1063,15 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             {
                                 _identifier = context_args.m_dast->m_name + "::" + identifier;
                             }
-                            
+
                             // set address
                             lv.m_address = context_args.m_reflection->m_namespace_instance.add_id(_identifier);
-                            
+
                             if (is_static)
                             {
                                 // remember static for context later.
                                 (*context_args.m_statics)[identifier] = lv.m_address;
-                                
+
                                 // so we can later remap from instance variable to the static variable.
                                 variable_id_t nonstatic_id = context_args.m_reflection->m_namespace_instance.add_id(identifier);
                                 context_args.m_accumulator->m_bytecode->add_static(
@@ -1086,16 +1086,16 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                                 context_args.m_reflection->m_bare_globals.insert(_identifier);
                             }
                         }
-                        
+
                         bytecode_address_t static_backpatch_src;
-                        
+
                         if (is_static)
                         {
                             // static initialization
                             write_op(out, okg);
                             write(out, lv.m_address);
                             write_op(out, bcond);
-                            
+
                             // dummy value to be backpatched.
                             static_backpatch_src = out.tellp();
                             write(out, static_backpatch_src);
@@ -1113,10 +1113,10 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             // defaults to "undefined"
                             write_op(out, ldi_undef);
                         }
-                        
+
                         // store value in var definition.
                         bytecode_generate_store(out, lv, context_args);
-                        
+
                         // backpatch for statics
                         if (is_static)
                         {
@@ -1146,18 +1146,18 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                     std::vector<const ogm_ast_t*> conditions;
                     std::vector<const ogm_ast_t*> bodies;
                     const ogm_ast_t* collect_from = &ast;
-                    
+
                     // Descend into the last "else" block each time.
                     while (collect_from)
                     {
                         conditions.push_back(&collect_from->m_sub[0]);
-                        
+
                         // if more conditions are added to "if" asts, this will need to be modified.
                         for (size_t i = 1; i < collect_from->m_sub_count; ++i)
                         {
                             bodies.push_back(&collect_from->m_sub[i]);
                         }
-                        
+
                         if (collect_from->m_sub_count >= 3 && bodies.back()->m_subtype == ogm_ast_st_imp_if)
                         // there is an else -- pop it and iterate over it.
                         {
@@ -1170,16 +1170,16 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             collect_from = nullptr;
                         }
                     }
-            
+
                     // these indices will have the end-of-chain address backpatched onto them.
                     std::vector<bytecode_address_t> backpatch_sources;
-                    
+
                     for (size_t i = 0; i < bodies.size(); ++i)
                     {
                         const bool has_condition = i < conditions.size();
                         const bool is_last_block = i == bodies.size() - 1;
                         bytecode_address_t skip_block_src;
-                        
+
                         // compute condition:
                         if (has_condition)
                         {
@@ -1188,28 +1188,28 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             // jump to "else" block if condition is false
                             write_op(out, ncond);
                             write_op(out, bcond);
-                            
+
                             // placeholder
                             skip_block_src = out.tellp();
                             write(out, skip_block_src);
                             peephole_block(out, context_args);
                         }
-                        
+
                         // body
                         bytecode_generate_ast(out, *bodies.at(i), context_args);
-                        
+
                         if (!is_last_block)
                         {
                             // skip to end of if-else block
                             write_op(out, jmp);
-                            
+
                             // write dummy jump dst and backpatch later.
                             bytecode_address_t backpatch_src = out.tellp();
                             backpatch_sources.push_back(backpatch_src);
                             write(out, backpatch_src);
                             peephole_block(out, context_args);
                         }
-                        
+
                         // backpatch
                         if (has_condition)
                         {
@@ -1218,7 +1218,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                             peephole_block(out, context_args);
                         }
                     }
-                    
+
                     // backpatch jump from end of each block
                     bytecode_address_t backpatch_dst = out.tellp();
                     for (bytecode_address_t backpatch_src : backpatch_sources)
@@ -1243,7 +1243,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         bytecode_address_t loop_end_dst;
                         write_op(out, ncond);
                         write_op(out, bcond);
-                        
+
                         // placeholder, to be filled in later.
                         bytecode_address_t loop_end_src = out.tellp();
                         write(out, k_placeholder_pos);
@@ -1540,7 +1540,7 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                                 for (auto it = context_args.m_cleanup_commands.rbegin(); it != context_args.m_cleanup_commands.rend(); ++it)
                                 {
                                     opcode::opcode_t op = *it;
-                                    
+
                                     // swap down the one and only return value.
                                     if (op == opcode::pop && ast.m_sub_count == 1)
                                     {
@@ -1662,7 +1662,7 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
     std::vector<bytecode_address_t> ph_break;
     std::vector<bytecode_address_t> ph_continue;
     std::vector<opcode::opcode_t> cleanup_commands;
-    
+
     // set index if not provided.
     if (index == k_no_bytecode)
     {
@@ -1680,7 +1680,7 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
         accumulator.m_library, assetTable, bytecodeTable,
         ph_break, ph_continue, cleanup_commands,
         debugSymbols, reflectionAccumulator,
-        config, 
+        config,
         peephole_block
     );
 
@@ -1704,15 +1704,56 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
         }
     }
 
-    // allocate local variables
-    // TODO: don't allocate locals if no locals in function.
-    write_op(out, all);
-    int32_t n_locals = 0;
-    auto n_locals_src = out.tellp();
+    bool has_locals = false;
+    if (in.m_named_args && in.m_argc > 0)
+    {
+        has_locals = true;
+    }
+    if (config && config->m_existing_locals_namespace && config->m_existing_locals_namespace->id_count() > 0)
+    {
+        has_locals = true;
+    }
 
-    //placeholder -- we won't know the number of locals until after compiling.
-    write(out, n_locals);
-    
+    if (!has_locals && generate_from_ast)
+    {
+        std::vector<const ogm_ast_t*> queue = { generate_from_ast };
+        while (!queue.empty())
+        {
+            const ogm_ast_t* current = queue.back();
+            queue.pop_back();
+            if (current->m_subtype == ogm_ast_st_imp_var)
+            {
+                ogm_ast_declaration_t* payload;
+                ogm_ast_tree_get_payload_declaration(current, &payload);
+                for (size_t i = 0; i < payload->m_identifier_count; i++)
+                {
+                    const char* dectype = payload->m_types[i] ? payload->m_types[i] : "";
+                    if (strcmp(dectype, "globalvar") != 0 && strcmp(dectype, "static") != 0)
+                    {
+                        has_locals = true;
+                        break;
+                    }
+                }
+                if (has_locals) break;
+            }
+            for (size_t i = 0; i < current->m_sub_count; ++i)
+            {
+                queue.push_back(&current->m_sub[i]);
+            }
+        }
+    }
+
+    // allocate local variables
+    int32_t n_locals = 0;
+    std::streampos n_locals_src = 0;
+    if (has_locals)
+    {
+        write_op(out, all);
+        n_locals_src = out.tellp();
+        //placeholder -- we won't know the number of locals until after compiling.
+        write(out, n_locals);
+    }
+
     // copy named args into local variables.
     std::string* named_args = in.m_named_args;
     if (named_args)
@@ -1722,7 +1763,7 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
             LValue lv;
             lv.m_memspace = memspace_local;
             lv.m_address = context_args.m_symbols->m_namespace_local.add_id(named_args[i]);
-            
+
             // get variable definition from library for "argument<n>"
             std::string argname = "argument" + std::to_string(i);
             BuiltInVariableDefinition def;
@@ -1738,7 +1779,7 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
             }
         }
     }
-    
+
     peephole_optimize(out, context_args);
 
     if (generate_from_ast)
@@ -1752,7 +1793,10 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
 
     // set number of locals at start of bytecode
     n_locals = context_args.m_symbols->m_namespace_local.id_count();
-    write_at(out, n_locals, n_locals_src);
+    if (has_locals)
+    {
+        write_at(out, n_locals, n_locals_src);
+    }
 
     if (n_locals > 0 && config->m_no_locals)
     {
@@ -1775,10 +1819,10 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
     }
     write_op(out, eof);
     std::string s = out.str();
-    
+
     // add generated bytecode to table.
     bytecodeTable->add_bytecode(index, Bytecode(s.c_str(), out.tellp(), retc, argc, debugSymbols));
-    
+
     // return index in table of the bytecode.
     return index;
 }
@@ -1799,7 +1843,7 @@ namespace
             }
         }
     }
-    
+
     void bytecode_preprocess_helper(const ogm_ast_t* ast, const ogm_ast_t* parent, uint8_t& out_retc, uint8_t& out_argc, ReflectionAccumulator& in_out_reflection_accumulator, asset::Config* config)
     {
         try
@@ -1828,7 +1872,7 @@ namespace
                     }
                 }
             }
-            
+
             // macro definition
             // TODO: macros actually need to be pre-preprocessed (!) so that the preprocessing step
             // is able to look up macros. :( ayaaaah....
