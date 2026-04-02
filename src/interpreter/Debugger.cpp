@@ -956,9 +956,9 @@ std::string Debugger::list_source(ogm::bytecode::Bytecode& bc, size_t range_min,
                 bytecode::DebugSymbolSourceMap::Range range;
                 
                 if (bc.m_debug_symbols->m_source_map.get_location_at(sus.m_breakpoint->m_pc.m_pos, range))
-                // FIXME: why is this empty..? explain.
-                { }
-                breakpoint_lines.push_back(range.m_source_start.m_line);
+                {
+                    breakpoint_lines.push_back(range.m_source_start.m_line);
+                }
             }
         }
     }
