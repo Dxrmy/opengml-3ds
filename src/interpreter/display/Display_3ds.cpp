@@ -218,10 +218,21 @@ void* Display_3DS_AllocTexture(uint32_t width, uint32_t height, GPU_TEXCOLOR for
         return nullptr;
     }
 
-    // Allocate from Linear RAM (required for PICA200)
-    void* data = linearAlloc(width * height * 4); // Assuming RGBA8
+    void* data = nullptr;
+    size_t size = width * height * 4; // Assuming RGBA8
+
+    // Attempt to allocate from high-speed VRAM for smaller textures
+    if (width <= 256 && height <= 256) {
+        data = vramAlloc(size);
+    }
+
+    // Fallback to Linear RAM if VRAM is full or texture is too large
     if (!data) {
-        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes from Linear RAM\n", (uint32_t)(width * height * 4));
+        data = linearAlloc(size);
+    }
+
+    if (!data) {
+        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes for texture\n", (uint32_t)size);
         return nullptr;
     }
 
