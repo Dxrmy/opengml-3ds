@@ -7,6 +7,7 @@
 #include "ogm/common/types.hpp"
 
 #include <functional>
+#include <unordered_set>
 
 namespace ogm
 {
@@ -23,7 +24,7 @@ struct TexturePage
 
     // optional (allows drawing to and blitting from)
     uint32_t m_gl_framebuffer = 0;
-    
+
     // optional (depth buffer)
     uint32_t m_gl_tex_depth = 0;
 
@@ -149,7 +150,7 @@ class TextureStore
         { }
     };
 
-    std::vector<TexturePage*> m_pages;
+    std::unordered_set<TexturePage*> m_pages;
 
     // maps assets to texture views.
     // has ownership over these pointers.
@@ -157,7 +158,7 @@ class TextureStore
 
     std::vector<std::pair<TexturePage*, TextureView*>> m_surface_map;
 
-public:    
+public:
     // gives a callback that supplies an image when it is needed.
     TextureView* bind_asset_to_callback(ImageDescriptor, TexturePage::ImageSupplier);
 
@@ -166,9 +167,9 @@ public:
 
     // retrive texture for existing asset
     TextureView* get_texture(ImageDescriptor);
-    
+
     TexturePage* create_tpage_from_callback(TexturePage::ImageSupplier);
-    
+
     TexturePage* create_tpage_from_image(asset::Image&);
 
     // arranges and blits source images onto a texture page.
