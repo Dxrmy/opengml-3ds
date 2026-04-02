@@ -58,7 +58,7 @@ void ogm::interpreter::fn::instance_create(VO out, V x, V y, V vobject_index)
     {
         throw MiscError("Attempted to create non-existent object");
     }
-    
+
     out = frame.create_instance({
         object_index,
         {x.castCoerce<coord_t>(), y.castCoerce<coord_t>()}
@@ -73,14 +73,14 @@ void ogm::interpreter::fn::instance_create_depth(VO out, V x, V y, V depth, V vo
     {
         throw MiscError("Attempted to create non-existent object");
     }
-    
+
     Frame::InstanceCreateArgs args = {
         object_index,
         {x.castCoerce<coord_t>(), y.castCoerce<coord_t>()}
     };
     args.m_type = Frame::InstanceCreateArgs::use_provided_depth;
     args.m_depth = depth.castCoerce<real_t>();
-    
+
     out = frame.create_instance(args)->m_data.m_id;
 }
 
@@ -151,7 +151,7 @@ void ogm::interpreter::fn::instance_copy(VO out, V events)
     newinstance->copyVariables(self);
 
     // transfer builtin variables over
-    // we pause at 
+    // we pause at
     for (size_t i = 0; i <= INSTANCE_VARIABLE_SUPPORTED_MAX; ++i)
     {
         Variable v;
@@ -203,7 +203,7 @@ void ogm::interpreter::fn::place_snapped(VO out, V w, V h)
         out = false;
         return;
     }
-    
+
     out = true;
 }
 
@@ -308,11 +308,10 @@ void ogm::interpreter::fn::getv::instance_id(VO out
 void ogm::interpreter::fn::instance_activate_all(VO out)
 {
     for (std::pair<instance_id_t, Instance*> pair : frame.m_instances)
-    // TODO: consider optimizing by not iterating through instances which are not in the room.
     {
         instance_id_t id = std::get<0>(pair);
         Instance* instance = std::get<1>(pair);
-        if (frame.instance_valid(id))
+        if (instance->m_data.m_room_id == frame.m_data.m_room_index && frame.instance_valid(id))
         {
             frame.activate_instance(instance);
         }
@@ -323,11 +322,10 @@ void ogm::interpreter::fn::instance_deactivate_all(VO out, V vnotme)
 {
     bool notme = vnotme.cond();
     for (std::pair<instance_id_t, Instance*> pair : frame.m_instances)
-    // TODO: consider optimizing by not iterating through instances which are not in the room.
     {
         instance_id_t id = std::get<0>(pair);
         Instance* instance = std::get<1>(pair);
-        if (frame.instance_valid(id) && (!notme || instance != staticExecutor.m_self))
+        if (instance->m_data.m_room_id == frame.m_data.m_room_index && frame.instance_valid(id) && (!notme || instance != staticExecutor.m_self))
         {
             // OPTIMIZE: pass id and instance (rather than read id from instance).
             // same goes for the other similar calls.
@@ -344,7 +342,7 @@ void ogm::interpreter::fn::instance_activate_object(VO out, V object)
     {
         instance_id_t id = std::get<0>(pair);
         Instance* instance = std::get<1>(pair);
-        if (frame.instance_valid(id))
+        if (instance->m_data.m_room_id == frame.m_data.m_room_index && frame.instance_valid(id))
         {
             if (frame.instance_matches_ex_id(instance, object.castCoerce<ex_instance_id_t>(), staticExecutor.m_self, staticExecutor.m_other))
             {

@@ -8,7 +8,7 @@
 
 namespace ogm::interpreter
 {
-    
+
 // declared in Garbage.hpp
 #ifdef OGM_GARBAGE_COLLECTOR
 GarbageCollector g_gc{};
@@ -41,6 +41,7 @@ Instance* Frame::create_instance_as(instance_id_t id, const InstanceCreateArgs& 
 
     VALGRIND_CHECK_INITIALIZED(args.m_object_index);
     i->m_data.m_object_index = args.m_object_index;
+    i->m_data.m_room_id = m_data.m_room_index;
 
     AssetObject* object = static_cast<AssetObject*>(m_assets.get_asset(args.m_object_index));
 
@@ -55,7 +56,7 @@ Instance* Frame::create_instance_as(instance_id_t id, const InstanceCreateArgs& 
     i->m_data.m_position_start = args.m_position;
     i->m_data.m_input_listener = object->m_input_listener;
     i->m_data.m_async_listener = object->m_async_listener;
-    
+
     // set depth or layer
     switch(args.m_type)
     {
@@ -114,7 +115,7 @@ Instance* Frame::create_instance_as(instance_id_t id, const InstanceCreateArgs& 
     add_collision(i);
 
     add_to_instance_vectors(i);
-    
+
     if (args.m_run_create_event)
     {
         // run create event
@@ -417,13 +418,17 @@ void Frame::get_multi_instance_iterator(ex_instance_id_t id, WithIterator& outIt
     for (; id_iter != id_end; ++id_iter)
     {
         Instance* instance = *id_iter;
-        // only add valid, active instances.
-        if (instance->m_data.m_frame_active)
+        // only add valid, active instances in the current room.
+        if (instance->m_data.m_frame_active && instance->m_data.m_room_id == m_data.m_room_index)
         {
             instances[i++] = instance;
         }
         else
         {
+            if (!instance->m_data.m_frame_active)
+            {
+                invalid_encountered++;
+            }
             outIterator.m_count--;
         }
     }
@@ -446,7 +451,7 @@ void Frame::change_room(asset_index_t room_index)
     {
         throw MiscError("Invalid room id " + std::to_string(room_index));
     }
-    
+
     #ifdef OGM_LAYERS
     // take note of preferred name and layer depth for all persistent instances.
     struct persistent_instance_layer_preference_t
@@ -458,7 +463,7 @@ void Frame::change_room(asset_index_t room_index)
     };
     std::vector<persistent_instance_layer_preference_t> persistent_instance_layer_prefs;
     #endif
-    
+
     // destroy all non-persistent instances,
     // and, if layers are enabled, record the layer preferences
     // of persistent instances.
@@ -467,13 +472,27 @@ void Frame::change_room(asset_index_t room_index)
         Instance* instance = std::get<1>(pair);
         ogm_assert(instance);
         if (!instance_valid(instance)) continue;
-        
+
         if (!instance->m_data.m_persistent)
         {
             invalidate_instance(std::get<0>(pair));
         }
+        else
+        {
+            instance->m_data.m_room_id = room_index;
+            remove_collision(instance);
+            if (instance->m_data.m_frame_active)
+            {
+                add_collision(instance);
+            }
+            else
+            {
+                add_inactive_collision(instance);
+            }
+        }
+
         #ifdef OGM_LAYERS
-        else if (m_data.m_layers_enabled || room->m_layers_enabled)
+        if (instance->m_data.m_persistent && (m_data.m_layers_enabled || room->m_layers_enabled))
         {
             // record layer preferences for persistent instance
             // in order to find a matching layer in the next room.
@@ -491,7 +510,7 @@ void Frame::change_room(asset_index_t room_index)
             else
             {
                 Layer& layer = m_layers.m_layers.at(instance->get_layer());
-                
+
                 persistent_instance_layer_prefs.push_back(
                     persistent_instance_layer_preference_t{
                         instance,
@@ -504,8 +523,8 @@ void Frame::change_room(asset_index_t room_index)
         }
         #endif
     }
-    
-    #ifdef OGM_LAYERS    
+
+    #ifdef OGM_LAYERS
     // remove all layers
     m_layers.clear();
     #endif
@@ -515,7 +534,7 @@ void Frame::change_room(asset_index_t room_index)
 
     // destroy all backgrounds
     m_background_layers.clear();
-    
+
     #ifdef OGM_CAMERAS
     // remove cameras
     if (m_cameras.camera_exists(m_data.m_default_camera))
@@ -523,7 +542,7 @@ void Frame::change_room(asset_index_t room_index)
         m_cameras.free_camera(m_data.m_default_camera);
         m_data.m_default_camera = k_no_camera;
     }
-    
+
     for (size_t i = 0; i < k_view_count; ++i)
     {
         // delete previous cameras, if they exist
@@ -549,7 +568,7 @@ void Frame::change_room(asset_index_t room_index)
     m_data.m_desired_fps = room->m_speed;
     #ifdef OGM_LAYERS
     m_data.m_layers_enabled = room->m_layers_enabled;
-    
+
     // add layers, but not their contents (yet).
     if (m_data.m_layers_enabled)
     {
@@ -562,12 +581,12 @@ void Frame::change_room(asset_index_t room_index)
             layer.m_primary_element = def.m_primary_element;
         }
     }
-    
+
     // add/merge all pre-existing persistent instances' layers.
     for (const persistent_instance_layer_preference_t& prefs : persistent_instance_layer_prefs)
     {
         assert(m_data.m_layers_enabled);
-        
+
         Instance* instance = prefs.instance;
         if (!prefs.m_managed)
         {
@@ -591,7 +610,7 @@ void Frame::change_room(asset_index_t room_index)
                 // found matching layer
                 layer_id = iter->second.front();
             }
-            
+
             // create element for instance.
             m_layers.add_element(
                 LayerElement::et_instance,
@@ -600,7 +619,7 @@ void Frame::change_room(asset_index_t room_index)
             ).instance.m_id = instance->m_data.m_id;
         }
     }
-    
+
     // add layer elements from room to layers
     for (const auto& [elt_id, elt] : room->m_layer_elements)
     {
@@ -686,7 +705,7 @@ void Frame::change_room(asset_index_t room_index)
         {
             const AssetObject* object = m_assets.get_asset<AssetObject*>(def.m_object_index);
             ogm_assert(object);
-            InstanceCreateArgs args{ def.m_object_index, {def.m_position.x, def.m_position.y}, false}; 
+            InstanceCreateArgs args{ def.m_object_index, {def.m_position.x, def.m_position.y}, false};
             #ifdef OGM_LAYERS
             if (m_data.m_layers_enabled)
             {
@@ -705,7 +724,7 @@ void Frame::change_room(asset_index_t room_index)
             instance->m_data.m_scale = def.m_scale;
             instance->m_data.m_angle = def.m_angle;
             instance->m_data.m_image_blend = def.m_blend;
-            
+
             // queue collision update
             queue_update_collision(instance);
         }
@@ -715,7 +734,7 @@ void Frame::change_room(asset_index_t room_index)
             instances.push_back(nullptr);
         }
     }
-    
+
     // instances have been added, so we add them to the collision tracker.
     process_collision_updates();
 
@@ -723,16 +742,16 @@ void Frame::change_room(asset_index_t room_index)
     {
         m_data.m_views_enabled = room->m_enable_views;
         size_t i = 0;
-        
+
         #ifdef OGM_CAMERAS
         m_data.m_default_camera = m_cameras.new_camera();
         m_cameras.get_camera(m_data.m_default_camera).m_manual = false;
         #endif
-        
+
         for (const AssetRoom::ViewDefinition& def : room->m_views)
         {
             m_data.m_view_visible[i] = def.m_visible;
-            
+
             #ifndef OGM_CAMERAS
                 m_data.m_view_position[i] = def.m_position;
                 m_data.m_view_dimension[i] = def.m_dimension;
@@ -758,7 +777,7 @@ void Frame::change_room(asset_index_t room_index)
         {
             Instance* instance = instances[i++];
             if (!instance) continue; // persistent instances aren't listed here, so we skip.
-            
+
             ogm_assert(m_instances.find(instance->m_data.m_id) != m_instances.end());
             ogm_assert(get_ex_instance_from_ex_id(instance->m_data.m_id) == instance);
 
@@ -829,11 +848,11 @@ void Frame::serialize(typename state_stream<write>::state_stream_t& s)
     // TODO: reflection (maybe???)
     // TODO: m_display
     // TODO: m_config
-    
+
     #ifdef OGM_LAYERS
     // TODO: layers
     #endif
-    
+
     #ifdef OGM_CAMERAS
     // TODO: cameras
     #endif
@@ -1198,7 +1217,7 @@ void Frame::gc_integrity_check() const
     {
         v.gc_integrity_check();
     }
-    
+
     for (auto& [id, instance] : m_instances)
     {
         if (instance)

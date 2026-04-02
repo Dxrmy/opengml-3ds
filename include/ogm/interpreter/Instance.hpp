@@ -30,6 +30,7 @@ namespace ogm::interpreter
     {
         ogm::id_t m_id = -1;
         asset_index_t m_object_index = -1, m_sprite_index = -1, m_mask_index = -1;
+        asset_index_t m_room_id = k_no_asset;
         real_t m_depth = 0;
         #ifdef OGM_LAYERS
         layer_elt_id_t m_layer_elt = -1;
@@ -212,6 +213,7 @@ namespace ogm::interpreter
                 _serialize<write>(s, m_data.m_object_index);
                 _serialize<write>(s, m_data.m_sprite_index);
                 _serialize<write>(s, m_data.m_mask_index);
+                _serialize<write>(s, m_data.m_room_id);
                 _serialize<write>(s, m_data.m_depth);
                 #ifdef OGM_LAYERS
                 _serialize<write>(s, m_data.m_layer_elt);
