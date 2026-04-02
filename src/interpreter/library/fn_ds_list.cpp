@@ -14,6 +14,7 @@
 
 #include <cctype>
 #include <cstdlib>
+#include <random>
 
 using namespace ogm::interpreter;
 using namespace ogm::interpreter::fn;
@@ -349,16 +350,8 @@ void ogm::interpreter::fn::ds_list_shuffle(VO out, V vindex)
     DSList& list = dslm.ds_get(index);
     std::vector<Variable> tmp(list.m_size);
     std::move(list.m_data.begin(), list.m_data.end(), tmp.begin());
-    // because we use std::rand, we cannot use the stl implementation.
-    for (size_t i = 0; i < list.m_size - 1; i++)
-    {
-        size_t remaining = list.m_size - i;
-
-        // this is biased.
-        size_t swap_index = rand() % remaining;
-
-        std::swap(tmp[i], tmp[i + swap_index]);
-    }
+    static thread_local std::mt19937 g_generator(std::random_device{}());
+    std::shuffle(tmp.begin(), tmp.end(), g_generator);
     std::move(tmp.begin(), tmp.end(), list.m_data.begin());
 }
 
