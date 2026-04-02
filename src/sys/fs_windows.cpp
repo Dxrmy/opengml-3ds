@@ -56,23 +56,23 @@ static bool terminal_colours_enabled = false;
 void enable_terminal_colours()
 {
     if (!is_terminal()) return;
-    
+
     DWORD outMode = 0;
     stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     if(stdoutHandle == INVALID_HANDLE_VALUE) {
         terminal_colours_are_supported = false;
- 		return;
- 	}
+		return;
+	}
     if(!GetConsoleMode(stdoutHandle, &outMode)) {
-   		terminal_colours_are_supported = false;
+		terminal_colours_are_supported = false;
         return;
-   	}
+	}
     outModeInit = outMode;
     outMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     if(!SetConsoleMode(stdoutHandle, outMode)) {
         terminal_colours_are_supported = false;
- 		return;
- 	}
+		return;
+	}
     terminal_colours_enabled = true;
 }
 
@@ -80,10 +80,10 @@ void restore_terminal_colours()
 {
     if (!is_terminal()) return;
     if (!terminal_colours_enabled) return;
-    
+
     // reset colour if set.
     std::cout << ansi_colour("0");
-    
+
     if(SetConsoleMode(stdoutHandle, outModeInit));
 }
 
@@ -123,7 +123,8 @@ bool create_directory(const std::string& path)
       throw MiscError("path too long");
     }
     memset(buff, BUFFLEN, 0);
-    strcpy(buff, path.c_str());
+    strncpy(buff, path.c_str(), BUFFLEN - 1);
+    buff[BUFFLEN - 1] = '\0';
     return CreateDirectory(buff);
 }
 
@@ -135,7 +136,8 @@ bool remove_directory(const std::string& path)
       throw MiscError("path too long");
     }
     memset(buff, 0, BUFFLEN);
-    strcpy(buff, path.c_str());
+    strncpy(buff, path.c_str(), BUFFLEN - 1);
+    buff[BUFFLEN - 1] = '\0';
     SHFILEOPSTRUCT shfo = {
         nullptr,
         FO_DELETE,
@@ -219,7 +221,7 @@ namespace
         {
             // for debugging windows.
             std::cout << "listing " << sub << std::endl;
-        
+
             out.push_back(sub);
             if (recursive && path_is_directory(sub))
             {
