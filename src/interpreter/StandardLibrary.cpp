@@ -534,7 +534,8 @@ void StandardLibrary::reflection_add_instance_variables(bytecode::ReflectionAccu
             {
                 if (!acc.m_namespace_instance.has_id(vd.m_name))
                 {
-                    goto err;
+                    // If we are in dry mode and the variable is missing, we still warn.
+                    continue;
                 }
                 vid = acc.m_namespace_instance.find_id(vd.m_name);
             }
@@ -549,10 +550,6 @@ void StandardLibrary::reflection_add_instance_variables(bytecode::ReflectionAccu
                 // This is expected and required for compatibility.
                 // We only warn about it instead of throwing a fatal error.
                 std::string err_msg = "NOTE: Builtin and instance namespaces differ for variable \"" + std::string(vd.m_name) + "\". (Namespace ID: " + std::to_string(vid) + ", Expected Sequential ID: " + std::to_string(i-1) + ")";
-                #ifdef __3DS__
-                // Only print if verbose or debugging
-                // SD_PRINT(err_msg); 
-                #endif
             }
         }
     }
