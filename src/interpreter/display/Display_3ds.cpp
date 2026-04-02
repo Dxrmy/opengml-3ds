@@ -42,6 +42,7 @@ namespace ogm::interpreter {
 // Static constants for 3DS rendering
 static C2D_TextBuf g_textBuf;
 static C3D_RenderTarget* g_topTarget;
+static bool g_vsync = false;
 
 // Shader Program Data
 static DVLB_s* g_defaultDvlb;
@@ -49,6 +50,7 @@ static shaderProgram_s g_defaultShader;
 static int8_t g_uLocProjection;
 
 bool Display::start(uint32_t width, uint32_t height, const char* caption, bool vsync) {
+    g_vsync = vsync;
     if (g_active_display != nullptr) {
         throw MiscError("Multiple displays not supported");
     }
@@ -153,7 +155,7 @@ static float g_draw_alpha = 1.0f;
 
 void Display::begin_render() {
     C2D_TextBufClear(g_textBuf);
-    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    C3D_FrameBegin(g_vsync ? C3D_FRAME_SYNCDRAW : 0);
 }
 
 void Display::clear_render() {
@@ -471,7 +473,9 @@ uint32_t Display::get_clear_colour() { return g_clear_colour; }
 void Display::set_clear_colour(uint32_t c) { g_clear_colour = c; }
 geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
 geometry::Vector<real_t> Display::get_mouse_coord() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
-void Display::set_vsync(bool) {}
+void Display::set_vsync(bool vsync) {
+    g_vsync = vsync;
+}
 void Display::set_font(asset::AssetFont*, TextureView*) {}
 void Display::disable_scissor() {}
 void Display::enable_scissor(real_t, real_t, real_t, real_t) {}
