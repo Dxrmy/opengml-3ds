@@ -88,6 +88,9 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     // Initial Blend Mode
     set_blendmode(0, 0); // bm_normal
 
+    // Depth Buffer Precision
+    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
+
     return true;
 }
 
