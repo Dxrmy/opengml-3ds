@@ -2,6 +2,7 @@
 #define OGMI_WITH_ITER_HPP
 
 #include "ogm/common/error.hpp"
+#include "ogm/interpreter/Variable.hpp"
 #include <cstdlib>
 
 namespace ogm { namespace interpreter {
@@ -19,7 +20,7 @@ friend class Frame;
 
 public:
     WithIterator() {}
-    
+
     // creates a singleton iterator
     WithIterator(Instance* instance)
     {
@@ -36,6 +37,23 @@ public:
         m_count = other.m_count;
         m_single = other.m_single;
         other.m_instance = nullptr;
+        #ifdef OGM_STRUCT_SUPPORT
+        m_struct_ref = std::move(other.m_struct_ref);
+        #endif
+    }
+
+    WithIterator& operator=(WithIterator&& other)
+    {
+        m_instance = other.m_instance;
+        m_at = other.m_at;
+        m_count = other.m_count;
+        m_single = other.m_single;
+        other.m_instance = nullptr;
+        #ifdef OGM_STRUCT_SUPPORT
+        m_struct_ref.cleanup();
+        m_struct_ref = std::move(other.m_struct_ref);
+        #endif
+        return *this;
     }
 
     inline bool complete() const
@@ -95,7 +113,14 @@ public:
         {
             delete[] static_cast<Instance**>(m_instance);
         }
+        #ifdef OGM_STRUCT_SUPPORT
+        m_struct_ref.cleanup();
+        #endif
     }
+
+    #ifdef OGM_STRUCT_SUPPORT
+    Variable m_struct_ref;
+    #endif
 };
 
 }}
