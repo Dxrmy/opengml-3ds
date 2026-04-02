@@ -8,6 +8,7 @@
 #include <fstream>
 #include <queue>
 #include <functional>
+#include <map>
 
 // forward declarations
 namespace ogm { namespace bytecode {
@@ -159,7 +160,7 @@ private:
     size_t m_current_frame = 0;
 
     std::queue<std::string> m_commands_queue;
-    
+
     std::function<void(const Variable& v)> m_expression_callback;
 
 public:
@@ -182,9 +183,9 @@ public:
         std::string m_arguments_str;
     };
 
-    Debugger(bool destroy_on_detach=false)
-        : m_destroy_on_detach(destroy_on_detach)
-    { }
+    std::map<std::string, std::function<bool(const DebuggerCommand&)>> m_command_map;
+
+    Debugger(bool destroy_on_detach=false);
 
     // executes once per update
     void tick(ogm::bytecode::BytecodeStream&);
@@ -209,7 +210,7 @@ public:
     {
         m_commands_queue.emplace(s);
     }
-    
+
     void set_expression_value(const Variable& v);
 
 private:
