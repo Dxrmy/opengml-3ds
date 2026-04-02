@@ -122,8 +122,9 @@ bool create_directory(const std::string& path)
     {
       throw MiscError("path too long");
     }
-    memset(buff, BUFFLEN, 0);
-    strcpy(buff, path.c_str());
+    memset(buff, 0, BUFFLEN);
+    strncpy(buff, path.c_str(), BUFFLEN - 1);
+    buff[BUFFLEN - 1] = 0;
     return CreateDirectory(buff);
 }
 
@@ -135,7 +136,8 @@ bool remove_directory(const std::string& path)
       throw MiscError("path too long");
     }
     memset(buff, 0, BUFFLEN);
-    strcpy(buff, path.c_str());
+    strncpy(buff, path.c_str(), BUFFLEN - 1);
+    buff[BUFFLEN - 1] = 0;
     SHFILEOPSTRUCT shfo = {
         nullptr,
         FO_DELETE,
