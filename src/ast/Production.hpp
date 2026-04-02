@@ -29,7 +29,7 @@ struct Production {
   void flattenPostfixes();
 
   // OPTIMIZE: allocating these is slow. is there a small_deque?
-  std::deque<PrInfixWS*> infixes;
+  std::deque<std::unique_ptr<PrInfixWS>> infixes;
   int postfix_n = 0;
 };
 

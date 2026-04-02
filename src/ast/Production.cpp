@@ -7,12 +7,6 @@
 using namespace std;
 
 Production::~Production() {
-  while (!infixes.empty()) {
-    PrInfixWS* p = infixes.front();
-    if (p)
-      delete(p);
-    infixes.pop_front();
-  }
 }
 
 string Production::to_string() {
@@ -23,14 +17,14 @@ void Production::flattenPostfixes() {
   //TODO: rewrite with iterators
   for (uint32_t i=infixes.size()-postfix_n;i<infixes.size();i++) {
     // flatten postfixes
-    auto ws = infixes[i];
+    auto& ws = infixes[i];
     if (ws) {
       ws->postfix_n = 0;
       // pull out nested infixes
       while (!ws->infixes.empty()) {
-        auto nested_ws = ws->infixes.back();
+        auto nested_ws = std::move(ws->infixes.back());
         ws->infixes.pop_back();
-        infixes.insert(infixes.begin() + i+1,nested_ws);
+        infixes.insert(infixes.begin() + i+1, std::move(nested_ws));
         postfix_n++;
       }
     }
@@ -129,17 +123,17 @@ string PrArrayLiteral::to_string() {
 string PrFunctionLiteral::to_string() {
     std::string ss;
     ss += "function";
-    
+
     ogm_assert(name.type == ID);
     ogm_assert(body);
-    
+
     if (name.value->length())
     {
       ss += " " + *name.value;
     }
-    
+
     ss += "(";
-    
+
     bool first = true;
     for (const Token& token : args)
     {
@@ -152,9 +146,9 @@ string PrFunctionLiteral::to_string() {
         ss += *token.value;
     }
     ss += ")\n";
-    
+
     ss += body->to_string();
-    
+
     return ss;
 }
 
@@ -212,16 +206,16 @@ PrMacroDefinition::PrMacroDefinition(const std::string& configuration, const std
 string PrMacroDefinition::to_string()
 {
   string s = "#macro ";
-  
+
   if (m_configuration_name.length() > 0)
   {
     s += std::string(":") + m_configuration_name;
   }
-  
+
   s += m_name;
   s += " ";
   s += m_value;
-  
+
   return s;
 }
 

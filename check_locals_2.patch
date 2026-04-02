@@ -1,0 +1,16 @@
+<<<<<<< SEARCH
+    // set number of locals at start of bytecode
+    n_locals = context_args.m_symbols->m_namespace_local.id_count();
+    write_at(out, n_locals, n_locals_src);
+
+    if (n_locals > 0 && config->m_no_locals)
+=======
+    // set number of locals at start of bytecode
+    n_locals = context_args.m_symbols->m_namespace_local.id_count();
+    if (has_locals)
+    {
+        write_at(out, n_locals, n_locals_src);
+    }
+
+    if (n_locals > 0 && config->m_no_locals)
+>>>>>>> REPLACE

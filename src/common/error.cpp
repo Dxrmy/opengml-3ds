@@ -74,7 +74,7 @@ void Error::assemble_message() const
         ss  << "For " << COLOUR(1) << m_detail_resource_type.value << COLOUR(0)
             << " resource " << COLOUR(1;36) << m_detail_resource_name.value
             << COLOUR(0);
-        
+
         if (m_detail_resource_event.set && m_detail_resource_event.value.length())
             ss << " in event " << COLOUR(1) << m_detail_resource_event.value << COLOUR(0);
 
@@ -114,7 +114,7 @@ void Error::assemble_message() const
         {
             ss << " (source unavailable)";
         }
-        
+
         ss << "\n";
     }
     else if (m_detail_location_start.set && m_detail_location_end.set)
@@ -146,7 +146,7 @@ void Error::assemble_message() const
 
         ss << "\n";
     }
-    
+
     // error colour
     const char* errcol = "";
     if (colour)
@@ -243,7 +243,43 @@ void Error::loc_preview(
         }
     }
 
-    // TODO: uniformly trim all previews
+    // uniformly trim all previews
+    size_t min_ws = std::string::npos;
+    for (size_t i = 0; i < 3; ++i)
+    {
+        const line_preview& preview = previews[i];
+        if (!preview.m_start) continue;
+        std::string s(preview.m_start, preview.m_end);
+        size_t orig_len = s.length();
+        ltrim(s);
+        if (s.length() > 0)
+        {
+            min_ws = std::min(min_ws, orig_len - s.length());
+        }
+    }
+
+    if (min_ws != std::string::npos)
+    {
+        for (size_t i = 0; i < 3; ++i)
+        {
+            line_preview& preview = previews[i];
+            if (!preview.m_start) continue;
+
+            if (static_cast<size_t>(preview.m_end - preview.m_start) > min_ws)
+            {
+                preview.m_start += min_ws;
+            }
+            else
+            {
+                preview.m_start = preview.m_end;
+            }
+
+            std::string s(preview.m_start, preview.m_end);
+            size_t orig_len = s.length();
+            rtrim(s);
+            preview.m_end -= (orig_len - s.length());
+        }
+    }
 
     const size_t maxlen = std::max<size_t>(3, fmt::format("{}", line_number + 1).length());
 

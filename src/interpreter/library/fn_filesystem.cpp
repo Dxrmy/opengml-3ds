@@ -185,12 +185,13 @@ namespace
         fbuff[sizeof(fbuff) - 1] = 0;
         ofn.nMaxFile = sizeof(fbuff);
         char* filtersub = nullptr;
-        if (strlen(filter) > 0)
+        size_t len = strlen(filter);
+        if (len > 0)
         {
-            size_t filterlen = strlen(filter) + 2;
+            size_t filterlen = len + 2;
             filtersub = (char*)malloc(filterlen);
             memset(filtersub, 0, filterlen);
-            memcpy(filtersub, filter, strlen(filter));
+            memcpy(filtersub, filter, len);
             for (size_t i = 0; i < filterlen; ++i)
             {
                 if (filtersub[i] == '|')

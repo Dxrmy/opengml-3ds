@@ -155,7 +155,7 @@ Production* Parser::read_production() {
     // read comments before final semicolon
     while (ts.peek().type == COMMENT) {
       LineColumn lc = ts.location();
-      p->infixes.push_back(new PrInfixWS(ts.read(), lc));
+      p->infixes.push_back(std::make_unique<PrInfixWS>(ts.read(), lc));
       p->infixes.back()->m_end = ts.location();
     }
     read_statement_end();
@@ -955,10 +955,10 @@ void Parser::ignoreWS(Production* p, bool as_postfix) {
   if (ts.peek() == CmpToken(ENX,"\n") || (ts.peek().type == COMMENT)) {
 
     LineColumn lc = ts.location();
-    PrInfixWS* infix = new PrInfixWS(ts.read(), lc);
-    ignoreWS(infix);
+    std::unique_ptr<PrInfixWS> infix = std::make_unique<PrInfixWS>(ts.read(), lc);
+    ignoreWS(infix.get());
     infix->m_end = ts.location();
-    p->infixes.push_back(infix);
+    p->infixes.push_back(std::move(infix));
   } else {
     p->infixes.push_back(nullptr);
   }
@@ -968,11 +968,11 @@ void Parser::ignoreWS(Production* p, bool as_postfix) {
 //! takes all postfixes from src and inserts them into dst
 void Parser::siphonWS(Production* src, Production* dst, bool as_postfix, bool condense) {
   int N = src->postfix_n;
-  PrInfixWS** infixes = new PrInfixWS*[max(N,1)];
+  std::vector<std::unique_ptr<PrInfixWS>> infixes(max(N, 1));
 
   // remove infixes from src
   while (src->postfix_n > 0) {
-    infixes[--src->postfix_n] = src->infixes.back();
+    infixes[--src->postfix_n] = std::move(src->infixes.back());
     src->infixes.pop_back();
   }
 
@@ -989,7 +989,7 @@ void Parser::siphonWS(Production* src, Production* dst, bool as_postfix, bool co
 
     // attach other postfixes as postfixes to the first non-null postfix:
     for (int i=first_non_null+1;i<N;i++) {
-      infixes[first_non_null]->infixes.push_back(infixes[i]);
+      infixes[first_non_null]->infixes.push_back(std::move(infixes[i]));
       infixes[first_non_null]->postfix_n++;
     }
 
@@ -997,18 +997,16 @@ void Parser::siphonWS(Production* src, Production* dst, bool as_postfix, bool co
     if (N==0) {
       infixes[0] = nullptr;
     } else if (first_non_null < N) {
-      infixes[0] = infixes[first_non_null];
+      infixes[0] = std::move(infixes[first_non_null]);
     }
     N = 1;
   }
 
   // append siphoned infixes to dst
   for (int i=0;i<N;i++) {
-    dst->infixes.push_back(infixes[i]);
+    dst->infixes.push_back(std::move(infixes[i]));
     dst->postfix_n += as_postfix;
   }
-
-  delete[] infixes;
 }
 
 // statements generally are followed by a newline.
@@ -1024,7 +1022,6 @@ void Parser::removeExtraNewline(Production* p) {
   for (int i=0; i < postfix_n && it != infixes.rend(); ++i, ++it) {
     if (*it) {
       if ((*it)->val.value == "\n") {
-        delete(*it);
         *it = nullptr;
         return;
       } else {

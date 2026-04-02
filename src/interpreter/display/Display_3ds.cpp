@@ -42,6 +42,7 @@ namespace ogm::interpreter {
 // Static constants for 3DS rendering
 static C2D_TextBuf g_textBuf;
 static C3D_RenderTarget* g_topTarget;
+static bool g_vsync = false;
 
 // Shader Program Data
 static DVLB_s* g_defaultDvlb;
@@ -49,6 +50,7 @@ static shaderProgram_s g_defaultShader;
 static int8_t g_uLocProjection;
 
 bool Display::start(uint32_t width, uint32_t height, const char* caption, bool vsync) {
+    g_vsync = vsync;
     if (g_active_display != nullptr) {
         throw MiscError("Multiple displays not supported");
     }
@@ -87,6 +89,9 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
 
     // Initial Blend Mode
     set_blendmode(0, 0); // bm_normal
+
+    // Depth Buffer Precision
+    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
 
     return true;
 }
@@ -139,7 +144,7 @@ void Display::set_blendmode_separate(int32_t src, int32_t dst, int32_t srca, int
 }
 
 void Display::shader_set_alpha_test_enabled(bool enabled) {
-    C3D_AlphaTest(enabled, GPU_GREATER, 0);
+    C3D_AlphaTest(enabled, GPU_GREATER, 0x80);
 }
 
 void Display::shader_set_alpha_test_threshold(real_t value) {
@@ -153,7 +158,7 @@ static float g_draw_alpha = 1.0f;
 
 void Display::begin_render() {
     C2D_TextBufClear(g_textBuf);
-    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    C3D_FrameBegin(g_vsync ? C3D_FRAME_SYNCDRAW : 0);
 }
 
 void Display::clear_render() {
@@ -218,10 +223,21 @@ void* Display_3DS_AllocTexture(uint32_t width, uint32_t height, GPU_TEXCOLOR for
         return nullptr;
     }
 
-    // Allocate from Linear RAM (required for PICA200)
-    void* data = linearAlloc(width * height * 4); // Assuming RGBA8
+    void* data = nullptr;
+    size_t size = width * height * 4; // Assuming RGBA8
+
+    // Attempt to allocate from high-speed VRAM for smaller textures
+    if (width <= 256 && height <= 256) {
+        data = vramAlloc(size);
+    }
+
+    // Fallback to Linear RAM if VRAM is full or texture is too large
     if (!data) {
-        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes from Linear RAM\n", (uint32_t)(width * height * 4));
+        data = linearAlloc(size);
+    }
+
+    if (!data) {
+        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes for texture\n", (uint32_t)size);
         return nullptr;
     }
 
@@ -423,7 +439,22 @@ void Display::get_colours4(uint32_t*) {}
 void Display::write_vertex(float*, coord_t, coord_t, coord_t, uint32_t, coord_t, coord_t) const {}
 uint32_t Display::get_vertex_size() const { return 0; }
 void Display::render_array(size_t, float*, TexturePage*, uint32_t) {}
-void Display::draw_outline_rectangle(coord_t, coord_t, coord_t, coord_t) {}
+void Display::draw_outline_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    // Top
+    C2D_DrawLine(x1, y1, c, x2, y1, c, 1.0f, 0.5f);
+    // Right
+    C2D_DrawLine(x2, y1, c, x2, y2, c, 1.0f, 0.5f);
+    // Bottom
+    C2D_DrawLine(x2, y2, c, x1, y2, c, 1.0f, 0.5f);
+    // Left
+    C2D_DrawLine(x1, y2, c, x1, y1, c, 1.0f, 0.5f);
+}
 
 void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
     uint8_t r = (g_draw_colour & 0x0000FF);
@@ -444,7 +475,13 @@ void Display::draw_filled_circle(coord_t x, coord_t y, coord_t radius) {
 void Display::draw_outline_circle(coord_t, coord_t, coord_t) {}
 void Display::draw_fill_colour(uint32_t) {}
 void Display::set_circle_precision(uint32_t) {}
-void Display::set_colour_mask(bool, bool, bool, bool) {}
+void Display::set_colour_mask(bool r, bool g, bool b, bool a) {
+    if (!r && !g && !b && !a) {
+        C3D_ColorLogicOp(GPU_LOGICOP_NOOP);
+    } else {
+        C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    }
+}
 void Display::set_depth_test(bool) {}
 void Display::set_culling(bool) {}
 void Display::set_zwrite(bool) {}
@@ -471,7 +508,9 @@ uint32_t Display::get_clear_colour() { return g_clear_colour; }
 void Display::set_clear_colour(uint32_t c) { g_clear_colour = c; }
 geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
 geometry::Vector<real_t> Display::get_mouse_coord() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
-void Display::set_vsync(bool) {}
+void Display::set_vsync(bool vsync) {
+    g_vsync = vsync;
+}
 void Display::set_font(asset::AssetFont*, TextureView*) {}
 void Display::disable_scissor() {}
 void Display::enable_scissor(real_t, real_t, real_t, real_t) {}

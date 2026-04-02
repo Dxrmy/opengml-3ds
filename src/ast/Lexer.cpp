@@ -138,7 +138,7 @@ namespace
     if (c >= 'A' && c <= 'F') return c - 'A';
     return 0xFF;
   }
-  
+
   inline bool is_hex_digit(char c)
   {
     return read_hex_digit_from_char(c) != 0xFF;
@@ -147,7 +147,7 @@ namespace
 
 void Lexer::read_string_helper_escaped(std::string& val) {
   char c = read_char();
-  
+
   if (c == 'n') {
     val += "\n"; return;
   }
@@ -181,7 +181,7 @@ void Lexer::read_string_helper_escaped(std::string& val) {
   std::stringstream ss;
   ss << "\\";
   uint32_t wchar;
-  
+
   // hex
   if (c == 'x') {
     char c2;
@@ -196,7 +196,7 @@ void Lexer::read_string_helper_escaped(std::string& val) {
     val += buff;
     return;
   }
-  
+
   // octal
   else if ((char)c >= '0' && (char)c < '8') {
     char c2 = c;
@@ -208,7 +208,7 @@ void Lexer::read_string_helper_escaped(std::string& val) {
     is->putback(c2);
     goto UNICODE;
   }
-  
+
   // unicode
   else if ((char)c == 'u') {
     char c2;
@@ -221,7 +221,7 @@ void Lexer::read_string_helper_escaped(std::string& val) {
     is->putback(c2);
     goto UNICODE;
   }
-  
+
   else
   {
     // default -- ignore escape; insert literal.
@@ -229,7 +229,7 @@ void Lexer::read_string_helper_escaped(std::string& val) {
     val += ss.str();
     return;
   }
-  
+
 UNICODE: {
     // insert wide character
     char buff[5];
@@ -270,9 +270,8 @@ Token Lexer::read_string() {
   }
   std::string terminal_str = " ";
   terminal_str[0] = terminal;
-  
-  // TODO: impart at-literal to token.
-  return Token(STR,terminal_str + val + terminal_str);
+
+  return Token(STR,(is_at_literal ? "@" : "") + terminal_str + val + terminal_str);
 }
 
 Token Lexer::read_number(int hex) {
@@ -488,7 +487,7 @@ void Lexer::set_line_preprocessor(const char* _pp) {
   strcpy(pp, _pp);
   _pp = pp;
   ogm_defer(free(const_cast<char *>(_pp)));
-  
+
   int token = 0;
   const char* file = nullptr;
   const char* line = nullptr;
@@ -511,7 +510,7 @@ void Lexer::set_line_preprocessor(const char* _pp) {
       file = pp + 1;
       ++pp;
     }
-    else 
+    else
     {
       if (line) column = pp;
       else line = pp;
@@ -527,7 +526,7 @@ void Lexer::set_line_preprocessor(const char* _pp) {
   }
 
   if (token == 0) throw ParseError(ErrorCode::P::pplinetokc, location(), "preprocessor \"#line\" requires exactly 1 or 2 tokens.");
-  
+
   if (!line) throw ParseError(ErrorCode::P::pplinetok, location(), "preprocessor \"#line\" requires line number to be set.");
 
   m_location[0].m_source_line = std::atoi(line);
@@ -598,17 +597,17 @@ Token Lexer::read_preprocessor() {
                     // except for #line ppstatements, we put back the newline.
                     putback_char(in);
                 }
-                
+
                 if (starts_with(s, "#define"))
                 {
                     return Token{ PPDEF, s };
                 }
-                
+
                 if (starts_with(s, "#macro"))
                 {
                     return Token{ PPMACRO, s };
                 }
-                
+
                 return Token{ COMMENT, s };
             }
             ss << in;
