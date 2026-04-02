@@ -1,0 +1,105 @@
+<<<<<<< SEARCH
+void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t x, coord_t y, coord_t w, coord_t h, coord_t px, coord_t py, coord_t pw, coord_t ph) {
+    if (!tv || !tv->m_tpage || !tv->m_tpage->m_gl_tex) return;
+
+    C3D_Tex* tex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+
+    C2D_ImageTint tint;
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    C2D_PlainImageTint(&tint, c, 1.0f);
+
+    // tv has already been mapped to absolute atlas texture coords, tx1/ty1/tx2/ty2 are the local bounds within it
+    Tex3DS_SubTexture subtex;
+    subtex.left = px;
+    subtex.top = py;
+    subtex.right = px + pw;
+    subtex.bottom = py + ph;
+    subtex.width = std::abs((float)(pw) * tex->width);
+    subtex.height = std::abs((float)(ph) * tex->height);
+
+    C2D_Image img;
+    img.tex = tex;
+    img.subtex = &subtex;
+
+    // Transform coordinates using x1, y1 and size
+    float scaled_w = w / subtex.width;
+    float scaled_h = h / subtex.height;
+
+    // Simplistic tiled drawing
+    coord_t cx = x;
+    while (cx < x + w) {
+        coord_t cy = y;
+        while (cy < y + h) {
+            C2D_DrawImageAt(img, cx, cy, 0.5f, &tint, scaled_w, scaled_h);
+            cy += subtex.height * scaled_h;
+            if (!tiley) break;
+        }
+        cx += subtex.width * scaled_w;
+        if (!tilex) break;
+    }
+}
+=======
+void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t x, coord_t y, coord_t w, coord_t h, coord_t px, coord_t py, coord_t pw, coord_t ph) {
+    if (!tv || !tv->m_tpage || !tv->m_tpage->m_gl_tex) return;
+
+    C3D_Tex* tex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
+
+    // Enable hardware texture repetition
+    C3D_TexSetWrap(tex, tilex ? GPU_REPEAT : GPU_CLAMP_TO_EDGE, tiley ? GPU_REPEAT : GPU_CLAMP_TO_EDGE);
+
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+
+    C2D_ImageTint tint;
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    C2D_PlainImageTint(&tint, c, 1.0f);
+
+    // Calculate base pixel dimensions of a single tile
+    float base_width = std::abs((float)(pw) * tex->width);
+    float base_height = std::abs((float)(ph) * tex->height);
+    if (base_width == 0 || base_height == 0) return;
+
+    // Calculate UV multipliers to cover the requested bounding box
+    float reps_x = tilex ? (w / base_width) : 1.0f;
+    float reps_y = tiley ? (h / base_height) : 1.0f;
+
+    Tex3DS_SubTexture subtex;
+    subtex.left = px;
+    subtex.top = py;
+    subtex.right = px + pw * reps_x;
+    subtex.bottom = py + ph * reps_y;
+
+    // Set the pixel dimensions of the quad we want to draw
+    subtex.width = tilex ? w : base_width;
+    subtex.height = tiley ? h : base_height;
+
+    C2D_Image img;
+    img.tex = tex;
+    img.subtex = &subtex;
+
+    // The scale applies to subtex.width and subtex.height
+    float scale_w = tilex ? 1.0f : (w / base_width);
+    float scale_h = tiley ? 1.0f : (h / base_height);
+
+    // Draw a single quad covering the requested area
+    C2D_DrawImageAt(img, x, y, 0.5f, &tint, scale_w, scale_h);
+
+    // Restore texture wrap mode to default
+    C3D_TexSetWrap(tex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
+}
+>>>>>>> REPLACE
