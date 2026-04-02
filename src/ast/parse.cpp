@@ -192,7 +192,7 @@ namespace
                 out.m_decor = (ogm_ast_decor_t**) malloc( sizeof(ogm_ast_decor_t*) * payload_list_count );
                 for (int32_t i = 0; i < payload_list_count; i++)
                 {
-                    PrInfixWS* infix = production->infixes[i];
+                    PrInfixWS* infix = production->infixes[i].get();
                     if (infix)
                     {
                         infix->flattenPostfixes();
@@ -1055,7 +1055,7 @@ void ogm_ast_copy_to(
             out->m_payload = malloc(sizeof(ogm_ast_literal_function_t));
             ogm_ast_literal_function_t* lit = static_cast<ogm_ast_literal_function_t*>(out->m_payload);
             const ogm_ast_literal_function_t* srclit = static_cast<const ogm_ast_literal_function_t*>(tree->m_payload);
-            
+
             lit->m_constructor = srclit->m_constructor;
             if (srclit->m_name)
             {
