@@ -470,8 +470,15 @@ bool StandardLibrary::generate_constant_bytecode(std::ostream& out, const char* 
         {
            if (name.substr(last) == "_version")
            {
-               // TODO: get the actual version
-               write_ldi_string(out, "1.0.0.0");
+               #ifdef VERSION
+                   #ifndef _STR
+                   #define _STR(A) #A
+                   #define STR(A) _STR(A)
+                   #endif
+                   write_ldi_string(out, STR(VERSION));
+               #else
+                   write_ldi_string(out, "1.0.0.0");
+               #endif
                return true;
            }
            if (name.substr(last) == "_build_date")
@@ -483,8 +490,10 @@ bool StandardLibrary::generate_constant_bytecode(std::ostream& out, const char* 
            if (name.substr(last) == "_runtime_version")
            {
                 #ifdef VERSION
+                    #ifndef _STR
                     #define _STR(A) #A
                     #define STR(A) _STR(A)
+                    #endif
                     #define VERSION_STR STR(VERSION)
                 #else
                     #define VERSION_STR
