@@ -123,7 +123,6 @@ namespace
     SDL_GLContext g_context;
     TexturePage* g_target = nullptr;
     uint32_t g_square_vbo;
-    size_t g_square_vbo_capacity = 0;
     uint32_t g_square_vao;
     uint32_t g_blank_texture;
     uint32_t g_circle_precision=32;
@@ -148,7 +147,7 @@ namespace
     bool init_buffers = false;
 
     bool g_sdl_closing = false;
-    
+
     uint8_t ogmenum_to_glenum(uint8_t render_glenum)
     {
         switch (render_glenum)
@@ -698,7 +697,6 @@ namespace
         } m_state;
         std::vector<char> m_data;
         size_t m_size;
-        size_t m_capacity = 0;
         uint32_t m_vbo;
         uint32_t m_format = std::numeric_limits<uint32_t>::max();
     };
@@ -788,7 +786,7 @@ namespace
     void bindTexture(GLuint texture_id)
     {
         glBindTexture(GL_TEXTURE_2D, texture_id);
-        
+
         // TODO: in theory, this can be done with samplers somehow to reduce calls.
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, g_texture_filter);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, g_texture_filter);
@@ -855,14 +853,14 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     g_context = SDL_GL_CreateContext(g_window);
-    
+
     if (!g_context)
     {
         printf("Unable to create OpenGL context\n");
         return false;
     }
     #endif
-    
+
     // renderer and context should now be available.
     const char* gl_version = (const char*) glGetString(GL_VERSION);
     const char* gl_renderer = (const char*) glGetString (GL_RENDERER);
@@ -1038,19 +1036,7 @@ void Display::render_vertices(float* vertices, size_t count, uint32_t texture, u
 {
     glBindVertexArray(g_square_vao);
     glBindBuffer(GL_ARRAY_BUFFER, g_square_vbo);
-
-    size_t required_size = count * sizeof(float) * k_vertex_data_size;
-    if (required_size > g_square_vbo_capacity)
-    {
-        g_square_vbo_capacity = required_size * 2;
-        glBufferData(GL_ARRAY_BUFFER, g_square_vbo_capacity, nullptr, GL_STREAM_DRAW);
-    }
-
-    if (required_size > 0)
-    {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, required_size, vertices);
-    }
-
+    glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * k_vertex_data_size, vertices, GL_STREAM_DRAW);
     bindTexture(texture);
     glDrawArrays(render_glenum, 0, count);
 }
@@ -1136,53 +1122,46 @@ void Display::draw_image_tiled(TextureView* texture, bool tiled_x, bool tiled_y,
             return { x1 + width * x, y1 + height * y };
         };
 
-        const size_t vertex_count = (offset_maxx - offset_minx) * (offset_maxy - offset_miny) * 6;
-        float* const vertices_o = new float[vertex_count * k_vertex_data_size];
-        float* vertices = vertices_o;
         for (int32_t i = offset_minx; i < offset_maxx; ++i)
         {
             for (int32_t j = offset_miny; j < offset_maxy; ++j)
             {
+                float vertices[k_vertex_data_size * 4];
                 auto p = offset_to_world(i, j);
+
+                // Vertex 0: Top-Left
                 floats3pm(vertices + 0*k_vertex_data_size, p.x, p.y);
+                // Vertex 1: Bottom-Left
                 floats3pm(vertices + 1*k_vertex_data_size, p.x, p.y + height);
+                // Vertex 2: Top-Right
                 floats3pm(vertices + 2*k_vertex_data_size, p.x + width, p.y);
-                floats3pm(vertices + 3*k_vertex_data_size, p.x + width, p.y);
-                floats3pm(vertices + 4*k_vertex_data_size, p.x, p.y + height);
-                floats3pm(vertices + 5*k_vertex_data_size, p.x + width, p.y + height);
+                // Vertex 3: Bottom-Right
+                floats3pm(vertices + 3*k_vertex_data_size, p.x + width, p.y + height);
 
                 colour4_to_floats(vertices + 0*k_vertex_data_size + 3, g_draw_colour[0]);
                 colour4_to_floats(vertices + 1*k_vertex_data_size + 3, g_draw_colour[1]);
                 colour4_to_floats(vertices + 2*k_vertex_data_size + 3, g_draw_colour[2]);
-                colour4_to_floats(vertices + 3*k_vertex_data_size + 3, g_draw_colour[2]);
-                colour4_to_floats(vertices + 4*k_vertex_data_size + 3, g_draw_colour[1]);
-                colour4_to_floats(vertices + 5*k_vertex_data_size + 3, g_draw_colour[3]);
+                colour4_to_floats(vertices + 3*k_vertex_data_size + 3, g_draw_colour[3]);
 
+                // Vertex 0: Top-Left UV
                 vertices[0*k_vertex_data_size + 7] = texture->u_global(tx1);
                 vertices[0*k_vertex_data_size + 8] = texture->v_global(ty1);
 
+                // Vertex 1: Bottom-Left UV
                 vertices[1*k_vertex_data_size + 7] = texture->u_global(tx1);
                 vertices[1*k_vertex_data_size + 8] = texture->v_global(ty2);
 
+                // Vertex 2: Top-Right UV
                 vertices[2*k_vertex_data_size + 7] = texture->u_global(tx2);
                 vertices[2*k_vertex_data_size + 8] = texture->v_global(ty1);
 
+                // Vertex 3: Bottom-Right UV
                 vertices[3*k_vertex_data_size + 7] = texture->u_global(tx2);
-                vertices[3*k_vertex_data_size + 8] = texture->v_global(ty1);
+                vertices[3*k_vertex_data_size + 8] = texture->v_global(ty2);
 
-                vertices[4*k_vertex_data_size + 7] = texture->u_global(tx1);
-                vertices[4*k_vertex_data_size + 8] = texture->v_global(ty2);
-
-                vertices[5*k_vertex_data_size + 7] = texture->u_global(tx2);
-                vertices[5*k_vertex_data_size + 8] = texture->v_global(ty2);
-
-                // TODO: switch to trianglestrip for more efficient vertex packing.
-                vertices += k_vertex_data_size * 6;
+                render_vertices(vertices, 4, texture->m_tpage->m_gl_tex, GL_TRIANGLE_STRIP);
             }
         }
-
-        render_vertices(vertices_o, vertex_count, texture->m_tpage->m_gl_tex, GL_TRIANGLES);
-        delete[] vertices_o;
     }
     else
     {
@@ -1856,10 +1835,10 @@ void Display::draw_text_ttf(coord_t _x, coord_t _y, const char* text, real_t hal
             }
 
             uint32_t w = power_of_two(text_srf->w);
-        	uint32_t h = power_of_two(text_srf->h);
+		uint32_t h = power_of_two(text_srf->h);
 
-        	SDL_Surface* tmp = SDL_CreateRGBSurface(0, w, h, 32,
-        			0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+		SDL_Surface* tmp = SDL_CreateRGBSurface(0, w, h, 32,
+				0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
             SDL_BlitSurface(text_srf, nullptr, tmp, nullptr);
 
@@ -2021,7 +2000,7 @@ namespace
         while( SDL_PollEvent( &event ) )
         {
             ogm_keycode_t keycode;
-            
+
             switch(event.type)
             {
             case SDL_KEYDOWN:
@@ -2045,7 +2024,7 @@ namespace
                             {
                                 character += 65 - 97;
                             }
-                            
+
                             switch(character)
                             {
                             case '1':
@@ -2087,7 +2066,7 @@ namespace
                             }
                         }
                     }
-                    
+
                     if (character >= 0)
                     {
                         g_char_last = std::string(1, character);
@@ -2902,16 +2881,7 @@ void Display::render_buffer(uint32_t vertex_buffer, TexturePage* texture, uint32
     // fill array if dirty
     if (vb.m_state == VertexBuffer::dirty)
     {
-        if (vb.m_size > vb.m_capacity)
-        {
-            vb.m_capacity = vb.m_size * 2;
-            glBufferData(GL_ARRAY_BUFFER, vb.m_capacity, nullptr, GL_STREAM_DRAW);
-        }
-
-        if (vb.m_size > 0)
-        {
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vb.m_size, &vb.m_data.front());
-        }
+        glBufferData(GL_ARRAY_BUFFER, vb.m_size, &vb.m_data.front(), GL_STREAM_DRAW);
         vb.m_state = VertexBuffer::clean;
     }
 
@@ -4040,7 +4010,7 @@ namespace ogm::interpreter
     {
         g_key_last = v;
     }
-    
+
     void Display::set_char_last(std::string&& v)
     {
         g_char_last = std::move(v);
