@@ -1018,8 +1018,7 @@ void Parser::removeExtraNewline(Production* p) {
 
   p->flattenPostfixes();
 
-  auto it = infixes.rbegin();
-  for (int i=0; i < postfix_n && it != infixes.rend(); ++i, ++it) {
+  for (auto it = infixes.rbegin(); it != infixes.rend(); ++it) {
     if (*it) {
       if ((*it)->val.value == "\n") {
         *it = nullptr;
