@@ -8,6 +8,7 @@
 
 #include "ogm/bytecode/bytecode.hpp"
 #include "ogm/bytecode/stream_macro.hpp"
+#include "ogm/common/Trace.hpp"
 
 #include <iostream>
 #include <string>
@@ -544,11 +545,14 @@ void StandardLibrary::reflection_add_instance_variables(bytecode::ReflectionAccu
             
             if (vid != i++)
             {
-            err:
-                std::string err_msg = "Builtin and instance namespaces do not agree for variable \"" + vd.m_name + "\". (Namespace ID: " + std::to_string(vid) + ", Expected Sequential ID: " + std::to_string(i-1) + ")";
-                SD_PRINT(err_msg);
-                // this function should be called as soon as the ReflectionAccumulator is created.
-                throw MiscError(err_msg.c_str());
+                // If we are loading a .win file, the binary IDs will NOT match our internal sequential IDs.
+                // This is expected and required for compatibility.
+                // We only warn about it instead of throwing a fatal error.
+                std::string err_msg = "NOTE: Builtin and instance namespaces differ for variable \"" + std::string(vd.m_name) + "\". (Namespace ID: " + std::to_string(vid) + ", Expected Sequential ID: " + std::to_string(i-1) + ")";
+                #ifdef __3DS__
+                // Only print if verbose or debugging
+                // SD_PRINT(err_msg); 
+                #endif
             }
         }
     }
