@@ -395,7 +395,14 @@ namespace ogm::interpreter
                     break;
                 default:
                     // single instance
-                    outIterator.m_instance = instance;
+                    if (static_cast<Instance*>(instance)->m_data.m_room_id == m_data.m_room_index)
+                    {
+                        outIterator.m_instance = instance;
+                    }
+                    else
+                    {
+                        outIterator.m_instance = nullptr;
+                    }
                     outIterator.m_single = true;
                     break;
             }
@@ -460,7 +467,11 @@ namespace ogm::interpreter
                     }
                     break;
                 default:
-                    return ex;
+                    if (static_cast<Instance*>(ex)->m_data.m_room_id == m_data.m_room_index)
+                    {
+                        return ex;
+                    }
+                    return nullptr;
             }
         }
         

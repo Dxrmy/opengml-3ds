@@ -83,11 +83,15 @@ int umain (int argn, char** argv)
     std::cout << "--- SANITY CHECK: CONSOLE INIT SUCCESS ---" << std::endl;
     std::cout << "Build ID: BUILD_2026_04_01_v14_PARSER_STABLE" << std::endl;
     std::cout << "Press START to test the Loader." << std::endl;
-    while (aptMainLoop()) {
+    while (aptMainLoop())
+    {
         gspWaitForVBlank();
         gfxSwapBuffers();
         hidScanInput();
-        if (hidKeysDown() & KEY_START) break;
+        if (hidKeysDown() & KEY_START)
+        {
+            break;
+        }
     }
     std::cout << "--- ENGINE BOOT ---" << std::endl;
     #endif
@@ -104,249 +108,244 @@ int umain (int argn, char** argv)
     }
     #endif
 
-// FIXME: indentation
+    // FIXME: indentation
 
-  int32_t filename_index = -1;
-  std::string filename = "in.gml";
-  std::vector<std::pair<std::string, std::string>> defines;
-  std::vector<std::string> debug_args;
-  bool
-    default_execute = true,
-    show_ast = false,
-    single_thread_compile = false,
-    dis = false,
-    dis_raw = false,
-    execute = false,
-    strip = false,
-    lines = false,
-    debug = false,
-    allow_trace = false,
-    rundebug = false,
-    version=!is_terminal(),
-    compile=false,
-    verbose=false,
-    gui=false,
-    popup=(argn <= 1) && !is_terminal(),
-    sound=true,
-    unzip_project=false,
-    cache=false,
-    gc_enabled=true,
-    show_license = false;
-  for (int i=1;i<argn;i++) {
-    char* arg = argv[i];
-    size_t dashc = 0;
-    while (strncmp(arg, "-", 1) == 0)
+    int32_t filename_index = -1;
+    std::string filename = "in.gml";
+    std::vector<std::pair<std::string, std::string>> defines;
+    std::vector<std::string> debug_args;
+    bool default_execute = true, show_ast = false,
+         single_thread_compile = false, dis = false, dis_raw = false,
+         execute = false, strip = false, lines = false, debug = false,
+         allow_trace = false, rundebug = false, version = !is_terminal(),
+         compile = false, verbose = false, gui = false,
+         popup = (argn <= 1) && !is_terminal(), sound = true,
+         unzip_project = false, cache = false, gc_enabled = true,
+         show_license = false;
+    for (int i = 1; i < argn; i++)
     {
-        arg++;
-        dashc++;
-    }
-    if (dashc == 1)
-    {
-        if (starts_with(arg, "D"))
+        char* arg = argv[i];
+        size_t dashc = 0;
+        while (strncmp(arg, "-", 1) == 0)
         {
-            // define constant
-            const char* pos = strchr(arg, '=');
-            if (pos == arg || pos == arg + 1)
+            arg++;
+            dashc++;
+        }
+        if (dashc == 1)
+        {
+            if (starts_with(arg, "D"))
             {
-                std::cout << "Definition malformed: " << arg << std::endl;
-                std::exit(2);
-            }
-            else if (pos == 0)
-            {
-                defines.emplace_back(arg + 1, "true");
-            }
-            else
-            {
-                defines.emplace_back(
-                    std::pair<std::string, std::string>{
+                // define constant
+                const char* pos = strchr(arg, '=');
+                if (pos == arg || pos == arg + 1)
+                {
+                    std::cout << "Definition malformed: " << arg << std::endl;
+                    std::exit(2);
+                }
+                else if (pos == 0)
+                {
+                    defines.emplace_back(arg + 1, "true");
+                }
+                else
+                {
+                    defines.emplace_back(std::pair<std::string, std::string>{
                         {arg + 1, static_cast<uint16_t>(pos - arg - 1)},
-                        pos + 1
-                    }
-                );
+                        pos + 1});
+                }
+            }
+            continue;
+        }
+        if (dashc == 2)
+        {
+            if (strcmp(arg, "ast") == 0 || strcmp(arg, "tree") == 0)
+            {
+                show_ast = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "dis") == 0)
+            {
+                dis = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "raw") == 0)
+            {
+                dis_raw = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "exec") == 0 || strcmp(arg, "execute") == 0)
+            {
+                execute = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "strip") == 0)
+            {
+                strip = true;
+            }
+            else if (strcmp(arg, "source-inline") == 0)
+            {
+                lines = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "debug") == 0)
+            {
+                debug = true;
+                execute = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "rdebug") == 0)
+            {
+                debug = true;
+                execute = true;
+                rundebug = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "garbage-disabled") == 0)
+            {
+                gc_enabled = false;
+                continue;
+            }
+            else if (strcmp(arg, "trace-enabled") == 0)
+            {
+                allow_trace = true;
+                continue;
+            }
+            else if (strcmp(arg, "single-thread") == 0)
+            {
+                single_thread_compile = true;
+                continue;
+            }
+            else if (strcmp(arg, "version") == 0)
+            {
+                version = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "compile") == 0)
+            {
+                compile = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "verbose") == 0)
+            {
+                verbose = true;
+                continue;
+            }
+            else if (strcmp(arg, "gui") == 0)
+            {
+                gui = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "mute") == 0)
+            {
+                sound = false;
+                continue;
+            }
+            else if (strcmp(arg, "cache") == 0)
+            {
+                cache = true;
+                continue;
+            }
+            else if (starts_with(arg, "ex="))
+            {
+                debug_args.push_back(arg + 3);
+                continue;
+            }
+            else if (strcmp(arg, "popup") == 0)
+            {
+                popup = true;
+                default_execute = false;
+            }
+            else if (strcmp(arg, "show-license") == 0)
+            {
+                show_license = true;
+                default_execute = false;
             }
         }
-        continue;
-    }
-    if (dashc == 2)
-    {
-      if (strcmp(arg,"ast") == 0 || strcmp(arg, "tree") == 0) {
-          show_ast = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"dis") == 0) {
-          dis = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"raw") == 0) {
-          dis_raw = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"exec") == 0 || strcmp(arg,"execute") == 0) {
-          execute = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"strip") == 0) {
-          strip = true;
-      }
-      else if (strcmp(arg,"source-inline") == 0) {
-          lines = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"debug") == 0) {
-          debug = true;
-          execute = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"rdebug") == 0) {
-          debug = true;
-          execute = true;
-          rundebug = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"garbage-disabled") == 0) {
-          gc_enabled = false;
-          continue;
-      }
-      else if (strcmp(arg, "trace-enabled") == 0)
-      {
-          allow_trace = true;
-          continue;
-      }
-      else if (strcmp(arg, "single-thread") == 0)
-      {
-          single_thread_compile = true;
-          continue;
-      }
-      else if (strcmp(arg,"version") == 0) {
-          version = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"compile") == 0) {
-          compile = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"verbose") == 0) {
-          verbose = true;
-          continue;
-      }
-      else if (strcmp(arg,"gui") == 0) {
-          gui = true;
-          default_execute = false;
-      }
-      else if (strcmp(arg,"mute") == 0) {
-          sound = false;
-          continue;
-      }
-      else if (strcmp(arg,"mute") == 0) {
-          sound = false;
-          continue;
-      }
-      else if (strcmp(arg,"cache") == 0) {
-          cache = true;
-          continue;
-      }
-      else if (starts_with(arg, "ex="))
-      {
-          debug_args.push_back(arg + 3);
-          continue;
-      }
-      else if (strcmp(arg, "popup") == 0)
-      {
-          popup=true;
-          default_execute = false;
-      }
-      else if (strcmp(arg, "show-license") == 0)
-      {
-          show_license = true;
-          default_execute = false;
-      }
-    }
-    if (dashc == 0)
-    {
-        // project file name
-        filename_index = i;
-        if (default_execute)
+        if (dashc == 0)
         {
-            execute = true;
+            // project file name
+            filename_index = i;
+            if (default_execute)
+            {
+                execute = true;
+            }
+            break;
         }
-        break;
     }
-  }
 
-  if (show_license)
-  {
-    #ifdef OGM_LICENSE_AVAILABLE
-    std::cout << _ogm_license_ << std::endl;
+    if (show_license)
+    {
+        #ifdef OGM_LICENSE_AVAILABLE
+        std::cout << _ogm_license_ << std::endl;
+        #else
+        std::cout << "OpenGML was not compiled with license information available.\n";
+        #endif
+        exit(0);
+    }
+
+    #ifndef __3DS__
+    if (version)
+    {
+        std::cout << VERSION_STR << std::endl;
+        if (!popup)
+        {
+            exit(0);
+        }
+    }
+
+    if (popup)
+    {
+        if (!is_terminal())
+        {
+            std::cout << "Please run from a console for more options." << std::endl;
+            ogm::sleep(500);
+        }
+        std::cout << "Opening popup window..." << std::endl;
+        ogm::interpreter::Variable filter = "project file|*.project.gmx;*.project.ogm;*.yyp";
+        ogm::interpreter::Variable fname = "";
+        ogm::interpreter::Variable selected;
+
+        // select file from dialogue.
+        ogm::interpreter::fn::get_open_filename(selected, filter, fname);
+
+        // set options
+        filename = selected.castCoerce<std::string>();
+        filename_index = argn;
+        compile = true;
+        execute = true;
+
+        if (filename == "")
+        {
+            std::cout << "No file was selected." << std::endl;
+            ogm::sleep(2000);
+        }
+        else
+        {
+            std::cout << "Selected file " << filename << std::endl;
+        }
+
+        // cleanup
+        filter.cleanup();
+        fname.cleanup();
+        selected.cleanup();
+    }
+    else
+    {
+        if (filename_index == -1)
+        {
+            std::cout << "Basic usage: " << argv[0] << " [--execute] [--dis] [--ast] [--gui] [--debug] [--rdebug] [--compile] [--single-thread] [--verbose] [--cache] [--show-license] file [parameters...]" << std::endl;
+            exit(0);
+        }
+        else
+        {
+            filename = argv[filename_index];
+        }
+    }
     #else
-    std::cout << "OpenGML was not compiled with license information available.\n";
+    filename = "sdmc:/3ds/OpenGML/data.win";
+    filename_index = 1;
+    compile = true;
+    execute = true;
     #endif
-    exit(0);
-  }
-
-  #ifndef __3DS__
-  if (version)
-  {
-      std::cout << VERSION_STR << std::endl;
-      if (!popup)
-      {
-          exit(0);
-      }
-  }
-
-  if (popup)
-  {
-      if (!is_terminal())
-      {
-          std::cout << "Please run from a console for more options." << std::endl;
-          ogm::sleep(500);
-      }
-      std::cout << "Opening popup window..." << std::endl;
-      ogm::interpreter::Variable filter = "project file|*.project.gmx;*.project.ogm;*.yyp";
-      ogm::interpreter::Variable fname = "";
-      ogm::interpreter::Variable selected;
-
-      // select file from dialogue.
-      ogm::interpreter::fn::get_open_filename(selected, filter, fname);
-
-      // set options
-      filename = selected.castCoerce<std::string>();
-      filename_index = argn;
-      compile = true;
-      execute = true;
-
-      if (filename == "")
-      {
-          std::cout << "No file was selected." << std::endl;
-          ogm::sleep(2000);
-      }
-      else
-      {
-          std::cout << "Selected file " << filename << std::endl;
-      }
-
-      // cleanup
-      filter.cleanup();
-      fname.cleanup();
-      selected.cleanup();
-  }
-  else
-  {
-      if (filename_index == -1)
-      {
-          std::cout << "Basic usage: " << argv[0] << " [--execute] [--dis] [--ast] [--gui] [--debug] [--rdebug] [--compile] [--single-thread] [--verbose] [--cache] [--show-license] file [parameters...]" << std::endl;
-          exit(0);
-      }
-      else
-      {
-          filename = argv[filename_index];
-      }
-  }
-  #else
-  filename = "sdmc:/3ds/OpenGML/data.win";
-  filename_index = 1;
-  compile = true;
-  execute = true;
-  #endif
 
   if (gui && compile)
   {
@@ -505,7 +504,7 @@ int umain (int argn, char** argv)
 
           std::cout << "Attempting to load: " << filename << std::endl;
           project.process();
-          
+
           #ifdef __3DS__
           if (project.m_data_win_loader)
           {
@@ -513,7 +512,7 @@ int umain (int argn, char** argv)
               // Inject strings
               ogm::interpreter::staticExecutor.m_frame.m_string_table = std::move(project.m_data_win_loader->m_strings);
               SD_PRINT("  -> Strings injected: " + std::to_string(ogm::interpreter::staticExecutor.m_frame.m_string_table.size()));
-              
+
               // Inject metadata
               if (ogm::interpreter::staticExecutor.m_frame.m_display)
               {
@@ -593,7 +592,7 @@ int umain (int argn, char** argv)
               SD_PRINT("  -> Rooms injected: " + std::to_string(project.m_data_win_loader->m_rooms.size()));
           }
           #endif
-          
+
           #ifdef __3DS__
           SD_PRINT("DEBUG: project.process() returned.");
           SD_PRINT("Press START to continue to compilation...");
@@ -726,12 +725,12 @@ int umain (int argn, char** argv)
           {
               SD_PRINT("Execution block started");
               if (verbose) std::cout << "Executing..." << std::endl;
-              
+
               // set gc enabled
               #ifdef OGM_GARBAGE_COLLECTOR
               ogm::interpreter::g_gc.set_enabled(gc_enabled);
               #endif
-              
+
               // TODO: get rid of "anonymous" instance, replace with global instance.
               SD_PRINT("Creating anonymous instance...");
               ogm::interpreter::Instance anonymous;
@@ -743,7 +742,7 @@ int umain (int argn, char** argv)
               {
                   parameters.push_back(argv[i]);
               }
-              
+
               SD_PRINT("Attaching debugger...");
               ogm::interpreter::Debugger debugger;
               debugger.m_config.m_trace_permitted = allow_trace;
@@ -768,7 +767,7 @@ int umain (int argn, char** argv)
               bool has_bc0 = ogm::interpreter::staticExecutor.m_frame.m_bytecode.has_bytecode(0);
               SD_PRINT("  -> Bytecode Count: " + std::to_string(bc_count));
               SD_PRINT("  -> Has Bytecode 0: " + std::string(has_bc0 ? "YES" : "NO"));
-              
+
               ogm_assert(has_bc0);
 
               try
@@ -838,7 +837,7 @@ int main (int argc, char** argv)
     {
         enable_terminal_colours();
     }
-    
+
     try
     {
         umain(argc, argv);
@@ -853,7 +852,7 @@ int main (int argc, char** argv)
         std::cout << err;
         #endif
     }
-    
+
     // cleanup.
     restore_terminal_colours();
 

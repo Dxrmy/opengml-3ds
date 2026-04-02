@@ -1,0 +1,7 @@
+1. **Locate `draw_filled_circle` and `draw_outline_circle`**:
+   The implementations are in `src/interpreter/display/Display.cpp`.
+2. **Update circle precision logic**:
+   Currently, the functions use `g_circle_precision` (usually 32).
+   The task requires calculating precision dynamically: `max(12.0f, radius * 0.5f)` (rounded or casted to an integer representing segments).
+   Let's replace the use of `g_circle_precision` with the new formula, which depends on `r`. If the formula specifies the number of segments to draw, we will adapt it to `std::max<uint32_t>(12, std::abs(r * 0.5f))`, though the prompt says `max(12.0f, radius * 0.5f)`.
+   Let's check `draw_circle` function definition in `Display.hpp`. Wait, maybe `g_circle_precision` is still used if `g_circle_precision` has been explicitly set or if the precision variable handles a user-defined fixed precision vs. dynamic? GameMaker defaults to a dynamic curve or a fixed one based on a setting, but standard GM `draw_set_circle_precision` is 24 by default. Wait, the prompt says: "Dynamically calculate segments in draw_filled_circle: max(12.0f, radius * 0.5f)." This may only apply to `draw_filled_circle` according to the prompt! Wait, if the prompt says "Dynamically calculate segments in draw_filled_circle: max(12.0f, radius * 0.5f).", maybe we should update `draw_filled_circle` in `src/interpreter/display/Display.cpp` and `draw_outline_circle` too? Let's check `Display.cpp` again.

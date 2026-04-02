@@ -42,6 +42,7 @@ namespace ogm::interpreter {
 // Static constants for 3DS rendering
 static C2D_TextBuf g_textBuf;
 static C3D_RenderTarget* g_topTarget;
+static bool g_vsync = false;
 
 // Shader Program Data
 static DVLB_s* g_defaultDvlb;
@@ -49,6 +50,7 @@ static shaderProgram_s g_defaultShader;
 static int8_t g_uLocProjection;
 
 bool Display::start(uint32_t width, uint32_t height, const char* caption, bool vsync) {
+    g_vsync = vsync;
     if (g_active_display != nullptr) {
         throw MiscError("Multiple displays not supported");
     }
@@ -87,6 +89,9 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
 
     // Initial Blend Mode
     set_blendmode(0, 0); // bm_normal
+
+    // Depth Buffer Precision
+    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
 
     return true;
 }
@@ -139,7 +144,7 @@ void Display::set_blendmode_separate(int32_t src, int32_t dst, int32_t srca, int
 }
 
 void Display::shader_set_alpha_test_enabled(bool enabled) {
-    C3D_AlphaTest(enabled, GPU_GREATER, 0);
+    C3D_AlphaTest(enabled, GPU_GREATER, 0x80);
 }
 
 void Display::shader_set_alpha_test_threshold(real_t value) {
@@ -153,7 +158,7 @@ static float g_draw_alpha = 1.0f;
 
 void Display::begin_render() {
     C2D_TextBufClear(g_textBuf);
-    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    C3D_FrameBegin(g_vsync ? C3D_FRAME_SYNCDRAW : 0);
 }
 
 void Display::clear_render() {
@@ -218,10 +223,21 @@ void* Display_3DS_AllocTexture(uint32_t width, uint32_t height, GPU_TEXCOLOR for
         return nullptr;
     }
 
-    // Allocate from Linear RAM (required for PICA200)
-    void* data = linearAlloc(width * height * 4); // Assuming RGBA8
+    void* data = nullptr;
+    size_t size = width * height * 4; // Assuming RGBA8
+
+    // Attempt to allocate from high-speed VRAM for smaller textures
+    if (width <= 256 && height <= 256) {
+        data = vramAlloc(size);
+    }
+
+    // Fallback to Linear RAM if VRAM is full or texture is too large
     if (!data) {
-        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes from Linear RAM\n", (uint32_t)(width * height * 4));
+        data = linearAlloc(size);
+    }
+
+    if (!data) {
+        fprintf(stderr, "[3DS GFX] FAILED to allocate %lu bytes for texture\n", (uint32_t)size);
         return nullptr;
     }
 
@@ -288,6 +304,9 @@ void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t 
 
     C3D_Tex* tex = reinterpret_cast<C3D_Tex*>(tv->m_tpage->m_gl_tex);
 
+    // Enable hardware texture repetition
+    C3D_TexSetWrap(tex, tilex ? GPU_REPEAT : GPU_CLAMP_TO_EDGE, tiley ? GPU_REPEAT : GPU_CLAMP_TO_EDGE);
+
     C3D_TexEnv* env = C3D_GetTexEnv(0);
     C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
     C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
@@ -301,35 +320,38 @@ void Display::draw_image_tiled(TextureView* tv, bool tilex, bool tiley, coord_t 
 
     C2D_PlainImageTint(&tint, c, 1.0f);
 
-    // tv has already been mapped to absolute atlas texture coords, tx1/ty1/tx2/ty2 are the local bounds within it
+    // Calculate base pixel dimensions of a single tile
+    float base_width = std::abs((float)(pw) * tex->width);
+    float base_height = std::abs((float)(ph) * tex->height);
+    if (base_width == 0 || base_height == 0) return;
+
+    // Calculate UV multipliers to cover the requested bounding box
+    float reps_x = tilex ? (w / base_width) : 1.0f;
+    float reps_y = tiley ? (h / base_height) : 1.0f;
+
     Tex3DS_SubTexture subtex;
     subtex.left = px;
     subtex.top = py;
-    subtex.right = px + pw;
-    subtex.bottom = py + ph;
-    subtex.width = std::abs((float)(pw) * tex->width);
-    subtex.height = std::abs((float)(ph) * tex->height);
+    subtex.right = px + pw * reps_x;
+    subtex.bottom = py + ph * reps_y;
+
+    // Set the pixel dimensions of the quad we want to draw
+    subtex.width = tilex ? w : base_width;
+    subtex.height = tiley ? h : base_height;
 
     C2D_Image img;
     img.tex = tex;
     img.subtex = &subtex;
 
-    // Transform coordinates using x1, y1 and size
-    float scaled_w = w / subtex.width;
-    float scaled_h = h / subtex.height;
+    // The scale applies to subtex.width and subtex.height
+    float scale_w = tilex ? 1.0f : (w / base_width);
+    float scale_h = tiley ? 1.0f : (h / base_height);
 
-    // Simplistic tiled drawing
-    coord_t cx = x;
-    while (cx < x + w) {
-        coord_t cy = y;
-        while (cy < y + h) {
-            C2D_DrawImageAt(img, cx, cy, 0.5f, &tint, scaled_w, scaled_h);
-            cy += subtex.height * scaled_h;
-            if (!tiley) break;
-        }
-        cx += subtex.width * scaled_w;
-        if (!tilex) break;
-    }
+    // Draw a single quad covering the requested area
+    C2D_DrawImageAt(img, x, y, 0.5f, &tint, scale_w, scale_h);
+
+    // Restore texture wrap mode to default
+    C3D_TexSetWrap(tex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
 }
 
 // Linker Stubs for missing Display methods on 3DS
@@ -346,7 +368,7 @@ void Display::vertex_format_append_attribute(uint32_t vf, VertexFormatAttribute 
 uint32_t Display::make_vertex_buffer(size_t size) { return 0; }
 void Display::add_vertex_buffer_data(uint32_t id, unsigned char* data, size_t length) {}
 void Display::freeze_vertex_buffer(uint32_t vb) {}
-void Display::render_buffer(uint32_t vb, TexturePage* tp, uint32_t glenum) {}
+void Display::render_buffer(uint32_t vb, TexturePage* tp, PrimitiveType type) {}
 void Display::bind_and_compile_shader(uint32_t s, const std::string& v, const std::string& f) {}
 geometry::AABB<coord_t> Display::get_viewable_aabb() { return {}; }
 
@@ -388,7 +410,7 @@ model_id_t Display::model_make() { return 0; }
 void Display::model_free(model_id_t) {}
 void Display::model_draw(model_id_t, TexturePage*) {}
 uint32_t Display::model_get_vertex_format(model_id_t) { return 0; }
-void Display::model_add_vertex_buffer(model_id_t, uint32_t, uint32_t) {}
+void Display::model_add_vertex_buffer(model_id_t, uint32_t, PrimitiveType) {}
 
 void Display::use_shader(uint32_t) {}
 int32_t Display::shader_get_uniform_id(uint32_t, const std::string&) { return -1; }
@@ -422,8 +444,23 @@ void Display::get_colours4(uint32_t*) {}
 
 void Display::write_vertex(float*, coord_t, coord_t, coord_t, uint32_t, coord_t, coord_t) const {}
 uint32_t Display::get_vertex_size() const { return 0; }
-void Display::render_array(size_t, float*, TexturePage*, uint32_t) {}
-void Display::draw_outline_rectangle(coord_t, coord_t, coord_t, coord_t) {}
+void Display::render_array(size_t, float*, TexturePage*, PrimitiveType) {}
+void Display::draw_outline_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+    uint8_t r = (g_draw_colour & 0x0000FF);
+    uint8_t g = (g_draw_colour & 0x00FF00) >> 8;
+    uint8_t b = (g_draw_colour & 0xFF0000) >> 16;
+    uint8_t a = static_cast<uint8_t>(g_draw_alpha * 255);
+    uint32_t c = C2D_Color32(r, g, b, a);
+
+    // Top
+    C2D_DrawLine(x1, y1, c, x2, y1, c, 1.0f, 0.5f);
+    // Right
+    C2D_DrawLine(x2, y1, c, x2, y2, c, 1.0f, 0.5f);
+    // Bottom
+    C2D_DrawLine(x2, y2, c, x1, y2, c, 1.0f, 0.5f);
+    // Left
+    C2D_DrawLine(x1, y2, c, x1, y1, c, 1.0f, 0.5f);
+}
 
 void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
     uint8_t r = (g_draw_colour & 0x0000FF);
@@ -444,7 +481,13 @@ void Display::draw_filled_circle(coord_t x, coord_t y, coord_t radius) {
 void Display::draw_outline_circle(coord_t, coord_t, coord_t) {}
 void Display::draw_fill_colour(uint32_t) {}
 void Display::set_circle_precision(uint32_t) {}
-void Display::set_colour_mask(bool, bool, bool, bool) {}
+void Display::set_colour_mask(bool r, bool g, bool b, bool a) {
+    if (!r && !g && !b && !a) {
+        C3D_ColorLogicOp(GPU_LOGICOP_NOOP);
+    } else {
+        C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    }
+}
 void Display::set_depth_test(bool) {}
 void Display::set_culling(bool) {}
 void Display::set_zwrite(bool) {}
@@ -471,7 +514,9 @@ uint32_t Display::get_clear_colour() { return g_clear_colour; }
 void Display::set_clear_colour(uint32_t c) { g_clear_colour = c; }
 geometry::Vector<real_t> Display::get_mouse_coord_invm() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
 geometry::Vector<real_t> Display::get_mouse_coord() { return {staticExecutor.m_mouse_x, staticExecutor.m_mouse_y}; }
-void Display::set_vsync(bool) {}
+void Display::set_vsync(bool vsync) {
+    g_vsync = vsync;
+}
 void Display::set_font(asset::AssetFont*, TextureView*) {}
 void Display::disable_scissor() {}
 void Display::enable_scissor(real_t, real_t, real_t, real_t) {}

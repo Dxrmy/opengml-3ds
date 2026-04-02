@@ -1,4 +1,5 @@
 #ifndef __3DS__
+#ifndef __3DS__
 // get constants
 #include "../library/libpre.h"
     #include "../library/fn_draw.h"
@@ -716,7 +717,7 @@ namespace
     std::vector<VertexBuffer> g_vertex_buffers;
     std::vector<Model> g_models;
 
-    const int32_t k_transform_stack_size = 16; // TODO: confirm
+    const int32_t k_transform_stack_size = 32;
     std::vector<glm::mat4> g_transform_stack;
 }
 

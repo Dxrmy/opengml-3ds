@@ -1,0 +1,10 @@
+<<<<<<< SEARCH
+        ogm::id_t m_id = -1;
+        asset_index_t m_object_index = -1, m_sprite_index = -1, m_mask_index = -1;
+        real_t m_depth = 0;
+=======
+        ogm::id_t m_id = -1;
+        asset_index_t m_object_index = -1, m_sprite_index = -1, m_mask_index = -1;
+        asset_index_t m_room_id = k_no_asset;
+        real_t m_depth = 0;
+>>>>>>> REPLACE

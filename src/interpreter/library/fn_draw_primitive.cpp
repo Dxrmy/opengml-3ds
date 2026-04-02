@@ -29,14 +29,14 @@ namespace
     std::vector<float> vbuff;
     size_t vcount = 0;
     size_t vcap = 0;
-    
+
     void reset_vertex()
     {
         vcount = 0;
         vcap = 32;
         vbuff.resize(vcap);
     }
-    
+
     float* next_vertex()
     {
         size_t next_vcount = vcount + display->get_vertex_size();
@@ -127,6 +127,6 @@ void ogm::interpreter::fn::draw_primitive_end(VO out)
         vcount,
         &vbuff.at(0),
         tex ? tex->m_tpage : nullptr,
-        g_glenum
+        static_cast<PrimitiveType>(g_glenum)
     );
 }

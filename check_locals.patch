@@ -1,0 +1,102 @@
+<<<<<<< SEARCH
+    // cast off outer body_container ast.
+    const ogm_ast_t* generate_from_ast = &ast;
+    if (ast.m_subtype == ogm_ast_st_imp_body_list)
+    {
+        if (ast.m_sub_count == 0)
+        {
+            generate_from_ast = nullptr;
+        }
+        else if (ast.m_sub_count == 1)
+        {
+            generate_from_ast = &ast.m_sub[0];
+        }
+        else
+        {
+            throw MiscError("More than one body_container provided in ast. This should be handled with multiple calls to bytecode_generate.");
+        }
+    }
+
+    // allocate local variables
+    // TODO: don't allocate locals if no locals in function.
+    write_op(out, all);
+    int32_t n_locals = 0;
+    auto n_locals_src = out.tellp();
+
+    //placeholder -- we won't know the number of locals until after compiling.
+    write(out, n_locals);
+
+    // copy named args into local variables.
+    std::string* named_args = in.m_named_args;
+=======
+    // cast off outer body_container ast.
+    const ogm_ast_t* generate_from_ast = &ast;
+    if (ast.m_subtype == ogm_ast_st_imp_body_list)
+    {
+        if (ast.m_sub_count == 0)
+        {
+            generate_from_ast = nullptr;
+        }
+        else if (ast.m_sub_count == 1)
+        {
+            generate_from_ast = &ast.m_sub[0];
+        }
+        else
+        {
+            throw MiscError("More than one body_container provided in ast. This should be handled with multiple calls to bytecode_generate.");
+        }
+    }
+
+    bool has_locals = false;
+    if (in.m_named_args && in.m_argc > 0)
+    {
+        has_locals = true;
+    }
+    if (config && config->m_existing_locals_namespace && config->m_existing_locals_namespace->id_count() > 0)
+    {
+        has_locals = true;
+    }
+
+    if (!has_locals && generate_from_ast)
+    {
+        std::vector<const ogm_ast_t*> queue = { generate_from_ast };
+        while (!queue.empty())
+        {
+            const ogm_ast_t* current = queue.back();
+            queue.pop_back();
+            if (current->m_subtype == ogm_ast_st_imp_var)
+            {
+                ogm_ast_declaration_t* payload;
+                ogm_ast_tree_get_payload_declaration(current, &payload);
+                for (size_t i = 0; i < payload->m_identifier_count; i++)
+                {
+                    const char* dectype = payload->m_types[i] ? payload->m_types[i] : "";
+                    if (strcmp(dectype, "globalvar") != 0 && strcmp(dectype, "static") != 0)
+                    {
+                        has_locals = true;
+                        break;
+                    }
+                }
+                if (has_locals) break;
+            }
+            for (size_t i = 0; i < current->m_sub_count; ++i)
+            {
+                queue.push_back(&current->m_sub[i]);
+            }
+        }
+    }
+
+    // allocate local variables
+    int32_t n_locals = 0;
+    std::streampos n_locals_src = 0;
+    if (has_locals)
+    {
+        write_op(out, all);
+        n_locals_src = out.tellp();
+        //placeholder -- we won't know the number of locals until after compiling.
+        write(out, n_locals);
+    }
+
+    // copy named args into local variables.
+    std::string* named_args = in.m_named_args;
+>>>>>>> REPLACE

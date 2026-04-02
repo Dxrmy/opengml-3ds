@@ -75,7 +75,17 @@ bool TexturePage::cache()
         }
 
         // Copy pixel data to linear memory
-        memcpy(linear_data, image->m_data, m_dimensions.x * m_dimensions.y * 4);
+        uint32_t* src = reinterpret_cast<uint32_t*>(image->m_data);
+        uint32_t* dst = reinterpret_cast<uint32_t*>(linear_data);
+        uint32_t w = m_dimensions.x;
+        uint32_t h = m_dimensions.y;
+
+        for (uint32_t y = 0; y < h; ++y) {
+            for (uint32_t x = 0; x < w; ++x) {
+                uint32_t morton = ((y >> 3) * (w >> 3) + (x >> 3)) << 6 | (y & 7) << 3 | (x & 7);
+                dst[morton] = src[y * w + x];
+            }
+        }
 
         C3D_Tex* tex3ds = new C3D_Tex();
         C3D_TexInit(tex3ds, m_dimensions.x, m_dimensions.y, GPU_RGBA8);
@@ -625,15 +635,17 @@ TextureStore::~TextureStore()
 
 surface_id_t TextureStore::create_surface(ogm::geometry::Vector<uint32_t> dimensions)
 {
-    m_pages.emplace_back(new TexturePage());
-    TexturePage& tp = *m_pages.back();
+    TexturePage* new_page = new TexturePage();
+    m_pages.insert(new_page);
+    TexturePage& tp = *new_page;
     tp.m_dimensions = dimensions;
     tp.m_volatile = false;
 
     #ifdef GFX_AVAILABLE
     if (gen_tex_framebuffer(tp.m_gl_framebuffer, tp.m_gl_tex, dimensions, &tp.m_gl_tex_depth))
     {
-        m_pages.pop_back();
+        m_pages.erase(new_page);
+        delete new_page;
         return -1;
     }
     #else
@@ -655,7 +667,7 @@ TexturePage* TextureStore::create_tpage_from_callback(TexturePage::ImageSupplier
 
     page->m_callback = supplier;
 
-    m_pages.push_back(page);
+    m_pages.insert(page);
 
     return page;
 }
@@ -677,7 +689,7 @@ TexturePage* TextureStore::create_tpage_from_image(asset::Image& image)
         return nullptr;
     };
 
-    m_pages.push_back(page);
+    m_pages.insert(page);
 
     return page;
 }
@@ -706,7 +718,7 @@ TextureView* TextureStore::bind_asset_to_callback(ImageDescriptor id, TexturePag
 
     page->m_callback = cb;
 
-    m_pages.push_back(page);
+    m_pages.insert(page);
     m_descriptor_map[id] = view;
 
     return view;
@@ -744,19 +756,17 @@ void TextureStore::free_surface(surface_id_t id)
     ogm_assert(m_surface_map.at(id).first->m_gl_framebuffer != 0);
     #endif
 
-    // TODO: optimize this lookup
-    for (int32_t i = m_pages.size() - 1; i >= 0; --i)
+    TexturePage* page_to_delete = m_surface_map.at(id).first;
+    auto it = m_pages.find(page_to_delete);
+    if (it != m_pages.end())
     {
-        if (m_pages.at(i) == m_surface_map.at(id).first)
-        {
-            delete m_surface_map.at(id).first;
-            delete m_surface_map.at(id).second;
-            m_surface_map[id].first = nullptr;
-            m_surface_map[id].second = nullptr;
-            m_pages[i] = nullptr;
-            break;
-        }
+        m_pages.erase(it);
+        delete m_surface_map.at(id).first;
+        delete m_surface_map.at(id).second;
+        m_surface_map[id].first = nullptr;
+        m_surface_map[id].second = nullptr;
     }
+
     if (id + 1 == m_surface_map.size())
     {
         m_surface_map.pop_back();

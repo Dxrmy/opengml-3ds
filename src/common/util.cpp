@@ -23,22 +23,17 @@
 #define OGM_CXX_ABI_AVAILABLE
 #endif
 
-// https://stackoverflow.com/a/8317622
-// TODO: is this hash function good enough?
-#define A 54059 /* a prime */
-#define B 76963 /* another prime */
-#define C 86969 /* yet another prime */
-#define FIRSTH 37 /* also prime */
-
+// FNV-1a 64-bit string hash
 namespace ogm {
 uint64_t hash64(const char* s)
 {
-   uint64_t h = FIRSTH;
-   while (char c = *s) {
-     h = (h * A) ^ (c * B);
-     ++s;
-   }
-   return h;
+    uint64_t h = 14695981039346656037ULL; // FNV offset basis
+    while (char c = *s) {
+        h ^= static_cast<unsigned char>(c);
+        h *= 1099511628211ULL; // FNV prime
+        ++s;
+    }
+    return h;
 }
 
 std::string pretty_typeid(const std::string& _name)
@@ -51,7 +46,7 @@ std::string pretty_typeid(const std::string& _name)
         return demangled_name;
     }
     #endif
-    
+
     #ifdef __GNUC__
     std::string name = _name;
     name = remove_suffix(name, "E");

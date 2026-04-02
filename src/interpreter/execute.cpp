@@ -2333,10 +2333,16 @@ bool execute_bytecode_loop()
                     {
                         Instance* instance = v.get_struct();
 
-                        // TODO: store a separate reference to prevent struct cleanup.
+                        // store a separate reference to prevent struct cleanup.
+                        Variable v_copy;
+                        v_copy.copy(v);
+
                         v.cleanup();
 
                         WithIterator& withIterator = staticExecutor.m_with_iterators.emplace_back(instance);
+                        #ifdef OGM_STRUCT_SUPPORT
+                        withIterator.m_struct_ref = std::move(v_copy);
+                        #endif
                     }
                     else
                     #endif

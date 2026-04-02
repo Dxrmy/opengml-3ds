@@ -2,7 +2,6 @@
 #include "lvalue.hpp"
 
 #include "ogm/bytecode/bytecode.hpp"
-#include "ogm/bytecode/generate_utils.hpp"
 #include "ogm/ast/parse.h"
 
 #include "ogm/common/error.hpp"
@@ -25,6 +24,77 @@ using namespace ogm::asset;
 using namespace opcode;
 
 const BytecodeTable defaultBytecodeTable;
+
+struct EnumData {
+    std::map<std::string, ogm_ast_t*> m_map;
+
+    ~EnumData()
+    {
+        for (const auto& pair : m_map)
+        {
+            delete std::get<1>(pair);
+        }
+    }
+};
+
+// FIXME: put this in its own header file.
+// Having it just in this cpp file is very awkward,
+// because it necessitates ReflectionAccumulator::ReflectionAccumulator()
+struct EnumTable {
+    std::map<std::string, EnumData> m_map;
+};
+
+ReflectionAccumulator::ReflectionAccumulator()
+    : m_namespace_instance()
+    , m_bare_globals()
+    , m_ast_macros()
+    , m_enums(new EnumTable())
+{ }
+
+ReflectionAccumulator::~ReflectionAccumulator()
+{
+    // free macro ASTs
+    for (auto& pair : m_ast_macros)
+    {
+        ogm_ast_free(std::get<1>(pair));
+    }
+
+    // delete enums
+    assert(m_enums != nullptr);
+    delete(m_enums);
+}
+
+void ReflectionAccumulator::set_macro(const char* name, const char* value, int flags)
+{
+    WRITE_LOCK(m_mutex_macros);
+    auto& macros = m_ast_macros;
+    ogm_ast_t* ast;
+    flags |= ogm_ast_parse_flag_no_decorations;
+    try
+    {
+        // try parsing as an expression
+        ast = ogm_ast_parse_expression(value, flags);
+    }
+    catch (...)
+    {
+        // not a valid expression -- try as a statement instead
+        try
+        {
+            ast = ogm_ast_parse(value, flags);
+        }
+        catch (...)
+        {
+            throw ogm::CompileError(ErrorCode::C::parsemacro, "Cannot parse macro \"{}\" as either an expression nor statement: \"{}\"", name, value);
+        }
+    }
+
+    if (m_ast_macros.find(name) != m_ast_macros.end())
+    {
+        // overwrite existing macro
+        ogm_ast_free(m_ast_macros[name]);
+    }
+    m_ast_macros[name] = ast;
+}
 
 // default implementation of generate_accessor_bytecode.
 // Because it is unlikely for most implementations to change this implementation, a default is provided.
@@ -867,7 +937,14 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         else
                         // function name not found in library
                         {
-                            // TODO: check extensions
+                            // check extensions
+                            if (starts_with(std::string(function_name), "steam_"))
+                            {
+                                if (!context_args.m_library->has_function(function_name))
+                                {
+                                    throw MiscError("Extension function " + std::string(function_name) + " not found in StandardLibrary.");
+                                }
+                            }
 
                             // check scripts
                             asset_index_t asset_index;
@@ -1634,14 +1711,55 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
         }
     }
 
-    // allocate local variables
-    // TODO: don't allocate locals if no locals in function.
-    write_op(out, all);
-    int32_t n_locals = 0;
-    auto n_locals_src = out.tellp();
+    bool has_locals = false;
+    if (in.m_named_args && in.m_argc > 0)
+    {
+        has_locals = true;
+    }
+    if (config && config->m_existing_locals_namespace && config->m_existing_locals_namespace->id_count() > 0)
+    {
+        has_locals = true;
+    }
 
-    //placeholder -- we won't know the number of locals until after compiling.
-    write(out, n_locals);
+    if (!has_locals && generate_from_ast)
+    {
+        std::vector<const ogm_ast_t*> queue = { generate_from_ast };
+        while (!queue.empty())
+        {
+            const ogm_ast_t* current = queue.back();
+            queue.pop_back();
+            if (current->m_subtype == ogm_ast_st_imp_var)
+            {
+                ogm_ast_declaration_t* payload;
+                ogm_ast_tree_get_payload_declaration(current, &payload);
+                for (size_t i = 0; i < payload->m_identifier_count; i++)
+                {
+                    const char* dectype = payload->m_types[i] ? payload->m_types[i] : "";
+                    if (strcmp(dectype, "globalvar") != 0 && strcmp(dectype, "static") != 0)
+                    {
+                        has_locals = true;
+                        break;
+                    }
+                }
+                if (has_locals) break;
+            }
+            for (size_t i = 0; i < current->m_sub_count; ++i)
+            {
+                queue.push_back(&current->m_sub[i]);
+            }
+        }
+    }
+
+    // allocate local variables
+    int32_t n_locals = 0;
+    std::streampos n_locals_src = 0;
+    if (has_locals)
+    {
+        write_op(out, all);
+        n_locals_src = out.tellp();
+        //placeholder -- we won't know the number of locals until after compiling.
+        write(out, n_locals);
+    }
 
     // copy named args into local variables.
     std::string* named_args = in.m_named_args;
@@ -1682,7 +1800,10 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
 
     // set number of locals at start of bytecode
     n_locals = context_args.m_symbols->m_namespace_local.id_count();
-    write_at(out, n_locals, n_locals_src);
+    if (has_locals)
+    {
+        write_at(out, n_locals, n_locals_src);
+    }
 
     if (n_locals > 0 && config->m_no_locals)
     {
