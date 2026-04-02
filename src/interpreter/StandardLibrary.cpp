@@ -494,8 +494,8 @@ bool StandardLibrary::generate_constant_bytecode(std::ostream& out, const char* 
         {
            if (name.substr(last) == "_version")
            {
-               // TODO: get the actual version
-               write_ldi_string(out, "1.0.0.0");
+               // retrieve actual software version
+               write_ldi_string(out, "" VERSION_STR);
                return true;
            }
            if (name.substr(last) == "_build_date")
