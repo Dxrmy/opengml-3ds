@@ -98,10 +98,14 @@ std::string get_binary_directory()
         bufsize
     ));
 
-    // FIXME: handle len == nSize
     if (len <= 0)
     {
         throw MiscError("Failed to determine binary directory name.");
+    }
+    else if (len == bufsize)
+    {
+        buf[bufsize - 1] = 0;
+        return path_directory(buf);
     }
     else
     {
