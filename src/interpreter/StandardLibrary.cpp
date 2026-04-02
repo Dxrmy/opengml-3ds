@@ -75,6 +75,17 @@ namespace
         #include "library/all.h"
     };
 
+    const std::unordered_map<std::string, std::vector<const FunctionMapEntry*>> get_fnmap_fast()
+    {
+        std::unordered_map<std::string, std::vector<const FunctionMapEntry*>> map;
+        for (const auto& entry : fnmap)
+        {
+            map[entry.m_name].push_back(&entry);
+        }
+        return map;
+    }
+
+    const std::unordered_map<std::string, std::vector<const FunctionMapEntry*>> fnmap_fast = get_fnmap_fast();
 
     struct VariableDefinition
     {
@@ -336,13 +347,14 @@ bool StandardLibrary::generate_function_bytecode(std::ostream& out, const char* 
     }
 
     const FunctionMapEntry* fme = nullptr;
-    for (auto& entry : fnmap)
+    auto iter = fnmap_fast.find(functionName);
+    if (iter != fnmap_fast.end())
     {
-        if (strcmp(entry.m_name , functionName) == 0)
+        for (const FunctionMapEntry* entry : iter->second)
         {
-            if (entry.m_argc == -1 || entry.m_argc == argc || (entry.m_argc == -2 && argc == 1))
+            if (entry->m_argc == -1 || entry->m_argc == argc || (entry->m_argc == -2 && argc == 1))
             {
-                fme = &entry;
+                fme = entry;
                 break;
             }
         }
@@ -393,6 +405,18 @@ bool StandardLibrary::generate_function_bytecode(std::ostream& out, const char* 
     }
 
     return true;
+}
+
+bool StandardLibrary::has_function(const char* functionName) const
+{
+    functionName = rename_lookup(functionName);
+
+    if (strcmp(functionName, "ogm_suspend") == 0)
+    {
+        return true;
+    }
+
+    return fnmap_fast.find(functionName) != fnmap_fast.end();
 }
 
 bool StandardLibrary::generate_constant_bytecode(std::ostream& out, const char* kName) const
@@ -541,9 +565,9 @@ void StandardLibrary::reflection_add_instance_variables(bytecode::ReflectionAccu
             }
             else
             {
-                vid = acc.m_namespace_instance.add_id(vd.m_name); 
+                vid = acc.m_namespace_instance.add_id(vd.m_name);
             }
-            
+
             if (vid != i++)
             {
                 // If we are loading a .win file, the binary IDs will NOT match our internal sequential IDs.
@@ -575,9 +599,9 @@ bool StandardLibrary::variable_definition(const char* variableName, BuiltInVaria
 }
 
 bool StandardLibrary::generate_variable_bytecode(std::ostream& out, variable_id_t address, size_t pop_count, bool store) const
-{    
+{
     const VariableDefinition* near_match = nullptr;
-    
+
     // look up in variable list
     // this implementation isn't nice, but it works.
     for (const VariableDefinition& vd : vars)
@@ -614,7 +638,7 @@ bool StandardLibrary::generate_variable_bytecode(std::ostream& out, variable_id_
             }
         }
     }
-    
+
     if (near_match)
     // Found a variable with the same id but wrong pop count.
     // We hackily make ends meet.
@@ -622,7 +646,7 @@ bool StandardLibrary::generate_variable_bytecode(std::ostream& out, variable_id_
         // generate bytecode with correct pop count but dummy out some values.
         size_t required_pop_count = near_match->m_function_argc;
         int32_t diff = static_cast<int32_t>(required_pop_count) - static_cast<int32_t>(pop_count);
-        
+
         // pad with dummy indices
         while (diff > 0)
         {
@@ -633,7 +657,7 @@ bool StandardLibrary::generate_variable_bytecode(std::ostream& out, variable_id_
                 write_op(out, ogm::bytecode::opcode::swap);
             }
         }
-        
+
         // pop unused indices
         while (diff < 0)
         {
@@ -644,7 +668,7 @@ bool StandardLibrary::generate_variable_bytecode(std::ostream& out, variable_id_
             }
             write_op(out, ogm::bytecode::opcode::pop);
         }
-        
+
         // generate bytecode for near-match variable ID
         bool found = generate_variable_bytecode(out, address, required_pop_count, store);
         assert(found);

@@ -937,7 +937,14 @@ void bytecode_generate_ast(std::ostream& out, const ogm_ast_t& ast, GenerateCont
                         else
                         // function name not found in library
                         {
-                            // TODO: check extensions
+                            // check extensions
+                            if (starts_with(std::string(function_name), "steam_"))
+                            {
+                                if (!context_args.m_library->has_function(function_name))
+                                {
+                                    throw MiscError("Extension function " + std::string(function_name) + " not found in StandardLibrary.");
+                                }
+                            }
 
                             // check scripts
                             asset_index_t asset_index;
@@ -1704,6 +1711,7 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
         }
     }
 
+<<<<<<< HEAD
     bool has_locals = false;
     if (in.m_named_args && in.m_argc > 0)
     {
@@ -1753,6 +1761,16 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
         //placeholder -- we won't know the number of locals until after compiling.
         write(out, n_locals);
     }
+=======
+    // allocate local variables
+    // TODO: don't allocate locals if no locals in function.
+    write_op(out, all);
+    int32_t n_locals = 0;
+    auto n_locals_src = out.tellp();
+
+    //placeholder -- we won't know the number of locals until after compiling.
+    write(out, n_locals);
+>>>>>>> origin/feature-extension-checking-7922257818925518145
 
     // copy named args into local variables.
     std::string* named_args = in.m_named_args;
@@ -1793,10 +1811,14 @@ bytecode_index_t bytecode_generate(const DecoratedAST& in, ProjectAccumulator& a
 
     // set number of locals at start of bytecode
     n_locals = context_args.m_symbols->m_namespace_local.id_count();
+<<<<<<< HEAD
     if (has_locals)
     {
         write_at(out, n_locals, n_locals_src);
     }
+=======
+    write_at(out, n_locals, n_locals_src);
+>>>>>>> origin/feature-extension-checking-7922257818925518145
 
     if (n_locals > 0 && config->m_no_locals)
     {
