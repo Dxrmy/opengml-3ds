@@ -75,7 +75,17 @@ bool TexturePage::cache()
         }
 
         // Copy pixel data to linear memory
-        memcpy(linear_data, image->m_data, m_dimensions.x * m_dimensions.y * 4);
+        uint32_t* src = reinterpret_cast<uint32_t*>(image->m_data);
+        uint32_t* dst = reinterpret_cast<uint32_t*>(linear_data);
+        uint32_t w = m_dimensions.x;
+        uint32_t h = m_dimensions.y;
+
+        for (uint32_t y = 0; y < h; ++y) {
+            for (uint32_t x = 0; x < w; ++x) {
+                uint32_t morton = ((y >> 3) * (w >> 3) + (x >> 3)) << 6 | (y & 7) << 3 | (x & 7);
+                dst[morton] = src[y * w + x];
+            }
+        }
 
         C3D_Tex* tex3ds = new C3D_Tex();
         C3D_TexInit(tex3ds, m_dimensions.x, m_dimensions.y, GPU_RGBA8);
