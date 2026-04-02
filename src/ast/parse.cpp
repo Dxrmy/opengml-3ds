@@ -1450,12 +1450,8 @@ namespace
         canary = read_int(in);
         ogm_assert(canary == k_canary/3);
 
-<<<<<<< HEAD
-        // FIXME ignore decor for now.
-=======
         // Decorations (whitespace, comments) are intentionally ignored during loading
         // to reduce memory consumption and parsing time, especially for the 3DS build.
->>>>>>> origin/document-ast-decor-ignored-10203808411226497586
         ast->m_decor_list_length = 0;
 
         ast->m_sub = make_ast(ast->m_sub_count);
@@ -1595,12 +1591,8 @@ namespace
 
         write_int(out, k_canary/3);
 
-<<<<<<< HEAD
-        // FIXME ignore decor for now.
-=======
         // Decorations (whitespace, comments) are intentionally omitted from the binary cache
         // to minimize binary size and reduce I/O overhead.
->>>>>>> origin/document-ast-decor-ignored-10203808411226497586
 
         // write subs
         for (size_t i = 0; i < ast->m_sub_count; ++i)

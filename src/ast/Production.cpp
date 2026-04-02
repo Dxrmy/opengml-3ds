@@ -16,7 +16,7 @@ string Production::to_string() {
 void Production::flattenPostfixes() {
   auto it = infixes.end() - postfix_n;
   while (it != infixes.end()) {
-    auto ws = *it;
+    auto& ws = *it;
     if (ws) {
       ws->postfix_n = 0;
       if (!ws->infixes.empty()) {
