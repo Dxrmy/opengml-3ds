@@ -95,6 +95,245 @@ void signal_handler(int s)
 }
 }
 
+
+Debugger::Debugger(bool destroy_on_detach)
+    : m_destroy_on_detach(destroy_on_detach)
+{
+        m_command_map[""] = [this](const DebuggerCommand& command) -> bool {     return false;
+        };
+        m_command_map["print"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_print(command.m_arguments_str);
+                return false;
+        };
+        m_command_map["info"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_info(command.m_arguments_str);
+                return false;
+        };
+        m_command_map["step"] = [this](const DebuggerCommand& command) -> bool {
+            const bytecode::DebugSymbols* symbols = staticExecutor.m_pc.m_bytecode.m_debug_symbols.get();
+
+                if (!symbols)
+                {
+                    std::cout << "Cannot step in: no debug symbols for this section.\n";
+                    std::cout << "Use \"step-instruction\" (or \"finish\" to exit this frame).\n";
+                }
+                else
+                {
+                    m_paused = false;
+                    m_ls_state = LS_IN;
+                    return true;
+                }
+                return false;
+        };
+        m_command_map["step-instruction"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false; // (not actually necessary -- would break on next step if paused)
+                m_ls_state = LS_I_IN;
+                return true;
+        };
+        m_command_map["next"] = [this](const DebuggerCommand& command) -> bool {
+            const bytecode::DebugSymbols* symbols = staticExecutor.m_pc.m_bytecode.m_debug_symbols.get();
+
+                if (!symbols)
+                {
+                    std::cout << "Cannot step over: no debug symbols for this section.\n";
+                    std::cout << "Use \"next-instruction\" (or \"finish\" to exit this frame).\n";
+                }
+                else
+                {
+                    m_paused = false;
+                    m_ls_state = LS_OVER;
+                    return true;
+                }
+                return false;
+        };
+        m_command_map["next-instruction"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false;
+                m_ls_state = LS_I_OVER;
+                return true;
+        };
+        m_command_map["to"] = [this](const DebuggerCommand& command) -> bool {
+                if (!cmd_break(command.m_arguments, true))
+                {
+                    m_paused = false;
+                }
+                return true;
+        };
+        m_command_map["continue"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false;
+                return true;
+        };
+        m_command_map["finish"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false;
+                m_ls_state = LS_FINISH;
+                return true;
+        };
+        m_command_map["out"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false;
+                m_ls_state = LS_OUT;
+                return true;
+        };
+        m_command_map["finish-instruction"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false;
+                m_ls_state = LS_I_FINISH;
+                return true;
+        };
+        m_command_map["out-instruction"] = [this](const DebuggerCommand& command) -> bool {
+                m_paused = false;
+                m_ls_state = LS_I_OUT;
+                return true;
+        };
+        m_command_map["up"] = [this](const DebuggerCommand& command) -> bool {
+                if (m_current_frame < m_frames.size() - 1)
+                {
+                    cmd_frame_shift(m_current_frame + 1);
+                }
+                else
+                {
+                    if (m_stack_broken)
+                    {
+                        std::cout << "Stack is broken past this point." << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Oldest (top-most) stack frame selected." << std::endl;
+                    }
+                }
+                return false;
+        };
+        m_command_map["down"] = [this](const DebuggerCommand& command) -> bool {
+                if (m_current_frame > 0)
+                {
+                    cmd_frame_shift(m_current_frame - 1);
+                }
+                else
+                {
+                    std::cout << "Newest (bottom-most) stack frame selected." << std::endl;
+                }
+                return false;
+        };
+        m_command_map["frame"] = [this](const DebuggerCommand& command) -> bool {
+                if (command.m_arguments.size() > 0)
+                {
+                    if (is_digits(command.m_arguments.at(0)))
+                    {
+                        cmd_frame_shift(std::stoi(command.m_arguments.at(0)) + 1);
+                    }
+                }
+                else
+                {
+                    // display stack frame.
+                    cmd_frame_shift(m_current_frame);
+                }
+                return false;
+        };
+        m_command_map["break"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_break(command.m_arguments, false);
+                return false;
+        };
+        m_command_map["tbreak"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_break(command.m_arguments, true);
+                return false;
+        };
+        m_command_map["watch"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_watch(command.m_arguments);
+                return false;
+        };
+        m_command_map["enable"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_enable(command.m_arguments, 2);
+                return false;
+        };
+        m_command_map["disable"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_enable(command.m_arguments, 1);
+                return false;
+        };
+        m_command_map["delete"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_enable(command.m_arguments, 0);
+                return false;
+        };
+        m_command_map["display"] = [this](const DebuggerCommand& command) -> bool {
+                // TODO
+                return false;
+        };
+        m_command_map["bytecode"] = [this](const DebuggerCommand& command) -> bool {
+                // TODO
+                return false;
+        };
+        m_command_map["list"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_list(&command.m_arguments, false);
+                return false;
+        };
+        m_command_map["list-instruction"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_list(&command.m_arguments, true);
+                return false;
+        };
+        m_command_map["backtrace"] = [this](const DebuggerCommand& command) -> bool {
+                // we skip 0 because it's a dummy entry.
+                for (size_t i = 0; i < m_frames.size(); ++i)
+                {
+                    if (i == m_current_frame)
+                    {
+                        std::cout << ">";
+                    }
+                    else
+                    {
+                        std::cout << " ";
+                    }
+                    std::cout << " #" << i + 1 << ": "
+                        << location_for_bytecode_stream(
+                                get_frame_pc(i),
+                                m_config.m_show_asm
+                           )
+                        << std::endl;
+                }
+                if (m_stack_broken)
+                {
+                    std::cout << "(Stack broken beyond this point.)" << std::endl;
+                }
+                return false;
+        };
+        m_command_map["config"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_set(command.m_arguments);
+                return false;
+        };
+        m_command_map["execute"] = [this](const DebuggerCommand& command) -> bool {
+                std::stringstream ss;
+                for (const std::string& s : command.m_arguments)
+                {
+                    ss << " " << s;
+                }
+                string_execute_inline(ss.str());
+                return false;
+        };
+        m_command_map["source"] = [this](const DebuggerCommand& command) -> bool {
+                // TODO
+                return false;
+        };
+        m_command_map["define"] = [this](const DebuggerCommand& command) -> bool {
+                // TODO
+                return false;
+        };
+        m_command_map["quit"] = [this](const DebuggerCommand& command) -> bool {
+                std::string input = ogm::interpreter::input("Quitting. Confirm? [y/n] ");
+                trim(input);
+                if (input == "y" || input == "Y")
+                {
+                    exit(0);
+                }
+                std::cout << "Cancelled.\n";
+                return false;
+        };
+        m_command_map["restart"] = [this](const DebuggerCommand& command) -> bool {
+                // TODO
+                return false;
+        };
+        m_command_map["help"] = [this](const DebuggerCommand& command) -> bool {
+                cmd_help(command.m_arguments.empty() ? "" : command.m_arguments_str);
+                return false;
+        };
+
+}
+
+
 void Debugger::on_attach()
 {
     g_signal_debugger = this;
@@ -369,240 +608,14 @@ void Debugger::tick(bytecode::BytecodeStream& in)
 
             DebuggerCommand command;
             parse_command(command, input);
-    #define HANDLE(c) if (command.m_command == c)
-            HANDLE("") { }
-            else HANDLE("print")
+
+            auto it = m_command_map.find(command.m_command);
+            if (it != m_command_map.end())
             {
-                cmd_print(command.m_arguments_str);
-            }
-            else HANDLE("info")
-            {
-                cmd_info(command.m_arguments_str);
-            }
-            else HANDLE("step")
-            {
-                if (!symbols)
+                if (it->second(command))
                 {
-                    std::cout << "Cannot step in: no debug symbols for this section.\n";
-                    std::cout << "Use \"step-instruction\" (or \"finish\" to exit this frame).\n";
-                }
-                else
-                {
-                    m_paused = false;
-                    m_ls_state = LS_IN;
                     break;
                 }
-            }
-            else HANDLE("step-instruction")
-            {
-                m_paused = false; // (not actually necessary -- would break on next step if paused)
-                m_ls_state = LS_I_IN;
-                break;
-            }
-            else HANDLE("next")
-            {
-                if (!symbols)
-                {
-                    std::cout << "Cannot step over: no debug symbols for this section.\n";
-                    std::cout << "Use \"next-instruction\" (or \"finish\" to exit this frame).\n";
-                }
-                else
-                {
-                    m_paused = false;
-                    m_ls_state = LS_OVER;
-                    break;
-                }
-            }
-            else HANDLE("next-instruction")
-            {
-                m_paused = false;
-                m_ls_state = LS_I_OVER;
-                break;
-            }
-            else HANDLE("to")
-            {
-                if (!cmd_break(command.m_arguments, true))
-                {
-                    m_paused = false;
-                }
-                break;
-            }
-            else HANDLE("continue")
-            {
-                m_paused = false;
-                break;
-            }
-            else HANDLE("finish")
-            {
-                m_paused = false;
-                m_ls_state = LS_FINISH;
-                break;
-            }
-            else HANDLE("out")
-            {
-                m_paused = false;
-                m_ls_state = LS_OUT;
-                break;
-            }
-            else HANDLE("finish-instruction")
-            {
-                m_paused = false;
-                m_ls_state = LS_I_FINISH;
-                break;
-            }
-            else HANDLE("out-instruction")
-            {
-                m_paused = false;
-                m_ls_state = LS_I_OUT;
-                break;
-            }
-            else HANDLE("up")
-            {
-                if (m_current_frame < m_frames.size() - 1)
-                {
-                    cmd_frame_shift(m_current_frame + 1);
-                }
-                else
-                {
-                    if (m_stack_broken)
-                    {
-                        std::cout << "Stack is broken past this point." << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "Oldest (top-most) stack frame selected." << std::endl;
-                    }
-                }
-            }
-            else HANDLE("down")
-            {
-                if (m_current_frame > 0)
-                {
-                    cmd_frame_shift(m_current_frame - 1);
-                }
-                else
-                {
-                    std::cout << "Newest (bottom-most) stack frame selected." << std::endl;
-                }
-            }
-            else HANDLE("frame")
-            {
-                if (command.m_arguments.size() > 0)
-                {
-                    if (is_digits(command.m_arguments.at(0)))
-                    {
-                        cmd_frame_shift(std::stoi(command.m_arguments.at(0)) + 1);
-                    }
-                }
-                else
-                {
-                    // display stack frame.
-                    cmd_frame_shift(m_current_frame);
-                }
-            }
-            else HANDLE("break")
-            {
-                cmd_break(command.m_arguments, false);
-            }
-            else HANDLE("tbreak")
-            {
-                cmd_break(command.m_arguments, true);
-            }
-            else HANDLE("watch")
-            {
-                cmd_watch(command.m_arguments);
-            }
-            else HANDLE("enable")
-            {
-                cmd_enable(command.m_arguments, 2);
-            }
-            else HANDLE("disable")
-            {
-                cmd_enable(command.m_arguments, 1);
-            }
-            else HANDLE("delete")
-            {
-                cmd_enable(command.m_arguments, 0);
-            }
-            else HANDLE("display")
-            {
-                // TODO
-            }
-            else HANDLE("bytecode")
-            {
-                // TODO
-            }
-            else HANDLE("list")
-            {
-                cmd_list(&command.m_arguments, false);
-            }
-            else HANDLE("list-instruction")
-            {
-                cmd_list(&command.m_arguments, true);
-            }
-            else HANDLE("backtrace")
-            {
-                // we skip 0 because it's a dummy entry.
-                for (size_t i = 0; i < m_frames.size(); ++i)
-                {
-                    if (i == m_current_frame)
-                    {
-                        std::cout << ">";
-                    }
-                    else
-                    {
-                        std::cout << " ";
-                    }
-                    std::cout << " #" << i + 1 << ": "
-                        << location_for_bytecode_stream(
-                                get_frame_pc(i),
-                                m_config.m_show_asm
-                           )
-                        << std::endl;
-                }
-                if (m_stack_broken)
-                {
-                    std::cout << "(Stack broken beyond this point.)" << std::endl;
-                }
-            }
-            else HANDLE("config")
-            {
-                cmd_set(command.m_arguments);
-            }
-            else HANDLE("execute")
-            {
-                std::stringstream ss;
-                for (const std::string& s : command.m_arguments)
-                {
-                    ss << " " << s;
-                }
-                string_execute_inline(ss.str());
-            }
-            else HANDLE("source")
-            {
-                // TODO
-            }
-            else HANDLE("define")
-            {
-                // TODO
-            }
-            else HANDLE("quit")
-            {
-                std::string input = ogm::interpreter::input("Quitting. Confirm? [y/n] ");
-                trim(input);
-                if (input == "y" || input == "Y")
-                {
-                    exit(0);
-                }
-                std::cout << "Cancelled.\n";
-            }
-            else HANDLE("restart")
-            {
-                // TODO
-            }
-            else HANDLE("help")
-            {
-                cmd_help(command.m_arguments.empty() ? "" : command.m_arguments_str);
             }
             else
             {
@@ -954,7 +967,7 @@ std::string Debugger::list_source(ogm::bytecode::Bytecode& bc, size_t range_min,
             if (sus.m_breakpoint->m_pc.m_bytecode.m_data == bc.m_data)
             {
                 bytecode::DebugSymbolSourceMap::Range range;
-                
+
                 if (bc.m_debug_symbols->m_source_map.get_location_at(sus.m_breakpoint->m_pc.m_pos, range))
                 // FIXME: why is this empty..? explain.
                 { }
@@ -1732,9 +1745,9 @@ void Debugger::cmd_info_instance(Instance* instance)
         std::cout << "No instance found.\n";
         return;
     }
-    
+
     const bytecode::ReflectionAccumulator* reflection = &staticExecutor.m_frame.m_reflection;
-    
+
     #ifdef OGM_STRUCT_SUPPORT
     if (instance->m_is_struct)
     {
@@ -1759,7 +1772,7 @@ void Debugger::cmd_info_instance(Instance* instance)
 
         std::cout << "  " << std::setw(17) << id_s << std::setw(0) << ": " << v << std::endl;
     }
-    
+
     // built-in instance variables (N/A for structs)
     #ifdef OGM_STRUCT_SUPPORT
     if (!instance->m_is_struct)
@@ -1769,16 +1782,16 @@ void Debugger::cmd_info_instance(Instance* instance)
         for (variable_id_t id = 0; id <= INSTANCE_VARIABLE_SUPPORTED_MAX; ++id)
         {
             std::string id_s = "%*" + std::to_string(id);
-            
+
             // TODO: technically reflection isn't needed here...
             if (reflection)
             {
                 id_s = reflection->m_namespace_instance.find_name(id);
             }
-            
+
             // get value for this builtin variable.
             Variable v;
-            
+
             if (id == v_alarm)
             {
                 v = "...";
@@ -1787,9 +1800,9 @@ void Debugger::cmd_info_instance(Instance* instance)
             {
                 instance->get_value(id, v);
             }
-            
+
             std::cout << "  " << std::setw(17) << id_s << std::setw(0) << ": " << v << std::endl;
-            
+
             v.cleanup();
         }
     }
@@ -1844,19 +1857,19 @@ void Debugger::cmd_info(std::string topic)
     {
         std::string expression = topic.substr(topic.find(" ") + 1);
         // get instance id from expression.
-        
+
         Instance* instance = nullptr;
-        
+
         try
         {
             m_expression_callback = [&instance](const Variable& v)
             {
                 instance = staticExecutor.m_frame.get_instance_single(v, staticExecutor.m_self, staticExecutor.m_other);
             };
-            
+
             // this calls the above callback, passing in the result of 'expression'.
             string_execute_inline("ogm_debug_set_expression_value(" + expression + ");");
-            
+
             cmd_info_instance(instance);
         }
         catch(...)
