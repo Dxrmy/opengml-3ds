@@ -1,0 +1,26 @@
+--- src/interpreter/display/Display.cpp
++++ src/interpreter/display/Display.cpp
+@@ -1474,21 +1474,22 @@
+ void Display::draw_filled_circle(coord_t x, coord_t y, coord_t r)
+ {
++    size_t segments = std::max<size_t>(12, std::abs(r) * 0.5f);
+     // set render data
+     const size_t vertex_size = k_vertex_data_size;
+-    const size_t vertex_count = (g_circle_precision + 2);
++    const size_t vertex_count = (segments + 2);
+     float* vertices = new float[vertex_size * vertex_count];
+
+     // xyz
+     floats3pm(vertices + 0, x, y);
+     colour4_to_floats(vertices + 0*k_vertex_data_size + 3, g_draw_colour[1]);
+     vertices[0*k_vertex_data_size + 7] = 0.5;
+     vertices[0*k_vertex_data_size + 8] = 0.5;
+
+-    for (size_t i = 1; i <= g_circle_precision + 1; ++i)
++    for (size_t i = 1; i <= segments + 1; ++i)
+     {
+-        float p = static_cast<float>(i)/g_circle_precision;
++        float p = static_cast<float>(i)/segments;
+         float theta = p * 6.283185307;
+         float cost = -std::cos(theta);
+         float sint = std::sin(theta);

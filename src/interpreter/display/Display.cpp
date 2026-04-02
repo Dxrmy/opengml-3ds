@@ -147,7 +147,7 @@ namespace
     bool init_buffers = false;
 
     bool g_sdl_closing = false;
-    
+
     uint8_t ogmenum_to_glenum(uint8_t render_glenum)
     {
         switch (render_glenum)
@@ -786,7 +786,7 @@ namespace
     void bindTexture(GLuint texture_id)
     {
         glBindTexture(GL_TEXTURE_2D, texture_id);
-        
+
         // TODO: in theory, this can be done with samplers somehow to reduce calls.
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, g_texture_filter);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, g_texture_filter);
@@ -853,14 +853,14 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     g_context = SDL_GL_CreateContext(g_window);
-    
+
     if (!g_context)
     {
         printf("Unable to create OpenGL context\n");
         return false;
     }
     #endif
-    
+
     // renderer and context should now be available.
     const char* gl_version = (const char*) glGetString(GL_VERSION);
     const char* gl_renderer = (const char*) glGetString (GL_RENDERER);
@@ -1471,9 +1471,11 @@ void Display::draw_filled_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t 
 
 void Display::draw_filled_circle(coord_t x, coord_t y, coord_t r)
 {
+    size_t segments = std::max<size_t>(12, std::abs(r) * 0.5f);
+
     // set render data
     const size_t vertex_size = k_vertex_data_size;
-    const size_t vertex_count = (g_circle_precision + 2);
+    const size_t vertex_count = (segments + 2);
     float* vertices = new float[vertex_size * vertex_count];
 
     // xyz
@@ -1482,9 +1484,9 @@ void Display::draw_filled_circle(coord_t x, coord_t y, coord_t r)
     vertices[0*k_vertex_data_size + 7] = 0.5;
     vertices[0*k_vertex_data_size + 8] = 0.5;
 
-    for (size_t i = 1; i <= g_circle_precision + 1; ++i)
+    for (size_t i = 1; i <= segments + 1; ++i)
     {
-        float p = static_cast<float>(i)/g_circle_precision;
+        float p = static_cast<float>(i)/segments;
         float theta = p * 6.283185307;
         float cost = -std::cos(theta);
         float sint = std::sin(theta);
@@ -1550,16 +1552,18 @@ void Display::draw_outline_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t
 
 void Display::draw_outline_circle(coord_t x, coord_t y, coord_t r)
 {
+    size_t segments = std::max<size_t>(12, std::abs(r) * 0.5f);
+
     // set render data
     const size_t vertex_size = k_vertex_data_size;
-    const size_t vertex_count = (g_circle_precision);
+    const size_t vertex_count = (segments);
     float* vertices = new float[vertex_size * vertex_count];
 
     // xyz
 
-    for (size_t i = 0; i < g_circle_precision; ++i)
+    for (size_t i = 0; i < segments; ++i)
     {
-        float p = static_cast<float>(i)/g_circle_precision;
+        float p = static_cast<float>(i)/segments;
         float theta = p * 6.283185307;
         float cost = -std::cos(theta);
         float sint = std::sin(theta);
@@ -1842,10 +1846,10 @@ void Display::draw_text_ttf(coord_t _x, coord_t _y, const char* text, real_t hal
             }
 
             uint32_t w = power_of_two(text_srf->w);
-        	uint32_t h = power_of_two(text_srf->h);
+		uint32_t h = power_of_two(text_srf->h);
 
-        	SDL_Surface* tmp = SDL_CreateRGBSurface(0, w, h, 32,
-        			0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+		SDL_Surface* tmp = SDL_CreateRGBSurface(0, w, h, 32,
+				0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
             SDL_BlitSurface(text_srf, nullptr, tmp, nullptr);
 
@@ -2007,7 +2011,7 @@ namespace
         while( SDL_PollEvent( &event ) )
         {
             ogm_keycode_t keycode;
-            
+
             switch(event.type)
             {
             case SDL_KEYDOWN:
@@ -2031,7 +2035,7 @@ namespace
                             {
                                 character += 65 - 97;
                             }
-                            
+
                             switch(character)
                             {
                             case '1':
@@ -2073,7 +2077,7 @@ namespace
                             }
                         }
                     }
-                    
+
                     if (character >= 0)
                     {
                         g_char_last = std::string(1, character);
@@ -4017,7 +4021,7 @@ namespace ogm::interpreter
     {
         g_key_last = v;
     }
-    
+
     void Display::set_char_last(std::string&& v)
     {
         g_char_last = std::move(v);
