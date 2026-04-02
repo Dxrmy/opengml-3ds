@@ -282,11 +282,13 @@ inline_if_ndebug int32_t Variable::castExact() const
     }
 }
 
+#ifndef __3DS__
 template<>
 inline_if_ndebug uint32_t Variable::castExact() const
 {
 	return castExact<int32_t>();
 }
+#endif
 
 template<>
 inline_if_ndebug int32_t Variable::castCoerce() const
@@ -434,11 +436,13 @@ inline_if_ndebug int64_t Variable::castCoerce() const
     }
 }
 
+#ifndef __3DS__
 template<>
 inline_if_ndebug uint32_t Variable::castCoerce() const
 {
     return castCoerce<uint64_t>();
 }
+#endif
 
 // removed castCoerce<unsigned int> redundant specializations since it clashes with uint32_t when they are the same type.
 

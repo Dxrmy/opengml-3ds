@@ -2266,7 +2266,7 @@ void Debugger::cache_stack_frames()
             break;
         }
 
-        size_t new_start = localsv.castCoerce<size_t>();
+        size_t new_start = static_cast<size_t>(localsv.castCoerce<uint64_t>());
         if (new_start >= local_start)
         {
             m_stack_broken = true;

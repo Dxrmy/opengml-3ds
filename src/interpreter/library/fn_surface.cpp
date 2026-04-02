@@ -73,8 +73,8 @@ void ogm::interpreter::fn::surface_get_height(VO out, V vid)
 void ogm::interpreter::fn::surface_getpixel_ext(VO out, V vid, V vx, V vy)
 {
     geometry::Vector<uint32_t> v {
-        vx.castCoerce<uint32_t>(),
-        vy.castCoerce<uint32_t>()
+        static_cast<uint32_t>(vx.castCoerce<uint64_t>()),
+        static_cast<uint32_t>(vy.castCoerce<uint64_t>())
     };
 
     surface_id_t id = vid.castCoerce<surface_id_t>();
@@ -160,8 +160,8 @@ void ogm::interpreter::fn::surface_resize(VO out, V id, V w, V h)
     display->m_textures.resize_surface(
         id.castCoerce<surface_id_t>(),
         {
-            static_cast<uint32_t>(w.castCoerce<size_t>()),
-            static_cast<uint32_t>(h.castCoerce<size_t>())
+            static_cast<uint32_t>(static_cast<size_t>(w.castCoerce<uint64_t>())),
+            static_cast<uint32_t>(static_cast<size_t>(h.castCoerce<uint64_t>()))
         }
     );
 }

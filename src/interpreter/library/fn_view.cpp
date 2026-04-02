@@ -53,7 +53,7 @@ void ogm::interpreter::fn::getv::view_current(VO out)
 
 void ogm::interpreter::fn::getv::view_visible(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -63,7 +63,7 @@ void ogm::interpreter::fn::getv::view_visible(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::view_visible(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -73,7 +73,7 @@ void ogm::interpreter::fn::setv::view_visible(VO out, OGM_2DARRAY_i V j, V val)
 
 void ogm::interpreter::fn::getv::view_xview(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -91,7 +91,7 @@ void ogm::interpreter::fn::getv::view_xview(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::getv::view_yview(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -109,7 +109,7 @@ void ogm::interpreter::fn::getv::view_yview(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::view_xview(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -127,7 +127,7 @@ void ogm::interpreter::fn::setv::view_xview(VO out, OGM_2DARRAY_i V j, V val)
 
 void ogm::interpreter::fn::setv::view_yview(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -145,7 +145,7 @@ void ogm::interpreter::fn::setv::view_yview(VO out, OGM_2DARRAY_i V j, V val)
 
 void ogm::interpreter::fn::getv::view_wview(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -163,7 +163,7 @@ void ogm::interpreter::fn::getv::view_wview(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::getv::view_hview(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -181,7 +181,7 @@ void ogm::interpreter::fn::getv::view_hview(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::view_wview(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -199,7 +199,7 @@ void ogm::interpreter::fn::setv::view_wview(VO out, OGM_2DARRAY_i V j, V val)
 
 void ogm::interpreter::fn::setv::view_hview(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -217,7 +217,7 @@ void ogm::interpreter::fn::setv::view_hview(VO out, OGM_2DARRAY_i V j, V val)
 
 void ogm::interpreter::fn::getv::view_angle(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -235,7 +235,7 @@ void ogm::interpreter::fn::getv::view_angle(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::view_angle(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -253,7 +253,7 @@ void ogm::interpreter::fn::setv::view_angle(VO out, OGM_2DARRAY_i V j, V val)
 
 void ogm::interpreter::fn::getv::view_camera(VO out, OGM_2DARRAY_i V j)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));
@@ -268,7 +268,7 @@ void ogm::interpreter::fn::getv::view_camera(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::view_camera(VO out, OGM_2DARRAY_i V j, V val)
 {
-    size_t view_index = j.castCoerce<size_t>();
+    size_t view_index = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (view_index >= frame.k_view_count)
     {
         throw MiscError("No view numbered " + std::to_string(view_index));

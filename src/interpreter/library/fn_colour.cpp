@@ -15,9 +15,9 @@ using namespace ogm::interpreter::fn;
 
 void ogm::interpreter::fn::make_colour_rgb(VO out, V vr, V vg, V vb)
 {
-    uint32_t r = vr.castCoerce<uint32_t>() & 0xff;
-    uint32_t g = vg.castCoerce<uint32_t>() & 0xff;
-    uint32_t b = vb.castCoerce<uint32_t>() & 0xff;
+    uint32_t r = static_cast<uint32_t>(vr.castCoerce<uint64_t>()) & 0xff;
+    uint32_t g = static_cast<uint32_t>(vg.castCoerce<uint64_t>()) & 0xff;
+    uint32_t b = static_cast<uint32_t>(vb.castCoerce<uint64_t>()) & 0xff;
     
     // BGR colour (not RGB!)
     out = (b << 16) | (g << 8) | r; 
@@ -98,13 +98,13 @@ void ogm::interpreter::fn::make_colour_hsv(VO out, V vh, V vs, V vv)
 
 void ogm::interpreter::fn::merge_colour(VO out, V a, V b, V vx)
 {
-    uint32_t ra = (a.castCoerce<uint32_t>() & 0xff);
-    uint32_t ga = (a.castCoerce<uint32_t>() & 0xff00) >> 8;
-    uint32_t ba = (a.castCoerce<uint32_t>() & 0xff0000) >> 16;
+    uint32_t ra = (static_cast<uint32_t>(a.castCoerce<uint64_t>()) & 0xff);
+    uint32_t ga = (static_cast<uint32_t>(a.castCoerce<uint64_t>()) & 0xff00) >> 8;
+    uint32_t ba = (static_cast<uint32_t>(a.castCoerce<uint64_t>()) & 0xff0000) >> 16;
     
-    uint32_t rb = (b.castCoerce<uint32_t>() & 0xff);
-    uint32_t gb = (b.castCoerce<uint32_t>() & 0xff00) >> 8;
-    uint32_t bb = (b.castCoerce<uint32_t>() & 0xff0000) >> 16;
+    uint32_t rb = (static_cast<uint32_t>(b.castCoerce<uint64_t>()) & 0xff);
+    uint32_t gb = (static_cast<uint32_t>(b.castCoerce<uint64_t>()) & 0xff00) >> 8;
+    uint32_t bb = (static_cast<uint32_t>(b.castCoerce<uint64_t>()) & 0xff0000) >> 16;
     
     float x = vx.castCoerce<real_t>();
     
@@ -121,17 +121,17 @@ void ogm::interpreter::fn::merge_colour(VO out, V a, V b, V vx)
 
 void ogm::interpreter::fn::colour_get_red(VO out, V c)
 {
-    out = (c.castCoerce<uint32_t>() & 0xff);
+    out = (static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xff);
 }
 
 void ogm::interpreter::fn::colour_get_blue(VO out, V c)
 {
-    out = (c.castCoerce<uint32_t>() & 0xff00) >> 8;
+    out = (static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xff00) >> 8;
 }
 
 void ogm::interpreter::fn::colour_get_green(VO out, V c)
 {
-    out = (c.castCoerce<uint32_t>() & 0xff0000) >> 16;
+    out = (static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xff0000) >> 16;
 }
 
 namespace
@@ -139,9 +139,9 @@ namespace
     // OPTIMIZE: force inline.
     inline void rgb_to_hsv(V c, VO hue, VO val, VO sat)
     {
-        uint32_t r = (c.castCoerce<uint32_t>() & 0xff);
-        uint32_t g = (c.castCoerce<uint32_t>() & 0xff00) >> 8;
-        uint32_t b = (c.castCoerce<uint32_t>() & 0xff0000) >> 16;
+        uint32_t r = (static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xff);
+        uint32_t g = (static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xff00) >> 8;
+        uint32_t b = (static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xff0000) >> 16;
         
         uint32_t _max = r;
         if (g > r) _max = g;

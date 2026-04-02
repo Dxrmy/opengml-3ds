@@ -57,7 +57,7 @@ void ogm::interpreter::fn::window_get_colour(VO out)
 
 void ogm::interpreter::fn::window_set_colour(VO out, V c)
 {
-    frame.m_display->set_clear_colour(c.castCoerce<uint32_t>());
+    frame.m_display->set_clear_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()));
 }
 
 void ogm::interpreter::fn::window_get_fullscreen(VO out)

@@ -32,7 +32,7 @@ void ogm::interpreter::fn::getv::argument(VO out
     #ifdef OGM_2DARRAY
     ogm_assert(vi == 0);
     #endif
-    size_t j = vj.castCoerce<size_t>();
+    size_t j = static_cast<size_t>(vj.castCoerce<uint64_t>());
 
     // ogm_assert argument number is less than argument count.
     size_t argc = staticExecutor.prelocal(1).get<int32_t>();
@@ -52,7 +52,7 @@ void ogm::interpreter::fn::setv::argument(VO out
     #ifdef OGM_2DARRAY
     ogm_assert(vi == 0);
     #endif
-    size_t j = vj.castCoerce<size_t>();
+    size_t j = static_cast<size_t>(vj.castCoerce<uint64_t>());
 
     // ogm_assert argument number is less than argument count.
     size_t argc = staticExecutor.prelocal(1).get<int32_t>();

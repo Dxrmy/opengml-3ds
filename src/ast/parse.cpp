@@ -192,11 +192,7 @@ namespace
                 out.m_decor = (ogm_ast_decor_t**) malloc( sizeof(ogm_ast_decor_t*) * payload_list_count );
                 for (int32_t i = 0; i < payload_list_count; i++)
                 {
-<<<<<<< HEAD
                     PrInfixWS* infix = production->infixes[i].get();
-=======
-                    PrInfixWS* infix = production->infixes[i];
->>>>>>> origin/document-ast-decor-ignored-10203808411226497586
                     if (infix)
                     {
                         infix->flattenPostfixes();

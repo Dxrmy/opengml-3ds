@@ -1,5 +1,4 @@
 #ifndef __3DS__
-#ifndef __3DS__
 // get constants
 #include "../library/libpre.h"
     #include "../library/fn_draw.h"

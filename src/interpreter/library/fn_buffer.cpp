@@ -40,32 +40,32 @@ void ogm::interpreter::fn::buffer_create(VO out, V size, V type, V alignment)
 {
     out = static_cast<real_t>(
         frame.m_buffers.create_buffer(
-            size.castCoerce<size_t>(),
+            static_cast<size_t>(size.castCoerce<uint64_t>()),
             static_cast<Buffer::Type>(type.castCoerce<int32_t>()),
-            alignment.castCoerce<size_t>()
+            static_cast<size_t>(alignment.castCoerce<uint64_t>())
         )
     );
 }
 
 void ogm::interpreter::fn::buffer_delete(VO out, V id)
 {
-    frame.m_buffers.delete_buffer(id.castCoerce<size_t>());
+    frame.m_buffers.delete_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
 }
 
 void ogm::interpreter::fn::buffer_exists(VO out, V id)
 {
-    out = frame.m_buffers.buffer_exists(id.castCoerce<size_t>());
+    out = frame.m_buffers.buffer_exists(static_cast<size_t>(id.castCoerce<uint64_t>()));
 }
 
 void ogm::interpreter::fn::buffer_get_alignment(VO out, V id)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     out = static_cast<real_t>(b.get_align());
 }
 
 void ogm::interpreter::fn::buffer_get_type(VO out, V id)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     out = static_cast<real_t>(b.get_type());
 }
 
@@ -114,7 +114,7 @@ void ogm::interpreter::fn::buffer_sizeof(VO out, V type)
 
 void ogm::interpreter::fn::buffer_read(VO out, V id, V type)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     auto t = type.castCoerce<buffer_type_t>();
     switch(t)
     {
@@ -175,7 +175,7 @@ void ogm::interpreter::fn::buffer_read(VO out, V id, V type)
 
 void ogm::interpreter::fn::buffer_write(VO out, V id, V type, V value)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     switch(type.castCoerce<buffer_type_t>())
     {
     case k_u8:
@@ -191,7 +191,7 @@ void ogm::interpreter::fn::buffer_write(VO out, V id, V type, V value)
         b.write(static_cast<int16_t>(value.castCoerce<int32_t>()));
         break;
     case k_u32:
-        b.write(value.castCoerce<uint32_t>());
+        b.write(static_cast<uint32_t>(value.castCoerce<uint64_t>()));
         break;
     case k_s32:
         b.write(value.castCoerce<int32_t>());
@@ -234,13 +234,13 @@ void ogm::interpreter::fn::buffer_write(VO out, V id, V type, V value)
 
 void ogm::interpreter::fn::buffer_tell(VO out, V id)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     out = static_cast<real_t>(b.tell());
 }
 
 void ogm::interpreter::fn::buffer_seek(VO out, V id, V vbase, V voffset)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     int32_t o = voffset.castCoerce<int32_t>();
     size_t prev = b.tell();
     const int32_t base = vbase.castCoerce<int32_t>();
@@ -262,18 +262,18 @@ void ogm::interpreter::fn::buffer_seek(VO out, V id, V vbase, V voffset)
 
 void ogm::interpreter::fn::buffer_peek(VO out, V id, V offset, V type)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     size_t prev = b.tell();
-    b.seek(offset.castCoerce<size_t>());
+    b.seek(static_cast<size_t>(offset.castCoerce<uint64_t>()));
     buffer_read(out, id, type);
     b.seek(prev);
 }
 
 void ogm::interpreter::fn::buffer_poke(VO out, V id, V offset, V type, V value)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     size_t prev = b.tell();
-    b.seek(offset.castCoerce<size_t>());
+    b.seek(static_cast<size_t>(offset.castCoerce<uint64_t>()));
     buffer_write(out, id, type, value);
     b.seek(prev);
 }
@@ -282,10 +282,10 @@ void ogm::interpreter::fn::buffer_fill(
     VO out, V id, V offset, V type, V value, V size
 )
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     size_t pre = b.tell();
-    size_t begin = offset.castCoerce<size_t>();
-    size_t end = begin + size.castCoerce<size_t>();
+    size_t begin = static_cast<size_t>(offset.castCoerce<uint64_t>());
+    size_t end = begin + static_cast<size_t>(size.castCoerce<uint64_t>());
     b.seek(begin);
 
     while (b.tell() < end)
@@ -299,13 +299,13 @@ void ogm::interpreter::fn::buffer_fill(
 
 void ogm::interpreter::fn::buffer_get_size(VO out, V id)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     out = static_cast<real_t>(b.size());
 }
 
 void ogm::interpreter::fn::buffer_get_address(VO out, V id)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     out = b.get_address();
     ogm_assert(out.is_pointer());
 }
@@ -332,8 +332,8 @@ void ogm::interpreter::fn::buffer_save_ext(VO out, V vbuff, V f, V voffset, V vs
     std::ofstream output(filepath, std::ios::binary);
     
     Buffer& buff = frame.m_buffers.get_buffer(vbuff.castCoerce<int64_t>());
-    int64_t offset = voffset.castCoerce<size_t>();
-    int64_t size = vsize.castCoerce<size_t>();
+    int64_t offset = static_cast<size_t>(voffset.castCoerce<uint64_t>());
+    int64_t size = static_cast<size_t>(vsize.castCoerce<uint64_t>());
     size = std::min<int64_t>(size, static_cast<int64_t>(buff.size()) - offset);
     
     if (offset >= 0 && size > 0)
@@ -385,21 +385,21 @@ void ogm::interpreter::fn::buffer_load(VO out, V f)
 
 void ogm::interpreter::fn::game_save_buffer(VO out, V buf)
 {
-    Buffer& b = frame.m_buffers.get_buffer(buf.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(buf.castCoerce<uint64_t>()));
     serialize_all<true>(b);
 }
 
 void ogm::interpreter::fn::game_load_buffer(VO out, V buf)
 {
-    Buffer& b = frame.m_buffers.get_buffer(buf.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(buf.castCoerce<uint64_t>()));
     serialize_all<false>(b);
 }
 
 void ogm::interpreter::fn::buffer_copy(VO out, V src, V srcfrom, V len, V dst, V dstto)
 {
     // TODO: optimize
-    Buffer& bsrc = frame.m_buffers.get_buffer(src.castCoerce<size_t>());
-    Buffer& bdst = frame.m_buffers.get_buffer(dst.castCoerce<size_t>());
+    Buffer& bsrc = frame.m_buffers.get_buffer(static_cast<size_t>(src.castCoerce<uint64_t>()));
+    Buffer& bdst = frame.m_buffers.get_buffer(static_cast<size_t>(dst.castCoerce<uint64_t>()));
 
     size_t l = len.castCoerce<int32_t>();
     if (l == 0) return;
@@ -407,8 +407,8 @@ void ogm::interpreter::fn::buffer_copy(VO out, V src, V srcfrom, V len, V dst, V
     // set positions
     size_t src_tell = bsrc.tell();
     size_t dst_tell = bdst.tell();
-    bsrc.seek(srcfrom.castCoerce<size_t>());
-    bdst.seek(dstto.castCoerce<size_t>());
+    bsrc.seek(static_cast<size_t>(srcfrom.castCoerce<uint64_t>()));
+    bdst.seek(static_cast<size_t>(dstto.castCoerce<uint64_t>()));
 
     // copy data
     if (l < 0) throw MiscError("length must be non-negative");

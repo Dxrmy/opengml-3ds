@@ -254,7 +254,7 @@ void ogm::interpreter::fn::instance_number(VO out, V vobject)
 void ogm::interpreter::fn::instance_find(VO out, V vobject, V vindex)
 {
     ex_instance_id_t object_index = vobject.castCoerce<ex_instance_id_t>();
-    size_t index = vindex.castCoerce<size_t>();
+    size_t index = static_cast<size_t>(vindex.castCoerce<uint64_t>());
     if (object_index == k_all || object_index == k_noone)
     {
         throw UnknownIntendedBehaviourError();
@@ -293,7 +293,7 @@ void ogm::interpreter::fn::getv::instance_id(VO out
     if (i == 0)
     #endif
     {
-        size_t n = j.castCoerce<size_t>();
+        size_t n = static_cast<size_t>(j.castCoerce<uint64_t>());
         if (n < frame.get_instance_count())
         {
             out = frame.get_instance_id_nth(n);
@@ -475,7 +475,7 @@ void ogm::interpreter::fn::instance_nearest(VO out, V x, V y, V obj)
 
 void ogm::interpreter::fn::alarm_get(VO out, V vindex)
 {
-    size_t index = vindex.castCoerce<size_t>();
+    size_t index = static_cast<size_t>(vindex.castCoerce<uint64_t>());
     if (index < 12)
     {
         out = static_cast<real_t>(
@@ -490,7 +490,7 @@ void ogm::interpreter::fn::alarm_get(VO out, V vindex)
 
 void ogm::interpreter::fn::alarm_set(VO out, V vindex, V val)
 {
-    size_t index = vindex.castCoerce<size_t>();
+    size_t index = static_cast<size_t>(vindex.castCoerce<uint64_t>());
     int32_t v = val.castCoerce<int32_t>();
     if (index < 12)
     {

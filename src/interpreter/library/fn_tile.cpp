@@ -60,7 +60,7 @@ void ogm::interpreter::fn::tile_set_alpha(VO out, V id, V alpha)
 void ogm::interpreter::fn::tile_set_blend(VO out, V id, V blend)
 {
     Tile& tile = frame.m_tiles.get_tile(id.castCoerce<real_t>());
-    tile.m_blend = blend.castCoerce<uint32_t>();
+    tile.m_blend = static_cast<uint32_t>(blend.castCoerce<uint64_t>());
 }
 
 void ogm::interpreter::fn::tile_set_position(VO out, V vid, V x, V y)

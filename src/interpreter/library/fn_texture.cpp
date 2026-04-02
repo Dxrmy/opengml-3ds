@@ -45,7 +45,7 @@ namespace
 void ogm::interpreter::fn::sprite_get_texture(VO out, V asset, V subimage)
 {
     out = static_cast<void*>(display->m_textures.get_texture(
-        {asset.castCoerce<asset_index_t>(), subimage.castCoerce<size_t>()}
+        {asset.castCoerce<asset_index_t>(), static_cast<size_t>(subimage.castCoerce<uint64_t>())}
     ));
 }
 
@@ -90,7 +90,7 @@ void ogm::interpreter::fn::sprite_get_uvs(VO out, V asset, V subimage)
 {
     get_uvs(out,
         display->m_textures.get_texture(
-            {asset.castCoerce<asset_index_t>(), subimage.castCoerce<size_t>()}
+            {asset.castCoerce<asset_index_t>(), static_cast<size_t>(subimage.castCoerce<uint64_t>())}
         )
     );
 }

@@ -140,7 +140,7 @@ void ogm::interpreter::fn::sprite_create_from_surface(VO out, V surface, V vx, V
 
     geometry::Vector<coord_t> src_coord = { vx.castCoerce<coord_t>(), vy.castCoerce<coord_t>()};
 
-    surface_id_t si = surface.castCoerce<uint32_t>();
+    surface_id_t si = static_cast<uint32_t>(surface.castCoerce<uint64_t>());
     TextureView* view = frame.m_display->m_textures.get_surface_texture_view(si);
     frame.m_display->m_textures.bind_asset_copy_texture(
         { asset_index, 0 },
@@ -227,7 +227,7 @@ void ogm::interpreter::fn::sprite_add_from_surface(VO out, V index, V surface, V
 
     geometry::Vector<coord_t> src_coord = { vx.castCoerce<coord_t>(), vy.castCoerce<coord_t>()};
 
-    surface_id_t si = surface.castCoerce<uint32_t>();
+    surface_id_t si = static_cast<uint32_t>(surface.castCoerce<uint64_t>());
     TextureView* view = frame.m_display->m_textures.get_surface_texture_view(si);
     frame.m_display->m_textures.bind_asset_copy_texture(
         { asset_index, sprite->m_subimage_count++ },

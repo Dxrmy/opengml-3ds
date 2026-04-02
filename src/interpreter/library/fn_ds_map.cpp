@@ -472,7 +472,7 @@ void ogm::interpreter::fn::ds_map_secure_load(VO out, V file)
 void ogm::interpreter::fn::ds_map_secure_save_buffer(VO out, V id, V buff)
 {
     std::string s = ds_map_secure_save_string(id);
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
 
     // write to buffer
     for (size_t i = 0; i < s.length(); ++i)
@@ -486,7 +486,7 @@ void ogm::interpreter::fn::ds_map_secure_save_buffer(VO out, V id, V buff)
 
 void ogm::interpreter::fn::ds_map_secure_load_buffer(VO out, V id)
 {
-    Buffer& b = frame.m_buffers.get_buffer(id.castCoerce<size_t>());
+    Buffer& b = frame.m_buffers.get_buffer(static_cast<size_t>(id.castCoerce<uint64_t>()));
     std::stringstream ss;
     while (true)
     {

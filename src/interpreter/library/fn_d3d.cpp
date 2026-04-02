@@ -139,7 +139,7 @@ void ogm::interpreter::fn::d3d_primitive_begin(VO out, V type)
 
     g_vertices.clear();
     g_view = nullptr;
-    g_vertex_type = type.castCoerce<uint32_t>();
+    g_vertex_type = static_cast<uint32_t>(type.castCoerce<uint64_t>());
 }
 
 void ogm::interpreter::fn::d3d_primitive_begin_texture(VO out, V type, V tex)
@@ -155,7 +155,7 @@ void ogm::interpreter::fn::d3d_primitive_begin_texture(VO out, V type, V tex)
 
     g_vertices.clear();
     g_view = static_cast<TextureView*>(tex.castExact<void*>());
-    g_vertex_type = type.castCoerce<uint32_t>();
+    g_vertex_type = static_cast<uint32_t>(type.castCoerce<uint64_t>());
 }
 
 namespace

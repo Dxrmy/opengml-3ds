@@ -289,8 +289,8 @@ void ogm::interpreter::fn::string_copy(VO out, V str, V pos)
 
 void ogm::interpreter::fn::string_copy(VO out, V str, V vpos, V vlen)
 {
-    size_t len = vlen.castCoerce<size_t>();
-    size_t pos = vpos.castCoerce<size_t>();
+    size_t len = static_cast<size_t>(vlen.castCoerce<uint64_t>());
+    size_t pos = static_cast<size_t>(vpos.castCoerce<uint64_t>());
   if (len + pos >= str.string_length() + 1)
   {
       ogm::interpreter::fn::string_copy(out, str, vpos);

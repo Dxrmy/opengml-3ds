@@ -64,7 +64,7 @@ void ogm::interpreter::fn::room_get_view_visible(VO out, V r, V i)
 {
     AssetRoom* room = frame.get_asset_from_variable<AssetRoom>(r);
     ogm_assert(room);
-    size_t index = i.castCoerce<size_t>();
+    size_t index = static_cast<size_t>(i.castCoerce<uint64_t>());
     if (index >= room->m_views.size())
     {
         throw MiscError("No view number " + std::to_string(index));
@@ -76,7 +76,7 @@ void ogm::interpreter::fn::room_get_view_wview(VO out, V r, V i)
 {
     AssetRoom* room = frame.get_asset_from_variable<AssetRoom>(r);
     ogm_assert(room);
-    size_t index = i.castCoerce<size_t>();
+    size_t index = static_cast<size_t>(i.castCoerce<uint64_t>());
     if (index >= room->m_views.size())
     {
         throw MiscError("No view number " + std::to_string(index));
@@ -88,7 +88,7 @@ void ogm::interpreter::fn::room_get_view_hview(VO out, V r, V i)
 {
     AssetRoom* room = frame.get_asset_from_variable<AssetRoom>(r);
     ogm_assert(room);
-    size_t index = i.castCoerce<size_t>();
+    size_t index = static_cast<size_t>(i.castCoerce<uint64_t>());
     if (index >= room->m_views.size())
     {
         throw MiscError("No view number " + std::to_string(index));
@@ -223,11 +223,11 @@ void ogm::interpreter::fn::room_set_view_enabled(VO out, V vr, V enable)
 void ogm::interpreter::fn::room_set_background(VO out, V vr, V index, V visible, V fg, V id, V x, V y, V htile, V vtile, V hspeed, V vspeed, V alpha)
 {
     AssetRoom* r = frame.get_asset_from_variable<AssetRoom>(vr);
-    if (r->m_bg_layers.size() < index.castCoerce<size_t>())
+    if (r->m_bg_layers.size() < static_cast<size_t>(index.castCoerce<uint64_t>()))
     {
-        r->m_bg_layers.resize(index.castCoerce<size_t>());
+        r->m_bg_layers.resize(static_cast<size_t>(index.castCoerce<uint64_t>()));
     }
-    AssetRoom::BackgroundLayerDefinition& bld = r->m_bg_layers[index.castCoerce<size_t>()];
+    AssetRoom::BackgroundLayerDefinition& bld = r->m_bg_layers[static_cast<size_t>(index.castCoerce<uint64_t>())];
     bld.m_background_index = id.castCoerce<asset_index_t>();
     bld.m_position = { x.castCoerce<coord_t>(), y.castCoerce<coord_t>() };
     bld.m_velocity = { hspeed.castCoerce<coord_t>(), vspeed.castCoerce<coord_t>() };

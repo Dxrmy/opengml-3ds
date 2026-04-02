@@ -16,6 +16,16 @@
 #include <unordered_map>
 #include <cstring>
 
+#ifndef VERSION
+    #define VERSION 1.0.0.0
+#endif
+
+#define _STR(A) #A
+#define STR(A) _STR(A)
+#ifndef VERSION_STR
+    #define VERSION_STR STR(VERSION)
+#endif
+
 #define CONST(name, v)
 #define FNDEF0(name) {#name, (void*)static_cast<void (*)(VO)>(&name), 0},
 #define FNDEF1(name, ...) {#name, (void*)static_cast<void (*)(VO, V)>(&name), 1},
@@ -506,13 +516,6 @@ bool StandardLibrary::generate_constant_bytecode(std::ostream& out, const char* 
            }
            if (name.substr(last) == "_runtime_version")
            {
-                #ifdef VERSION
-                    #define _STR(A) #A
-                    #define STR(A) _STR(A)
-                    #define VERSION_STR STR(VERSION)
-                #else
-                    #define VERSION_STR
-                #endif
                 write_ldi_string(out, "" VERSION_STR);
                 return true;
            }

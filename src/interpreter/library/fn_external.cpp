@@ -71,9 +71,9 @@ void ogm::interpreter::fn::external_define(VO out, byte argc, const Variable* ar
     // marshall arguments
     string_t path = staticExecutor.m_frame.m_fs.resolve_file_path(argv[0].castCoerce<string_t>());
     string_t fnname = argv[1].castCoerce<string_t>();
-    CallType ct = static_cast<CallType>(argv[2].castCoerce<size_t>());
-    VariableType rt = static_cast<VariableType>(argv[3].castCoerce<size_t>());
-    size_t nargs = argv[4].castCoerce<size_t>();
+    CallType ct = static_cast<CallType>(argv[static_cast<size_t>(2].castCoerce<uint64_t>()));
+    VariableType rt = static_cast<VariableType>(argv[static_cast<size_t>(3].castCoerce<uint64_t>()));
+    size_t nargs = argv[static_cast<size_t>(4].castCoerce<uint64_t>());
     if (nargs + 5 != argc) throw MiscError("external_define wrong number of arguments");
 
     VariableType argt[32];
@@ -82,7 +82,7 @@ void ogm::interpreter::fn::external_define(VO out, byte argc, const Variable* ar
     // argument types
     for (size_t i = 0; i < nargs; ++i)
     {
-        argt[i] =  static_cast<VariableType>(argv[5 + i].castCoerce<size_t>());
+        argt[i] =  static_cast<VariableType>(argv[5 + static_cast<size_t>(i].castCoerce<uint64_t>()));
     }
 
     std::string orgpath = path;

@@ -35,7 +35,7 @@ void ogm::interpreter::fn::ogm_display_create(VO out, V width, V height, V capti
 {
     Display* display = new Display();
 
-    if (!display->start(width.castCoerce<uint32_t>(), height.castCoerce<uint32_t>(), caption.castCoerce<std::string>().c_str()))
+    if (!display->start(static_cast<uint32_t>(width.castCoerce<uint64_t>()), static_cast<uint32_t>(height.castCoerce<uint64_t>()), caption.castCoerce<std::string>().c_str()))
     {
         if (display) delete display;
         display = nullptr;
@@ -138,7 +138,7 @@ void ogm::interpreter::fn::ogm_display_check_error(VO out, V str)
 
 void ogm::interpreter::fn::ogm_display_set_multisample(VO out, V c)
 {
-    frame.m_display->set_multisample(c.castCoerce<uint32_t>());
+    frame.m_display->set_multisample(static_cast<uint32_t>(c.castCoerce<uint64_t>()));
 }
 
 void ogm::interpreter::fn::ogm_display_delay(VO out, V c)
@@ -427,8 +427,8 @@ namespace
     template<bool draw, bool draw_tiles=false>
     void _ogm_phase(V ev, V subev)
     {
-        DynamicEvent event = static_cast<DynamicEvent>(ev.castCoerce<uint32_t>());
-        DynamicSubEvent sub_event = static_cast<DynamicSubEvent>(subev.castCoerce<uint32_t>());
+        DynamicEvent event = static_cast<DynamicEvent>(static_cast<uint32_t>(ev.castCoerce<uint64_t>()));
+        DynamicSubEvent sub_event = static_cast<DynamicSubEvent>(static_cast<uint32_t>(subev.castCoerce<uint64_t>()));
 
         frame.m_data.m_event_context.m_event = event;
         frame.m_data.m_event_context.m_sub_event = sub_event;
@@ -659,7 +659,7 @@ void ogm::interpreter::fn::ogm_suspend(VO out)
 void ogm::interpreter::fn::ogm_ds_info(VO out, V type, V id)
 {
     ds_index_t did = id.castCoerce<ds_index_t>();
-    size_t dtype = type.castCoerce<size_t>();
+    size_t dtype = static_cast<size_t>(type.castCoerce<uint64_t>());
     switch (dtype)
     {
     case constant::ds_type_map:

@@ -171,7 +171,7 @@ void ogm::interpreter::fn::ds_list_set(VO out, V vindex, V vlindex, V val)
     }
 
     DSList& list = dslm.ds_get(index);
-    size_t lindex = vlindex.castCoerce<size_t>();
+    size_t lindex = static_cast<size_t>(vlindex.castCoerce<uint64_t>());
 
     if (lindex < list.m_size)
     {
@@ -207,7 +207,7 @@ void ogm::interpreter::fn::ds_list_delete(VO out, V vindex, V vlindex)
     }
 
     DSList& list = dslm.ds_get(index);
-    size_t lindex = vlindex.castCoerce<size_t>();
+    size_t lindex = static_cast<size_t>(vlindex.castCoerce<uint64_t>());
 
     if (lindex >= list.m_size)
     {
@@ -253,7 +253,7 @@ void ogm::interpreter::fn::ds_list_find_value(VO out, V vindex, V vlindex)
     }
 
     DSList& list = dslm.ds_get(index);
-    size_t lindex = vlindex.castCoerce<size_t>();
+    size_t lindex = static_cast<size_t>(vlindex.castCoerce<uint64_t>());
 
     if (lindex >= list.m_size)
     {
@@ -288,7 +288,7 @@ void ogm::interpreter::fn::ds_list_insert(VO out, V vindex, V vlindex, V val)
     }
 
     DSList& list = dslm.ds_get(index);
-    size_t lindex = vlindex.castCoerce<size_t>();
+    size_t lindex = static_cast<size_t>(vlindex.castCoerce<uint64_t>());
 
     if (lindex > list.m_size)
     {
@@ -312,7 +312,7 @@ void ogm::interpreter::fn::ds_list_replace(VO out, V vindex, V vlindex, V val)
     }
 
     DSList& list = dslm.ds_get(index);
-    size_t lindex = vlindex.castCoerce<size_t>();
+    size_t lindex = static_cast<size_t>(vlindex.castCoerce<uint64_t>());
 
     if (lindex >= list.m_size)
     {
@@ -392,7 +392,7 @@ void ogm::interpreter::fn::ds_list_mark_as_map(VO out, V vid, V vindex)
     }
 
     DSList& list = dslm.ds_get(id);
-    list.m_nested_ds[vindex.castCoerce<size_t>()] = DSList::MAP;
+    list.m_nested_ds[static_cast<size_t>(vindex.castCoerce<uint64_t>())] = DSList::MAP;
 }
 
 
@@ -405,5 +405,5 @@ void ogm::interpreter::fn::ds_list_mark_as_list(VO out, V vid, V vindex)
     }
 
     DSList& list = dslm.ds_get(id);
-    list.m_nested_ds[vindex.castCoerce<size_t>()] = DSList::LIST;
+    list.m_nested_ds[static_cast<size_t>(vindex.castCoerce<uint64_t>())] = DSList::LIST;
 }

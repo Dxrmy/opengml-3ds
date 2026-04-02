@@ -112,7 +112,7 @@ void ogm::interpreter::fn::getv::background_showcolour(VO out)
 
 void ogm::interpreter::fn::setv::background_visible(VO out, OGM_2DARRAY_i V j, V vis)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -122,7 +122,7 @@ void ogm::interpreter::fn::setv::background_visible(VO out, OGM_2DARRAY_i V j, V
 
 void ogm::interpreter::fn::getv::background_visible(VO out, OGM_2DARRAY_i V j)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -132,7 +132,7 @@ void ogm::interpreter::fn::getv::background_visible(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::background_index(VO out, OGM_2DARRAY_i V j, V vis)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -142,7 +142,7 @@ void ogm::interpreter::fn::setv::background_index(VO out, OGM_2DARRAY_i V j, V v
 
 void ogm::interpreter::fn::getv::background_index(VO out, OGM_2DARRAY_i V j)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -152,7 +152,7 @@ void ogm::interpreter::fn::getv::background_index(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::background_x(VO out, OGM_2DARRAY_i V j, V vis)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -162,7 +162,7 @@ void ogm::interpreter::fn::setv::background_x(VO out, OGM_2DARRAY_i V j, V vis)
 
 void ogm::interpreter::fn::getv::background_x(VO out, OGM_2DARRAY_i V j)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -172,7 +172,7 @@ void ogm::interpreter::fn::getv::background_x(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::background_y(VO out, OGM_2DARRAY_i V j, V vis)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -182,7 +182,7 @@ void ogm::interpreter::fn::setv::background_y(VO out, OGM_2DARRAY_i V j, V vis)
 
 void ogm::interpreter::fn::getv::background_y(VO out, OGM_2DARRAY_i V j)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -192,7 +192,7 @@ void ogm::interpreter::fn::getv::background_y(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::background_hspeed(VO out, OGM_2DARRAY_i V j, V vis)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -202,7 +202,7 @@ void ogm::interpreter::fn::setv::background_hspeed(VO out, OGM_2DARRAY_i V j, V 
 
 void ogm::interpreter::fn::getv::background_hspeed(VO out, OGM_2DARRAY_i V j)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -212,7 +212,7 @@ void ogm::interpreter::fn::getv::background_hspeed(VO out, OGM_2DARRAY_i V j)
 
 void ogm::interpreter::fn::setv::background_vspeed(VO out, OGM_2DARRAY_i V j, V vis)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");
@@ -222,7 +222,7 @@ void ogm::interpreter::fn::setv::background_vspeed(VO out, OGM_2DARRAY_i V j, V 
 
 void ogm::interpreter::fn::getv::background_vspeed(VO out, OGM_2DARRAY_i V j)
 {
-    size_t bg_id = j.castCoerce<size_t>();
+    size_t bg_id = static_cast<size_t>(j.castCoerce<uint64_t>());
     if (bg_id >= frame.m_background_layers.size())
     {
         throw MiscError("Background index out-of-bounds.");

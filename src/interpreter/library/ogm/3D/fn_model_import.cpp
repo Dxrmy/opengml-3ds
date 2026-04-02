@@ -72,7 +72,7 @@ void ogm::interpreter::fn::ogm_model_import_mesh_count(VO out)
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_count(VO out, V vmesh_index)
 {
     #ifdef ASSIMP
-    size_t mesh_index = vmesh_index.castCoerce<size_t>();
+    size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0;
@@ -88,7 +88,7 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_count(VO out, V vmesh_in
 void ogm::interpreter::fn::ogm_model_import_mesh_name(VO out, V vmesh_index)
 {
     #ifdef ASSIMP
-    size_t mesh_index = vmesh_index.castCoerce<size_t>();
+    size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = "";
@@ -104,8 +104,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_name(VO out, V vmesh_index)
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_x(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -127,8 +127,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_x(VO out, V vmesh_index,
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_y(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -150,8 +150,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_y(VO out, V vmesh_index,
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_z(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -173,8 +173,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_z(VO out, V vmesh_index,
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_nx(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -196,8 +196,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_nx(VO out, V vmesh_index
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_ny(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -219,8 +219,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_ny(VO out, V vmesh_index
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_nz(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -242,8 +242,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_nz(VO out, V vmesh_index
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_u(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -265,8 +265,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_u(VO out, V vmesh_index,
 void ogm::interpreter::fn::ogm_model_import_mesh_vertex_v(VO out, V vmesh_index, V vvertex_index)
 {
     #ifdef ASSIMP
-    const size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    const size_t vertex_index = vvertex_index.castCoerce<size_t>();
+    const size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    const size_t vertex_index = static_cast<size_t>(vvertex_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0f;
@@ -288,7 +288,7 @@ void ogm::interpreter::fn::ogm_model_import_mesh_vertex_v(VO out, V vmesh_index,
 void ogm::interpreter::fn::ogm_model_import_mesh_face_count(VO out, V vmesh_index)
 {
     #ifdef ASSIMP
-    size_t mesh_index = vmesh_index.castCoerce<size_t>();
+    size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = 0.0;
@@ -304,8 +304,8 @@ void ogm::interpreter::fn::ogm_model_import_mesh_face_count(VO out, V vmesh_inde
 void ogm::interpreter::fn::ogm_model_import_mesh_face_vertex_count(VO out, V vmesh_index, V vface_index)
 {
     #ifdef ASSIMP
-    size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    size_t face_index = vface_index.castCoerce<size_t>();
+    size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    size_t face_index = static_cast<size_t>(vface_index.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = -1.0;
@@ -326,9 +326,9 @@ void ogm::interpreter::fn::ogm_model_import_mesh_face_vertex_count(VO out, V vme
 void ogm::interpreter::fn::ogm_model_import_mesh_face_vertex_index(VO out, V vmesh_index, V vface_index, V vfvindex)
 {
     #ifdef ASSIMP
-    size_t mesh_index = vmesh_index.castCoerce<size_t>();
-    size_t face_index = vface_index.castCoerce<size_t>();
-    size_t fvindex = vfvindex.castCoerce<size_t>();
+    size_t mesh_index = static_cast<size_t>(vmesh_index.castCoerce<uint64_t>());
+    size_t face_index = static_cast<size_t>(vface_index.castCoerce<uint64_t>());
+    size_t fvindex = static_cast<size_t>(vfvindex.castCoerce<uint64_t>());
     if (mesh_index >= g_scene->mNumMeshes)
     {
         out = -1.0;

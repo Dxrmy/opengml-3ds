@@ -250,7 +250,7 @@ void ogm::interpreter::fn::font_add_sprite(VO out, V vsprite, V first, V prop, V
     std::vector<size_t> indices;
     AssetSprite* sprite = frame.get_asset_from_variable<AssetSprite>(vsprite);
 
-    size_t base = first.castCoerce<size_t>();
+    size_t base = static_cast<size_t>(first.castCoerce<uint64_t>());
 
     for (size_t i = 0; i < sprite->m_subimage_count; ++i)
     {

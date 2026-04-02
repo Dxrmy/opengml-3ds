@@ -32,7 +32,7 @@ void ogm::interpreter::fn::matrix_get(VO out, V v)
 {
     matrix_t arr;
 
-    switch(v.castCoerce<size_t>())
+    switch(static_cast<size_t>(v.castCoerce<uint64_t>()))
     {
     case 0:
         arr = frame.m_display->get_matrix_view();
@@ -51,7 +51,7 @@ void ogm::interpreter::fn::matrix_set(VO out, V v, V matrix)
 {
     matrix_t arr;
     variable_to_matrix(matrix, arr);
-    switch(v.castCoerce<size_t>())
+    switch(static_cast<size_t>(v.castCoerce<uint64_t>()))
     {
     case 0:
         frame.m_display->set_matrix_view(arr);

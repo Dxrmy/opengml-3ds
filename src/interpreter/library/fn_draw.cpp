@@ -179,7 +179,7 @@ namespace
     size_t calc_subimage(V image, AssetSprite* sprite)
     {
         size_t count = sprite->image_count();
-        size_t img = image.castCoerce<size_t>();
+        size_t img = static_cast<size_t>(image.castCoerce<uint64_t>());
         if (img >= 0 || !staticExecutor.m_self)
         {
             return img % count;
@@ -269,7 +269,7 @@ void ogm::interpreter::fn::draw_sprite_part_ext(VO out, V sprite, V image, V lef
         float prev_alpha = display->get_alpha();
         float prev_colour = display->get_colour();
         display->set_alpha(alpha.castCoerce<real_t>());
-        display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+        display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 
         coord_t c_left = std::max(left.castCoerce<coord_t>(), 0.0);
         coord_t c_top = std::max(top.castCoerce<coord_t>(), 0.0);
@@ -346,7 +346,7 @@ void ogm::interpreter::fn::draw_sprite_ext(VO out, V sprite, V image, V x, V y, 
         float prev_alpha = display->get_alpha();
         float prev_colour = display->get_colour();
         display->set_alpha(alpha.castCoerce<real_t>());
-        display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+        display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 
         display->draw_image(
             frame.m_display->m_textures.get_texture(
@@ -374,7 +374,7 @@ void ogm::interpreter::fn::draw_sprite_stretched_ext(VO out, V sprite, V image, 
         float prev_alpha = display->get_alpha();
         float prev_colour = display->get_colour();
         display->set_alpha(alpha.castCoerce<real_t>());
-        display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+        display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 
         display->draw_image(
             frame.m_display->m_textures.get_texture(
@@ -484,7 +484,7 @@ void ogm::interpreter::fn::draw_self(VO out)
 
 void ogm::interpreter::fn::draw_set_colour(VO out, V c)
 {
-    display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+    display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 }
 
 void ogm::interpreter::fn::draw_set_alpha(VO out, V a)

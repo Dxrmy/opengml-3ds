@@ -23,7 +23,7 @@ using namespace ogm::interpreter::fn;
 void ogm::interpreter::fn::ds_exists(VO out, V id, V type)
 {
     ds_index_t did = id.castCoerce<ds_index_t>();
-    size_t dtype = type.castCoerce<size_t>();
+    size_t dtype = static_cast<size_t>(type.castCoerce<uint64_t>());
     switch (dtype)
     {
     case 0:

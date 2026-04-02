@@ -24,8 +24,8 @@ void ogm::interpreter::fn::event_perform_object(VO out, V object, V ev, V subev)
     // change event
     AssetObject* a = frame.get_asset_from_variable<AssetObject>(object);
     ogm_assert(a);
-    DynamicEvent de = static_cast<DynamicEvent>(ev.castCoerce<size_t>());
-    DynamicSubEvent dse = static_cast<DynamicSubEvent>(subev.castCoerce<size_t>());
+    DynamicEvent de = static_cast<DynamicEvent>(static_cast<size_t>(ev.castCoerce<uint64_t>()));
+    DynamicSubEvent dse = static_cast<DynamicSubEvent>(static_cast<size_t>(subev.castCoerce<uint64_t>()));
 
     bytecode_index_t bytecode_index= frame.get_dynamic_event_bytecode(a, de, dse);
     if (bytecode_index != k_no_bytecode)
@@ -56,7 +56,7 @@ void ogm::interpreter::fn::event_perform(VO out, V ev, V subev)
 
 void ogm::interpreter::fn::event_user(VO out, V vn)
 {
-    size_t n = vn.castCoerce<size_t>();
+    size_t n = static_cast<size_t>(vn.castCoerce<uint64_t>());
     Variable e = static_cast<size_t>(DynamicEvent::OTHER);
     Variable se = n + static_cast<size_t>(DynamicSubEvent::OTHER_USER0);
     ogm::interpreter::fn::event_perform(out, e, se);

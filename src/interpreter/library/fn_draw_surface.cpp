@@ -25,7 +25,7 @@ void ogm::interpreter::fn::draw_surface(VO out, V srfid, V x, V y)
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         if (!tp) return;
         TextureView tv{ tp };
@@ -52,7 +52,7 @@ void ogm::interpreter::fn::draw_surface_part(VO out, V srfid, V left, V top, V w
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 
@@ -91,7 +91,7 @@ void ogm::interpreter::fn::draw_surface_part_ext(VO out, V srfid, V left, V top,
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 
@@ -102,7 +102,7 @@ void ogm::interpreter::fn::draw_surface_part_ext(VO out, V srfid, V left, V top,
         float prev_alpha = display->get_alpha();
         float prev_colour = display->get_colour();
         display->set_alpha(alpha.castCoerce<real_t>());
-        display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+        display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 
         coord_t c_left = std::max(left.castCoerce<coord_t>(), 0.0);
         coord_t c_top = std::max(top.castCoerce<coord_t>(), 0.0);
@@ -130,7 +130,7 @@ void ogm::interpreter::fn::draw_surface_general(VO out, V srfid, V left, V top, 
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 
@@ -169,7 +169,7 @@ void ogm::interpreter::fn::draw_surface_ext(VO out, V srfid, V x, V y, V xscale,
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 
@@ -177,7 +177,7 @@ void ogm::interpreter::fn::draw_surface_ext(VO out, V srfid, V x, V y, V xscale,
         float prev_alpha = display->get_alpha();
         float prev_colour = display->get_colour();
         display->set_alpha(alpha.castCoerce<real_t>());
-        display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+        display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 
         display->draw_image(
             &tv,
@@ -195,7 +195,7 @@ void ogm::interpreter::fn::draw_surface_stretched_ext(VO out, V srfid, V x, V y,
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 
@@ -203,7 +203,7 @@ void ogm::interpreter::fn::draw_surface_stretched_ext(VO out, V srfid, V x, V y,
         float prev_alpha = display->get_alpha();
         float prev_colour = display->get_colour();
         display->set_alpha(alpha.castCoerce<real_t>());
-        display->set_colour(c.castCoerce<uint32_t>() & 0xffffff);
+        display->set_colour(static_cast<uint32_t>(c.castCoerce<uint64_t>()) & 0xffffff);
 
         display->draw_image(
             &tv,
@@ -222,7 +222,7 @@ void ogm::interpreter::fn::draw_surface_stretched(VO out, V srfid, V x, V y, V w
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 
@@ -249,7 +249,7 @@ void ogm::interpreter::fn::draw_surface_pos(VO out, V srfid, V x1, V y1, V x2, V
 {
     {
         TexturePage* tp = frame.m_display->m_textures.get_surface(
-            srfid.castCoerce<uint32_t>()
+            static_cast<uint32_t>(srfid.castCoerce<uint64_t>())
         );
         TextureView tv{ tp };
 

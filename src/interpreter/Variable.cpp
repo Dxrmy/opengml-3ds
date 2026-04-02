@@ -5,7 +5,9 @@
 #include <limits>
 
 // Force inclusion of implementation for explicit instantiation
+#ifndef NDEBUG
 #include "ogm/interpreter/Variable_impl.inc"
+#endif
 
 // the include order is important.
 
@@ -1826,22 +1828,37 @@ void matrix_to_variable(const matrix_t& matrix, Variable& out)
 
 }}
 
+
+
 #ifdef __3DS__
 namespace ogm { namespace interpreter {
-template const VariableArrayData& VariableComponentHandle<VariableArrayData>::getReadable<false>() const;
-template const VariableArrayData& VariableComponentHandle<VariableArrayData>::getReadable<true>() const;
 
-template bool Variable::castCoerce<bool>() const;
-template uint32_t Variable::castCoerce<uint32_t>() const;
-template int32_t Variable::castCoerce<int32_t>() const;
-template uint64_t Variable::castCoerce<uint64_t>() const;
-template int64_t Variable::castCoerce<int64_t>() const;
-template real_t Variable::castCoerce<real_t>() const;
-template std::string Variable::castCoerce<std::string>() const;
+// We define these here to ensure they are emitted as symbols in Variable.o
+// We cover all variations of 32-bit unsigned integers to satisfy the linker.
 
-template uint32_t Variable::castExact<uint32_t>() const;
-template int32_t Variable::castExact<int32_t>() const;
-template real_t Variable::castExact<real_t>() const;
-template bool Variable::castExact<bool>() const;
+template<>
+unsigned int Variable::castCoerce<unsigned int>() const
+{
+    return castCoerce<uint64_t>();
+}
+
+template<>
+long unsigned int Variable::castCoerce<long unsigned int>() const
+{
+    return castCoerce<uint64_t>();
+}
+
+template<>
+int Variable::castCoerce<int>() const
+{
+    return castCoerce<uint64_t>();
+}
+
+template<>
+uint32_t Variable::castExact<uint32_t>() const
+{
+    return castExact<int32_t>();
+}
+
 } }
 #endif

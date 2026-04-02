@@ -25,7 +25,7 @@ void ogm::interpreter::fn::parameter_count(VO out)
 
 void ogm::interpreter::fn::parameter_string(VO out, V i)
 {
-    size_t _i = i.castCoerce<size_t>();
+    size_t _i = static_cast<size_t>(i.castCoerce<uint64_t>());
     if (_i < frame.m_data.m_clargs.size())
     {
         out = frame.m_data.m_clargs[_i];

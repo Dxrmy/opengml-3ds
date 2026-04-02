@@ -36,7 +36,7 @@ void ogm::interpreter::fn::array_height_2d(VO out, V a)
 
 void ogm::interpreter::fn::array_length_2d(VO out, V a, V vn)
 {
-    size_t n = vn.castCoerce<size_t>();
+    size_t n = static_cast<size_t>(vn.castCoerce<uint64_t>());
     #ifdef OGM_2DARRAY
     out = static_cast<real_t>(a.array_length(n));
     #else
@@ -82,9 +82,9 @@ void ogm::interpreter::fn::array_copy(VO out, V dst, V dsti, V src, V srci, V le
         // that it is not marked as a root.
         VariableArrayData& vdst = varr.get<VariableArrayHandle>().getWriteableNoCopy<false>();
         const VariableArrayData& vsrc = src.get<VariableArrayHandle>().getReadable<false>();
-        size_t dst_index = dsti.castCoerce<size_t>();
-        size_t src_index = srci.castCoerce<size_t>();
-        size_t l = length.castCoerce<size_t>();
+        size_t dst_index = static_cast<size_t>(dsti.castCoerce<uint64_t>());
+        size_t src_index = static_cast<size_t>(srci.castCoerce<uint64_t>());
+        size_t l = static_cast<size_t>(length.castCoerce<uint64_t>());
         if (vsrc.m_vector.size() < 1)
         {
             throw MiscError("src array is empty.");
@@ -123,7 +123,7 @@ void ogm::interpreter::fn::array_create(VO out, V vn)
 
 void ogm::interpreter::fn::array_create(VO out, V vn, V value)
 {
-    size_t n = vn.castCoerce<size_t>();
+    size_t n = static_cast<size_t>(vn.castCoerce<uint64_t>());
     if (n == 0)
     {
         throw UnknownIntendedBehaviourError("Zero-length array.");
