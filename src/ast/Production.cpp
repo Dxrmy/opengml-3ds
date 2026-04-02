@@ -20,20 +20,19 @@ string Production::to_string() {
 }
 
 void Production::flattenPostfixes() {
-  //TODO: rewrite with iterators
-  for (uint32_t i=infixes.size()-postfix_n;i<infixes.size();i++) {
-    // flatten postfixes
-    auto ws = infixes[i];
+  auto it = infixes.end() - postfix_n;
+  while (it != infixes.end()) {
+    auto ws = *it;
     if (ws) {
       ws->postfix_n = 0;
-      // pull out nested infixes
-      while (!ws->infixes.empty()) {
-        auto nested_ws = ws->infixes.back();
-        ws->infixes.pop_back();
-        infixes.insert(infixes.begin() + i+1,nested_ws);
-        postfix_n++;
+      if (!ws->infixes.empty()) {
+        auto inserted_first = infixes.insert(it + 1, ws->infixes.begin(), ws->infixes.end());
+        postfix_n += ws->infixes.size();
+        ws->infixes.clear();
+        it = inserted_first - 1;
       }
     }
+    ++it;
   }
 }
 
