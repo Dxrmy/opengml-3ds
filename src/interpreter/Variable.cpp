@@ -4,9 +4,8 @@
 #include <cmath>
 #include <limits>
 
-#ifndef NDEBUG
+// Force inclusion of implementation for explicit instantiation
 #include "ogm/interpreter/Variable_impl.inc"
-#endif
 
 // the include order is important.
 

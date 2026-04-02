@@ -545,8 +545,10 @@ void StandardLibrary::reflection_add_instance_variables(bytecode::ReflectionAccu
             if (vid != i++)
             {
             err:
+                std::string err_msg = "Builtin and instance namespaces do not agree for variable \"" + vd.m_name + "\". (Namespace ID: " + std::to_string(vid) + ", Expected Sequential ID: " + std::to_string(i-1) + ")";
+                SD_PRINT(err_msg);
                 // this function should be called as soon as the ReflectionAccumulator is created.
-                throw MiscError("Builtin and instance namespaces do not agree.");
+                throw MiscError(err_msg.c_str());
             }
         }
     }
