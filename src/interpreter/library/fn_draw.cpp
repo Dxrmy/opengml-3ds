@@ -25,13 +25,13 @@ using namespace ogm::interpreter::fn;
 void ogm::interpreter::fn::draw_line(VO out, V x1, V y1, V x2, V y2)
 {
     display->set_matrix_pre_model();
-    
+
     // this is allocated the first time the function is called.
     // never dealloc'd.
     static float* linebuff = alloc<float>(
         display->get_vertex_size() * 2
     );
-    
+
     // v1
     display->write_vertex(
         linebuff,
@@ -40,7 +40,7 @@ void ogm::interpreter::fn::draw_line(VO out, V x1, V y1, V x2, V y2)
         0, // z
         display->get_colour4()
     );
-    
+
     // v2
     display->write_vertex(
         linebuff + display->get_vertex_size(),
@@ -49,14 +49,14 @@ void ogm::interpreter::fn::draw_line(VO out, V x1, V y1, V x2, V y2)
         0, // z
         display->get_colour4()
     );
-    
-    display->render_array(2 * display->get_vertex_size(), linebuff, nullptr, constant::pr_linelist);
+
+    display->render_array(2 * display->get_vertex_size(), linebuff, nullptr, static_cast<PrimitiveType>(constant::pr_linelist));
 }
 
 void ogm::interpreter::fn::draw_rectangle_colour(VO out, V x1, V y1, V x2, V y2, V c1, V c2, V c3, V c4, V outline)
 {
     display->set_matrix_pre_model();
-    
+
     // set colours
     uint32_t previous_colours[4];
     display->get_colours4(previous_colours);
@@ -68,7 +68,7 @@ void ogm::interpreter::fn::draw_rectangle_colour(VO out, V x1, V y1, V x2, V y2,
         (c4.castCoerce<int32_t>() << 8) | ualpha
     };
     display->set_colours4(cols);
-    
+
     if (outline.cond())
     {
         display->draw_outline_rectangle(
@@ -87,7 +87,7 @@ void ogm::interpreter::fn::draw_rectangle_colour(VO out, V x1, V y1, V x2, V y2,
             y2.castCoerce<real_t>()
         );
     }
-    
+
     display->set_colours4(previous_colours);
 }
 
@@ -170,7 +170,7 @@ void ogm::interpreter::fn::draw_circle_colour(VO out, V x, V y, V r, V c1, V c2,
             r.castCoerce<real_t>()
         );
     }
-    
+
     display->set_colours4(previous_colours);
 }
 
@@ -223,7 +223,7 @@ void ogm::interpreter::fn::draw_sprite_part(VO out, V sprite, V image, V left, V
         asset_index_t asset_index;
         AssetSprite* asset = frame.get_asset_from_variable<AssetSprite>(sprite, asset_index, false);
         if (!asset) return;
-        
+
         coord_t texw = asset->m_dimensions.x;
         coord_t texh = asset->m_dimensions.y;
 
@@ -261,7 +261,7 @@ void ogm::interpreter::fn::draw_sprite_part_ext(VO out, V sprite, V image, V lef
         asset_index_t asset_index;
         AssetSprite* asset = frame.get_asset_from_variable<AssetSprite>(sprite, asset_index, false);
         if (!asset) return;
-        
+
         coord_t texw = asset->m_dimensions.x;
         coord_t texh = asset->m_dimensions.y;
 
@@ -301,7 +301,7 @@ void ogm::interpreter::fn::draw_sprite_general(VO out, V sprite, V image, V left
         asset_index_t asset_index;
         AssetSprite* asset = frame.get_asset_from_variable<AssetSprite>(sprite, asset_index, false);
         if (!asset) return;
-        
+
         coord_t texw = asset->m_dimensions.x;
         coord_t texh = asset->m_dimensions.y;
 

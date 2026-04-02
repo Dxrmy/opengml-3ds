@@ -368,7 +368,7 @@ void Display::vertex_format_append_attribute(uint32_t vf, VertexFormatAttribute 
 uint32_t Display::make_vertex_buffer(size_t size) { return 0; }
 void Display::add_vertex_buffer_data(uint32_t id, unsigned char* data, size_t length) {}
 void Display::freeze_vertex_buffer(uint32_t vb) {}
-void Display::render_buffer(uint32_t vb, TexturePage* tp, uint32_t glenum) {}
+void Display::render_buffer(uint32_t vb, TexturePage* tp, PrimitiveType type) {}
 void Display::bind_and_compile_shader(uint32_t s, const std::string& v, const std::string& f) {}
 geometry::AABB<coord_t> Display::get_viewable_aabb() { return {}; }
 
@@ -410,7 +410,7 @@ model_id_t Display::model_make() { return 0; }
 void Display::model_free(model_id_t) {}
 void Display::model_draw(model_id_t, TexturePage*) {}
 uint32_t Display::model_get_vertex_format(model_id_t) { return 0; }
-void Display::model_add_vertex_buffer(model_id_t, uint32_t, uint32_t) {}
+void Display::model_add_vertex_buffer(model_id_t, uint32_t, PrimitiveType) {}
 
 void Display::use_shader(uint32_t) {}
 int32_t Display::shader_get_uniform_id(uint32_t, const std::string&) { return -1; }
@@ -444,7 +444,7 @@ void Display::get_colours4(uint32_t*) {}
 
 void Display::write_vertex(float*, coord_t, coord_t, coord_t, uint32_t, coord_t, coord_t) const {}
 uint32_t Display::get_vertex_size() const { return 0; }
-void Display::render_array(size_t, float*, TexturePage*, uint32_t) {}
+void Display::render_array(size_t, float*, TexturePage*, PrimitiveType) {}
 void Display::draw_outline_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
     uint8_t r = (g_draw_colour & 0x0000FF);
     uint8_t g = (g_draw_colour & 0x00FF00) >> 8;

@@ -66,6 +66,17 @@ struct VertexFormatAttribute
 
 typedef uint32_t model_id_t;
 
+enum class PrimitiveType
+{
+    pointlist = 0,
+    linelist = 1,
+    linestrip = 2,
+    trianglelist = 3,
+    trianglestrip = 4,
+    trianglefan = 5,
+    lineloop = 6,
+};
+
 class Display
 {
 public:
@@ -92,20 +103,20 @@ public:
     size_t vertex_buffer_get_size(uint32_t id);
     size_t vertex_buffer_get_count(uint32_t id);
     void free_vertex_buffer(uint32_t id);
-    
+
     model_id_t model_make();
-    void model_add_vertex_buffer(model_id_t, uint32_t buffer, uint32_t render_glenum);
+    void model_add_vertex_buffer(model_id_t, uint32_t buffer, PrimitiveType type);
     void model_draw(model_id_t, TexturePage* texture);
     uint32_t model_get_vertex_format(model_id_t);
     void model_free(model_id_t);
 
     void associate_vertex_buffer_format(uint32_t vb, uint32_t vf);
 
-    void render_buffer(uint32_t vertex_buffer, TexturePage* image, uint32_t render_glenum);
+    void render_buffer(uint32_t vertex_buffer, TexturePage* image, PrimitiveType type);
 
     // length in floats, not vertices.
-    void render_array(size_t length, float* vertex_data, TexturePage* texture, uint32_t render_glenum);
-    
+    void render_array(size_t length, float* vertex_data, TexturePage* texture, PrimitiveType type);
+
     // writes Display::get_vertex_size() bytes to the given buffer.
     void write_vertex(float* out, coord_t x, coord_t y, coord_t z=0, uint32_t colour=0xffffffff, coord_t u=0, coord_t v=0) const;
     uint32_t get_vertex_size() const;
@@ -192,7 +203,7 @@ public:
 
     float get_alpha();
     void set_alpha(float);
-    
+
     uint32_t get_colour4();
 
     void get_colours4(uint32_t*);
@@ -204,7 +215,7 @@ public:
     void set_blendmode_separate(int32_t src, int32_t dst, int32_t srca, int32_t dsta);
     void set_blending_enabled(bool enabled);
     void set_interpolation_linear(bool linear);
-    
+
     void shader_set_alpha_test_enabled(bool enabled);
     void shader_set_alpha_test_threshold(real_t value);
 
@@ -227,7 +238,7 @@ public:
     bool get_key_direct(ogm_keycode_t);
 
     ogm_keycode_t get_current_key();
-    
+
     real_t get_key_last();
     const std::string& get_char_last();
     void set_key_last(real_t);
@@ -283,7 +294,7 @@ public:
 
     // applies a rotation to the current transformation
     void transform_apply_rotation(coord_t angle, coord_t x, coord_t y, coord_t z);
-    
+
     // applies a translation to the current transformation
     void transform_apply_translation(coord_t x, coord_t y, coord_t z);
 
@@ -301,20 +312,20 @@ public:
 
     template<bool write>
     void serialize(typename state_stream<write>::state_stream_t& s);
-    
+
     void bind_and_compile_shader(asset_index_t, const std::string& vertex_source, const std::string& fragment_source);
-    
+
     void use_shader(asset_index_t);
-    
+
     int32_t shader_get_uniform_id(asset_index_t, const std::string& handle);
     void shader_set_uniform_f(int32_t uniform_id, int c, float* v);
-    
+
     void check_error(const std::string& text);
-    
+
     void set_multisample(uint32_t n_samples);
-    
+
     void delay(real_t microseconds);
-    
+
     void set_vsync(bool);
 
 private:
@@ -329,7 +340,7 @@ private:
 
     void blank_image();
 
-    void render_vertices(float* vertices, size_t count, uint32_t texture, uint32_t render_glenum);
+    void render_vertices(float* vertices, size_t count, uint32_t texture, uint32_t gl_enum);
 
     void draw_text_ttf(coord_t x, coord_t y, const char* text, real_t halign, real_t valign, bool use_max_width=false, coord_t max_width=0, bool use_sep=false, coord_t sep=0);
     void draw_text_image(coord_t x, coord_t y, const char* text, real_t halign, real_t valign, bool use_max_width=false, coord_t max_width=0, bool use_sep=false, coord_t sep=0);

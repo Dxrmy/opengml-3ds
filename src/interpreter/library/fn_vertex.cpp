@@ -380,7 +380,7 @@ void ogm::interpreter::fn::vertex_submit(VO out, V id, V type, V texture)
         display->render_buffer(
             id.castCoerce<size_t>(),
             nullptr,
-            type.castCoerce<uint64_t>()
+            static_cast<PrimitiveType>(type.castCoerce<uint64_t>())
         );
     }
     else
@@ -388,7 +388,7 @@ void ogm::interpreter::fn::vertex_submit(VO out, V id, V type, V texture)
         display->render_buffer(
             id.castCoerce<size_t>(),
             static_cast<TextureView*>(texture.castExact<void*>())->m_tpage,
-            type.castCoerce<uint64_t>()
+            static_cast<PrimitiveType>(type.castCoerce<uint64_t>())
         );
     }
 }

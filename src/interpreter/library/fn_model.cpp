@@ -44,13 +44,13 @@ void ogm::interpreter::fn::d3d_model_draw(VO out, V id, V x, V y, V z, V texture
     coord_t _x = x.castCoerce<coord_t>();
     coord_t _y = y.castCoerce<coord_t>();
     coord_t _z = z.castCoerce<coord_t>();
-    
+
     if (_x != 0 || _y != 0 || _z != 0)
     {
         display->transform_stack_push();
         display->transform_apply_translation(_x, _y, _z);
     }
-    
+
     if (!texture.is_pointer())
     {
         display->model_draw(
@@ -65,7 +65,7 @@ void ogm::interpreter::fn::d3d_model_draw(VO out, V id, V x, V y, V z, V texture
             static_cast<TextureView*>(texture.castExact<void*>())->m_tpage
         );
     }
-    
+
     if (_x != 0 || _y != 0 || _z != 0)
     {
         display->transform_stack_pop();
@@ -86,7 +86,7 @@ void ogm::interpreter::fn::d3d_model_primitive_begin(VO out, V id, V glenum)
     display->model_add_vertex_buffer(
         g_current_model,
         g_current_vbo,
-        glenum.castCoerce<uint32_t>()
+        static_cast<PrimitiveType>(glenum.castCoerce<uint32_t>())
     );
 }
 

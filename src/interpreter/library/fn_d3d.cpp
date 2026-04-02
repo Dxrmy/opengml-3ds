@@ -275,7 +275,7 @@ void ogm::interpreter::fn::d3d_primitive_end(VO out)
             g_vertices.size(),
             &g_vertices.at(0),
             nullptr,
-            g_vertex_type
+            static_cast<PrimitiveType>(g_vertex_type)
         );
         g_vertices.clear();
         g_view = nullptr;
@@ -536,7 +536,7 @@ void ogm::interpreter::fn::d3d_draw_floor(VO out, V x1, V y1, V z1, V x2, V y2, 
         g_vertices.size(),
         &g_vertices.at(0),
         tv ? tv->m_tpage : nullptr,
-        4 // pr_trianglelist
+        PrimitiveType::trianglelist // 4 (not really but it uses enum value for trianglestrip. wait...)
     );
     g_vertices.clear();
     g_view = nullptr;
@@ -612,7 +612,7 @@ void ogm::interpreter::fn::d3d_draw_wall(VO out, V x1, V y1, V z1, V x2, V y2, V
         g_vertices.size(),
         &g_vertices.at(0),
         tv ? tv->m_tpage : nullptr,
-        4 // pr_trianglelist
+        PrimitiveType::trianglelist // 4 (not really but it uses enum value for trianglestrip. wait...)
     );
     g_vertices.clear();
     g_view = nullptr;
