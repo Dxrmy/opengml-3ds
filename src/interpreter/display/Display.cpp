@@ -123,11 +123,11 @@ namespace
     SDL_GLContext g_context;
     TexturePage* g_target = nullptr;
     uint32_t g_square_vbo;
+    size_t g_square_vbo_capacity = 0;
     uint32_t g_square_vao;
     uint32_t g_blank_texture;
     uint32_t g_circle_precision=32;
     uint32_t g_texture_filter = GL_NEAREST;
-    uint32_t g_sampler = 0;
     bool g_blending_enabled = true;
     colour4 g_clear_colour{0, 0, 0, 1};
     colour4 g_draw_colour[4] = {{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}};
@@ -148,7 +148,7 @@ namespace
     bool init_buffers = false;
 
     bool g_sdl_closing = false;
-
+    
     uint8_t ogmenum_to_glenum(uint8_t render_glenum)
     {
         switch (render_glenum)
@@ -698,6 +698,7 @@ namespace
         } m_state;
         std::vector<char> m_data;
         size_t m_size;
+        size_t m_capacity = 0;
         uint32_t m_vbo;
         uint32_t m_format = std::numeric_limits<uint32_t>::max();
     };
@@ -787,8 +788,10 @@ namespace
     void bindTexture(GLuint texture_id)
     {
         glBindTexture(GL_TEXTURE_2D, texture_id);
-
-        glBindSampler(0, g_sampler);
+        
+        // TODO: in theory, this can be done with samplers somehow to reduce calls.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, g_texture_filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, g_texture_filter);
     }
 }
 
@@ -852,14 +855,14 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     g_context = SDL_GL_CreateContext(g_window);
-
+    
     if (!g_context)
     {
         printf("Unable to create OpenGL context\n");
         return false;
     }
     #endif
-
+    
     // renderer and context should now be available.
     const char* gl_version = (const char*) glGetString(GL_VERSION);
     const char* gl_renderer = (const char*) glGetString (GL_RENDERER);
@@ -976,11 +979,6 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
     glEnable( GL_BLEND );
 
-    // create and initialize the sampler
-    glGenSamplers(1, &g_sampler);
-    glSamplerParameteri(g_sampler, GL_TEXTURE_MAG_FILTER, g_texture_filter);
-    glSamplerParameteri(g_sampler, GL_TEXTURE_MIN_FILTER, g_texture_filter);
-
     // generate the basic "blank" texture
     blank_image();
 
@@ -1001,7 +999,6 @@ Display::~Display()
     {
         glDeleteVertexArrays(1, &g_square_vao);
         glDeleteBuffers(1, &g_square_vbo);
-        glDeleteSamplers(1, &g_sampler);
 
         init_buffers = false;
     }
@@ -1041,7 +1038,19 @@ void Display::render_vertices(float* vertices, size_t count, uint32_t texture, u
 {
     glBindVertexArray(g_square_vao);
     glBindBuffer(GL_ARRAY_BUFFER, g_square_vbo);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * k_vertex_data_size, vertices, GL_STREAM_DRAW);
+
+    size_t required_size = count * sizeof(float) * k_vertex_data_size;
+    if (required_size > g_square_vbo_capacity)
+    {
+        g_square_vbo_capacity = required_size * 2;
+        glBufferData(GL_ARRAY_BUFFER, g_square_vbo_capacity, nullptr, GL_STREAM_DRAW);
+    }
+
+    if (required_size > 0)
+    {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, required_size, vertices);
+    }
+
     bindTexture(texture);
     glDrawArrays(render_glenum, 0, count);
 }
@@ -1397,8 +1406,6 @@ void Display::set_blending_enabled(bool c)
 void Display::set_interpolation_linear(bool linear)
 {
     g_texture_filter = (linear) ? GL_LINEAR : GL_NEAREST;
-    glSamplerParameteri(g_sampler, GL_TEXTURE_MAG_FILTER, g_texture_filter);
-    glSamplerParameteri(g_sampler, GL_TEXTURE_MIN_FILTER, g_texture_filter);
 }
 
 void Display::shader_set_alpha_test_enabled(bool enabled)
@@ -1849,10 +1856,10 @@ void Display::draw_text_ttf(coord_t _x, coord_t _y, const char* text, real_t hal
             }
 
             uint32_t w = power_of_two(text_srf->w);
-		uint32_t h = power_of_two(text_srf->h);
+        	uint32_t h = power_of_two(text_srf->h);
 
-		SDL_Surface* tmp = SDL_CreateRGBSurface(0, w, h, 32,
-				0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+        	SDL_Surface* tmp = SDL_CreateRGBSurface(0, w, h, 32,
+        			0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
             SDL_BlitSurface(text_srf, nullptr, tmp, nullptr);
 
@@ -2014,7 +2021,7 @@ namespace
         while( SDL_PollEvent( &event ) )
         {
             ogm_keycode_t keycode;
-
+            
             switch(event.type)
             {
             case SDL_KEYDOWN:
@@ -2038,7 +2045,7 @@ namespace
                             {
                                 character += 65 - 97;
                             }
-
+                            
                             switch(character)
                             {
                             case '1':
@@ -2080,7 +2087,7 @@ namespace
                             }
                         }
                     }
-
+                    
                     if (character >= 0)
                     {
                         g_char_last = std::string(1, character);
@@ -2895,7 +2902,16 @@ void Display::render_buffer(uint32_t vertex_buffer, TexturePage* texture, uint32
     // fill array if dirty
     if (vb.m_state == VertexBuffer::dirty)
     {
-        glBufferData(GL_ARRAY_BUFFER, vb.m_size, &vb.m_data.front(), GL_STREAM_DRAW);
+        if (vb.m_size > vb.m_capacity)
+        {
+            vb.m_capacity = vb.m_size * 2;
+            glBufferData(GL_ARRAY_BUFFER, vb.m_capacity, nullptr, GL_STREAM_DRAW);
+        }
+
+        if (vb.m_size > 0)
+        {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vb.m_size, &vb.m_data.front());
+        }
         vb.m_state = VertexBuffer::clean;
     }
 
@@ -4024,7 +4040,7 @@ namespace ogm::interpreter
     {
         g_key_last = v;
     }
-
+    
     void Display::set_char_last(std::string&& v)
     {
         g_char_last = std::move(v);
