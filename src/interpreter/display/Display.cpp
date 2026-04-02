@@ -148,26 +148,34 @@ namespace
 
     bool g_sdl_closing = false;
 
-    uint32_t primitive_type_to_glenum(PrimitiveType render_glenum)
+    uint8_t ogmenum_to_glenum(uint8_t render_glenum)
     {
         switch (render_glenum)
         {
-        case PrimitiveType::pointlist:
+        case pr_pointlist:
             return GL_POINTS;
-        case PrimitiveType::linelist:
+            break;
+        case pr_linelist:
             return GL_LINES;
-        case PrimitiveType::linestrip:
+            break;
+        case pr_linestrip:
             return GL_LINE_STRIP;
-        case PrimitiveType::lineloop:
+            break;
+        case pr_lineloop:
             return GL_LINE_LOOP;
-        case PrimitiveType::trianglelist:
+            break;
+        case pr_triangle_list:
             return GL_TRIANGLES;
-        case PrimitiveType::trianglestrip:
+            break;
+        case pr_triangle_strip:
             return GL_TRIANGLE_STRIP;
-        case PrimitiveType::trianglefan:
+            break;
+        case pr_triangle_fan:
             return GL_TRIANGLE_FAN;
+            break;
         default:
             return GL_POINTS;
+            break;
         }
     }
 
@@ -964,16 +972,11 @@ bool Display::start(uint32_t width, uint32_t height, const char* caption, bool v
     // reset pre-model matrix.
     set_matrix_pre_model();
 
-    // enable alpha blending
-    glEnable(GL_TEXTURE_2D);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-    glEnable( GL_BLEND );
+    // reset render state to defaults
+    reset_render_state();
 
     // generate the basic "blank" texture
     blank_image();
-
-    // disable distance fog
-    set_fog(false);
 
     glCheckErrorStr("ogm graphics initialization.");
 
@@ -1024,13 +1027,13 @@ void Display::blank_image()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Display::render_vertices(float* vertices, size_t count, uint32_t texture, uint32_t gl_enum)
+void Display::render_vertices(float* vertices, size_t count, uint32_t texture, uint32_t render_glenum)
 {
     glBindVertexArray(g_square_vao);
     glBindBuffer(GL_ARRAY_BUFFER, g_square_vbo);
     glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * k_vertex_data_size, vertices, GL_STREAM_DRAW);
     bindTexture(texture);
-    glDrawArrays(gl_enum, 0, count);
+    glDrawArrays(render_glenum, 0, count);
 }
 
 void Display::draw_image_tiled(TextureView* texture, bool tiled_x, bool tiled_y, coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t tx1, coord_t ty1, coord_t tx2, coord_t ty2)
@@ -2837,7 +2840,7 @@ void Display::associate_vertex_buffer_format(uint32_t vb_id, uint32_t vf_id)
     vb.m_format = vf_id;
 }
 
-void Display::render_buffer(uint32_t vertex_buffer, TexturePage* texture, PrimitiveType type)
+void Display::render_buffer(uint32_t vertex_buffer, TexturePage* texture, uint32_t render_glenum)
 {
     if (vertex_buffer >= g_vertex_buffers.size())
     {
@@ -2884,7 +2887,10 @@ void Display::render_buffer(uint32_t vertex_buffer, TexturePage* texture, Primit
         vb.m_state = VertexBuffer::clean;
     }
 
-    uint32_t mapped_enum = primitive_type_to_glenum(type);
+    // sigh...
+    // TODO: make this exposed properly
+    // (lined up with pr_* definitions presently)
+    uint32_t mapped_enum = ogmenum_to_glenum(render_glenum);
 
     glDrawArrays(mapped_enum, 0, vb.m_size / vf.m_size);
 }
@@ -3162,14 +3168,14 @@ void Display::set_target(TexturePage* page)
     glCheckError();
 }
 
-void Display::render_array(size_t length, float* vertex_data, TexturePage* texture, PrimitiveType type)
+void Display::render_array(size_t length, float* vertex_data, TexturePage* texture, uint32_t render_glenum)
 {
     uint32_t tex = g_blank_texture;
     if (texture && texture->cache())
     {
         tex = texture->m_gl_tex;
     }
-    render_vertices(vertex_data, length / k_vertex_data_size, tex, primitive_type_to_glenum(type));
+    render_vertices(vertex_data, length / k_vertex_data_size, tex, ogmenum_to_glenum(render_glenum));
 }
 
 void Display::transform_identity()
@@ -3413,6 +3419,19 @@ void Display::delay(real_t microseconds)
     }
 }
 
+
+void Display::reset_render_state()
+{
+    set_blending_enabled(true);
+    glEnable(GL_TEXTURE_2D);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+    glEnable(GL_BLEND);
+    set_depth_test(false);
+    set_culling(false);
+    set_zwrite(false);
+    set_fog(false);
+}
+
 void Display::set_vsync(bool vsync)
 {
     SDL_GL_SetSwapInterval(vsync);
@@ -3481,19 +3500,19 @@ initialize_model:
     return id;
 }
 
-void Display::model_add_vertex_buffer(model_id_t id, uint32_t buffer, PrimitiveType type)
+void Display::model_add_vertex_buffer(model_id_t id, uint32_t buffer, uint32_t render_glenum)
 {
     Model& m = get_model(id);
-    m.m_buffers.emplace_back(buffer, static_cast<uint32_t>(type)); // Actually, wait. The buffer stores uint32_t.
+    m.m_buffers.emplace_back(buffer, render_glenum);
 }
 
 void Display::model_draw(model_id_t id, TexturePage* image)
 {
     Model& m = get_model(id);
 
-    for (auto& [buffer, render_type] : m.m_buffers)
+    for (auto& [buffer, glenum] : m.m_buffers)
     {
-        render_buffer(buffer, image, static_cast<PrimitiveType>(render_type));
+        render_buffer(buffer, image, glenum);
     }
 }
 
@@ -3730,7 +3749,7 @@ void Display::add_vertex_buffer_data(uint32_t id, unsigned char* data, size_t le
 void Display::freeze_vertex_buffer(uint32_t id)
 { }
 
-void Display::render_buffer(uint32_t vertex_buffer, TexturePage* image, PrimitiveType type)
+void Display::render_buffer(uint32_t vertex_buffer, TexturePage* image, uint32_t render_glenum)
 { }
 
 size_t Display::vertex_buffer_get_size(uint32_t id)
@@ -3786,6 +3805,9 @@ void Display::set_depth_test(bool)
 void Display::set_culling(bool)
 { }
 
+void Display::reset_render_state()
+{ }
+
 void Display::set_zwrite(bool)
 { }
 
@@ -3798,7 +3820,7 @@ void Display::set_camera_ortho(coord_t x, coord_t y, coord_t w, coord_t h, coord
 void Display::set_target(TexturePage*)
 { }
 
-void Display::render_array(size_t length, float* vertex_data, TexturePage* texture, PrimitiveType type)
+void Display::render_array(size_t length, float* vertex_data, TexturePage* texture, uint32_t render_glenum)
 { }
 
 void Display::transform_identity()
@@ -3938,7 +3960,7 @@ model_id_t Display::model_make()
     return 0;
 }
 
-void Display::model_add_vertex_buffer(model_id_t, uint32_t buffer, PrimitiveType type)
+void Display::model_add_vertex_buffer(model_id_t, uint32_t buffer, uint32_t render_glenum)
 { }
 
 void Display::model_draw(model_id_t id, TexturePage* image)
