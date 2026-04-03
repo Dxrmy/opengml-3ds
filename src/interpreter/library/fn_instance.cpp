@@ -307,10 +307,8 @@ void ogm::interpreter::fn::getv::instance_id(VO out
 
 void ogm::interpreter::fn::instance_activate_all(VO out)
 {
-    for (std::pair<instance_id_t, Instance*> pair : frame.m_instances)
+    for (const auto& [id, instance] : frame.m_instances)
     {
-        instance_id_t id = std::get<0>(pair);
-        Instance* instance = std::get<1>(pair);
         if (instance->m_data.m_room_id == frame.m_data.m_room_index && frame.instance_valid(id))
         {
             frame.activate_instance(instance);
@@ -321,10 +319,8 @@ void ogm::interpreter::fn::instance_activate_all(VO out)
 void ogm::interpreter::fn::instance_deactivate_all(VO out, V vnotme)
 {
     bool notme = vnotme.cond();
-    for (std::pair<instance_id_t, Instance*> pair : frame.m_instances)
+    for (const auto& [id, instance] : frame.m_instances)
     {
-        instance_id_t id = std::get<0>(pair);
-        Instance* instance = std::get<1>(pair);
         if (instance->m_data.m_room_id == frame.m_data.m_room_index && frame.instance_valid(id) && (!notme || instance != staticExecutor.m_self))
         {
             // OPTIMIZE: pass id and instance (rather than read id from instance).
@@ -338,10 +334,8 @@ void ogm::interpreter::fn::instance_activate_object(VO out, V object)
 {
     // OPTIMIZE: only iterate through objects of the given description.
     // (can't use with iterators because those only iterate through active instance.)
-    for (std::pair<instance_id_t, Instance*> pair : frame.m_instances)
+    for (const auto& [id, instance] : frame.m_instances)
     {
-        instance_id_t id = std::get<0>(pair);
-        Instance* instance = std::get<1>(pair);
         if (instance->m_data.m_room_id == frame.m_data.m_room_index && frame.instance_valid(id))
         {
             if (frame.instance_matches_ex_id(instance, object.castCoerce<ex_instance_id_t>(), staticExecutor.m_self, staticExecutor.m_other))
