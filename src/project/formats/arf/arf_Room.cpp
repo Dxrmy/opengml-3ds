@@ -119,14 +119,11 @@ bool ResourceRoom::save_file_arf(std::ofstream& of)
     {
         of << "isometric: true" << endl;
     }
-    // TODO: only write enable views if differs from expectation.
+
+    // only write enable views if differs from expectation (default: false)
     if (m_data.m_enable_views)
     {
         of << "enable_views: true" << endl;
-    }
-    else
-    {
-        of << "enable_views: false" << endl;
     }
 
     // backgrounds
