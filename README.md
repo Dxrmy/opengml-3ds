@@ -6,7 +6,7 @@ Native GML 1.4 Interpreter for the Nintendo 3DS.
 
 ## The Struggle (Why I built this)
 
-Porting an interpreter to the 3DS was honestly a huge headache, but that's what made it a fun challenge. The Old 3DS's ARM11 processor is brutally slow compared to modern hardware. The hardest part was getting the bytecode dispatch loop fast enough—I ended up fighting the compiler constantly and had to use GCC Computed Gotos just to squeeze out barely enough instruction throughput. Trying to debug memory alignment issues and OOB writes on this little handheld hardware really tests your patience!
+Porting an interpreter to the 3DS was honestly a huge headache, but that's what made it a fun challenge. The Old 3DS's ARM11 processor is brutally slow compared to modern hardware. The hardest part was getting the bytecode dispatch loop fast enough, so I ended up fighting the compiler constantly and had to use GCC Computed Gotos just to squeeze out barely enough instruction throughput. Trying to debug memory alignment issues and OOB writes on this little handheld hardware really tests your patience!
 
 ## Features
 
