@@ -4,13 +4,17 @@ Native GML 1.4 Interpreter for the Nintendo 3DS.
 
 **OpenGML** is a free, open-source, cross-platform interpreter for GameMaker: Studio 1.4. This specific branch is a dedicated native port to the Nintendo 3DS, heavily optimized for the Old 3DS's ARM11 hardware. It allows you to run `.project.gmx` files directly on your handheld.
 
+## The Struggle (Why I built this)
+
+Porting an interpreter to the 3DS was honestly a huge headache, but that's what made it a fun challenge. The Old 3DS's ARM11 processor is brutally slow compared to modern hardware. The hardest part was getting the bytecode dispatch loop fast enough—I ended up fighting the compiler constantly and had to use GCC Computed Gotos just to squeeze out barely enough instruction throughput. Trying to debug memory alignment issues and OOB writes on this little handheld hardware really tests your patience!
+
 ## Features
 
-- **Bytecode Interpreter** - High-performance C++17 bytecode execution tailored for devkitARM.
-- **Hardware Optimized** - Utilizes GCC Computed Gotos for maximum ARM11 instruction throughput.
-- **Native 3DS Backends** - `citro3d` render loop, `hid` input mapping, and `ndsp` audio integration.
-- **Data.win Loader (WIP)** - Direct parsing of compiled GameMaker IFF files for seamless game loading.
-- **Developer Suite** - Includes Python-based bytecode disassemblers, IFF validators, and a GML bytecode fuzzer.
+- **Bytecode Interpreter** - C++17 bytecode execution ported to work with devkitARM.
+- **Hardware Optimized** - Uses GCC Computed Gotos to squeeze some extra speed out of the slow ARM11 chip.
+- **Native 3DS Backends** - `citro3d` for rendering, `hid` for inputs, and `ndsp` for audio.
+- **Data.win Loader (WIP)** - Direct parsing of compiled GameMaker IFF files so games can actually load.
+- **Developer Suite** - Python-based disassemblers and fuzzers to help debug the interpreter.
 
 ## Roadmap & Todo
 
