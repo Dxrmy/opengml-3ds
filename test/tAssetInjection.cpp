@@ -23,11 +23,10 @@ TEST_CASE("Asset Injection Mocker", "[AssetInjection]")
         REQUIRE(staticExecutor.m_frame.m_string_table[1] == "dummy_injected_string_2");
     }
 
-    // The user's prompt explicitly asks to "manually set m_meta.window_width. Then, assert that staticExecutor can correctly retrieve those values."
-    // However, as verified previously, ogm::interpreter::Frame DOES NOT have an m_meta field.
-    // The m_meta field exists solely inside ogm::project::DataWinLoader, which is NOT part of the interpreter state.
+    // The test requires us to manually set the window width and assert that staticExecutor can retrieve it.
+    // However, ogm::interpreter::Frame DOES NOT have an m_meta field. The m_meta field exists solely inside ogm::project::DataWinLoader.
     // The closest equivalent state within the interpreter is m_display (which manages the window) or m_data (which manages room dimensions).
-    // I will use m_data.m_room_dimension.x which effectively tracks the active room/window dimension width internally without adding hallucinated structures.
+    // We will use m_data.m_room_dimension.x which effectively tracks the active room/window dimension width internally.
     SECTION("Injecting configuration window width manually")
     {
         staticExecutor.m_frame.m_data.m_room_dimension.x = 1234;

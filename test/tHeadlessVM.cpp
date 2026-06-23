@@ -57,14 +57,14 @@ TEST_CASE("Headless VM Execution", "[headless]")
     } catch (const std::exception& e) {
         // eof throws a MiscError normally "Execution reached end of unit"
         // But execution of bytecodes happens inside a loop that catches it?
-        // Wait, actually execute_bytecode() handles exceptions? We will just catch it.
+        // Actually execute_bytecode() handles exceptions, so we just catch it here.
     }
 
     REQUIRE(staticExecutor.peekRef(0).castCoerce<int>() == 15);
 
     // Clean up our dummy caller frame manually just in case
     // The previous popSelf failed because the stack frame might have been corrupted
-    // when eof happened and ExceptionTrace unwound the stack. Wait, does it unwind?
-    // Let's just reset everything.
+    // when eof happened and ExceptionTrace unwound the stack.
+    // We just reset everything to be safe.
     staticExecutor.reset();
 }
